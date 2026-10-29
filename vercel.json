@@ -1,0 +1,12 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "redirects": [
+    { "source": "/game", "destination": "/game/", "permanent": false }
+  ],
+  "rewrites": [
+    { "source": "/game/", "destination": "/vendor/dry-run-engine/game/index.html" },
+    { "source": "/game/:path*", "destination": "/vendor/dry-run-engine/game/:path*" },
+    { "source": "/engine/:path*", "destination": "/vendor/dry-run-engine/engine/:path*" },
+    { "source": "/text/:path*", "destination": "/vendor/dry-run-engine/text/:path*" }
+  ]
+}
