@@ -1,0 +1,13 @@
+# Upload only what the site serves: the holding page, and the game with the engine and text it
+# imports. Everything else (vendor's docs and sheet, runner/, verify/, tests, reports) stays off
+# the site, so a path like /vendor/dry-run-engine/SIMULATION-MATHS.md is a 404.
+/*
+!/index.html
+!/vercel.json
+!/vendor
+/vendor/*
+!/vendor/dry-run-engine
+/vendor/dry-run-engine/*
+!/vendor/dry-run-engine/game
+!/vendor/dry-run-engine/engine
+!/vendor/dry-run-engine/text
