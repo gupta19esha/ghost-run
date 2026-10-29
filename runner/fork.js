@@ -6,8 +6,7 @@
 //
 // After the fork, rule 29 (maths doc section 10) can withdraw a later real choice from the ghost:
 // a real D16-A player who chose D20-A has no index investment to move on a ghost that took D16-B.
-// What the ghost does then is the substitution rule. It is not ruled, so there is no default:
-// fork refuses to run until a rule is passed in, or SUBSTITUTION below is set.
+// What the ghost does then is the substitution rule, SUBSTITUTION below unless one is passed in.
 
 import { play } from "./replay.js";
 import { getDecision } from "../vendor/dry-run-engine/engine/index.js";
@@ -58,12 +57,12 @@ export const STRATEGIES = Object.freeze({
   "keep-real-or-stop": keepRealChoiceIfOffered(stop),
 });
 
-// Not ruled. The ruling names one of STRATEGIES here.
-export const SUBSTITUTION = null;
+// Ruled: keep the real choice while the ghost offers it, otherwise the first option it offers
+export const SUBSTITUTION = "keep-real-or-first";
 
 const BARS = ["netWorth", "safety", "freedom", "life"];
 
-// fork(save, monthIndex, alternativeOptionId, { substitution }) -> { real, ghost, divergence }
+// fork(save, monthIndex, alternativeOptionId, { substitution }) -> { real, ghost, divergence, substitutions }
 //
 // monthIndex is the position of the choice in save.choices, 0 for the first. Chapter 1 has 30
 // decisions in 24 months, so a month can hold two choices; alternativeOptionId must be an option
@@ -74,12 +73,13 @@ const BARS = ["netWorth", "safety", "freedom", "life"];
 // choice the ghost could not follow: { index, decision_id, month, real, offered, chosen }, where
 // chosen is null when the rule ended the ghost there. ghost.stoppedAt is that index, or null.
 // divergence: for each month both runs closed, ghost minus real, for net worth and the four bars.
+// substitutions: { monthIndex, decisionId, withdrawn, chosen } for each later choice where the real
+// option was not offered and the fallback was used; monthIndex is the choice's position, as for the
+// fork itself. Empty for most forks.
 export function fork(save, monthIndex, alternativeOptionId, { substitution = SUBSTITUTION } = {}) {
   const rule = typeof substitution === "string" ? STRATEGIES[substitution] : substitution;
   if (typeof rule !== "function") {
-    throw new Error(substitution == null
-      ? "No substitution rule: none is ruled yet, so pass { substitution } (see STRATEGIES)"
-      : `Unknown substitution rule ${JSON.stringify(substitution)}`);
+    throw new Error(`Unknown substitution rule ${JSON.stringify(substitution)}`);
   }
   const realRun = play(save.seed, (decision, state, index) => (index < save.choices.length ? save.choices[index] : null));
   if (realRun.choices.length < save.choices.length) throw new Error("The save does not replay: choices left over");
@@ -113,7 +113,12 @@ export function fork(save, monthIndex, alternativeOptionId, { substitution = SUB
 
   const real = { state: realRun.state, history: realRun.history, bars: realRun.bars, choices: realRun.choices };
   const ghost = { state: ghostRun.state, history: ghostRun.history, bars: ghostRun.bars, choices: ghostRun.choices, substitutions, stoppedAt };
-  return { real, ghost, divergence: divergence(real.bars, ghost.bars) };
+  return {
+    real,
+    ghost,
+    divergence: divergence(real.bars, ghost.bars),
+    substitutions: substitutions.map((s) => ({ monthIndex: s.index, decisionId: s.decision_id, withdrawn: s.real, chosen: s.chosen })),
+  };
 }
 
 // Ghost minus real for every month both runs closed

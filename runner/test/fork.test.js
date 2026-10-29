@@ -18,11 +18,12 @@ test("a fork that takes the option the player chose is the real run, byte for by
   for (const { name, save } of SAVES) {
     for (let index = 0; index < save.choices.length; index++) {
       for (const substitution of RULES) {
-        const { real, ghost, divergence } = fork(save, index, save.choices[index], { substitution });
+        const { real, ghost, divergence, substitutions } = fork(save, index, save.choices[index], { substitution });
         const where = `${name}, choice ${index} (${save.choices[index]}), ${substitution}`;
         assert.equal(timeline(ghost), timeline(real), where);
         assert.deepStrictEqual(ghost.state, real.state, where);
         assert.deepEqual(ghost.substitutions, [], where);
+        assert.deepEqual(substitutions, [], where);
         assert.equal(ghost.stoppedAt, null, where);
         assert.equal(divergence.length, 24, where);
         for (const row of divergence) {
@@ -70,8 +71,9 @@ test("a real choice the ghost does not offer goes to the rule, and is recorded",
   const d16 = choices.indexOf("D16-A");
   const d20 = choices.indexOf("D20-A");
   for (const substitution of RULES) {
-    const { ghost, divergence } = fork(withIndex, d16, "D16-C", { substitution });
+    const { ghost, divergence, substitutions } = fork(withIndex, d16, "D16-C", { substitution });
     const [sub] = ghost.substitutions;
+    assert.deepEqual(substitutions, [{ monthIndex: d20, decisionId: "D20", withdrawn: "D20-A", chosen: sub.chosen }], substitution);
     assert.equal(sub.decision_id, "D20", substitution);
     assert.equal(sub.real, "D20-A");
     assert.ok(!sub.offered.includes("D20-A"));
@@ -88,13 +90,6 @@ test("a real choice the ghost does not offer goes to the rule, and is recorded",
   }
 });
 
-test("no substitution rule is ruled, so fork refuses to guess one", () => {
-  assert.equal(SUBSTITUTION, null);
-  const { save } = SAVES[0];
-  assert.throws(() => fork(save, 0, save.choices[0]), /No substitution rule/);
-  assert.throws(() => fork(save, 0, save.choices[0], { substitution: "keep-real" }), /Unknown substitution rule/);
-});
-
 test("fork refuses an alternative that is not offered at the fork, or a fork point not in the save", () => {
   const save = typeSave("cautious");
   const rule = { substitution: "keep-real-or-first" };
@@ -102,4 +97,32 @@ test("fork refuses an alternative that is not offered at the fork, or a fork poi
   // Cautious has no index investment at D20, so D20-A is withdrawn there (rule 29)
   assert.throws(() => fork(save, save.choices.indexOf("D20-C"), "D20-A", rule), /not offered at D20/);
   assert.throws(() => fork(save, 30, "D30-A", rule), /No choice at index 30/);
+  assert.throws(() => fork(save, 0, save.choices[0], { substitution: "keep-real" }), /Unknown substitution rule/);
+});
+
+// Lock on the ruled fallback. keep-real-or-first takes the first offered option in sheet order, so
+// a reordered sheet would silently change every ghost below. If this fails after a sheet change,
+// the mapping moved: rule again on what the ghost should take, then update the expectations.
+test("the ruled fallback maps each withdrawable D20 and D28 choice as ruled", () => {
+  assert.equal(SUBSTITUTION, "keep-real-or-first");
+  // Each case: a path to the withdrawn choice from Cautious's save, the fork that withdraws it,
+  // what the ghost then offers and what the fallback takes
+  const cases = [
+    { path: { "D16-C": "D16-A", "D20-C": "D20-A" }, fork: "D16-C", withdrawn: "D20-A", offered: ["D20-C", "D20-D"], chosen: "D20-C" },
+    { path: { "D16-C": "D16-A", "D20-C": "D20-B" }, fork: "D16-C", withdrawn: "D20-B", offered: ["D20-C", "D20-D"], chosen: "D20-C" },
+    { path: { "D20-C": "D20-D" }, fork: "D16-A", withdrawn: "D20-D", offered: ["D20-A", "D20-B", "D20-C"], chosen: "D20-A" },
+    { path: { "D28-A": "D28-B" }, fork: "D27-A", withdrawn: "D28-B", offered: ["D28-A", "D28-C", "D28-D"], chosen: "D28-A" },
+  ];
+  const cautious = typeSave("cautious");
+  for (const c of cases) {
+    const choices = cautious.choices.map((id) => c.path[id] ?? id);
+    const save = { ...cautious, choices };
+    const [decisionId] = c.fork.split("-");
+    const index = choices.findIndex((id) => id.startsWith(`${decisionId}-`));
+    const { ghost, substitutions } = fork(save, index, c.fork);
+    const at = choices.indexOf(c.withdrawn);
+    assert.deepEqual(substitutions, [{ monthIndex: at, decisionId: c.withdrawn.split("-")[0], withdrawn: c.withdrawn, chosen: c.chosen }], c.withdrawn);
+    assert.deepEqual(ghost.substitutions[0].offered, c.offered, c.withdrawn);
+    assert.equal(ghost.choices[at], c.chosen, c.withdrawn);
+  }
 });
