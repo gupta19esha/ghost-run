@@ -1,13 +1,14 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { readRun, forkView, costList, surpriseList, placeholderNarration } from "../ghost-model.js";
+import { readRun, forkView, costList, surpriseList, placeholderNarration, sameMoney, reasons, markedDraft, SAME_MONEY } from "../ghost-model.js";
 import { forksOf } from "../../agent/rank.js";
 import { fork } from "../../runner/fork.js";
 import { verify } from "../../verify/verify.js";
 
 const save = JSON.parse(readFileSync(new URL("../demo/save.json", import.meta.url), "utf8"));
 const forks = forksOf(save).map(({ fork: _, ...summary }) => summary);
+const views = forks.map((f) => forkView(save, f.monthIndex, f.option));
 
 test("the run: 24 months, every choice placed in its month with what else was offered", () => {
   const run = readRun(save);
@@ -18,27 +19,57 @@ test("the run: 24 months, every choice placed in its month with what else was of
   assert.equal(run.end.month, 24);
 });
 
-test("every fork of the demo: the placeholder passes verify(), and the view is verify()'s own output", () => {
-  for (const f of forks) {
-    const view = forkView(save, f.monthIndex, f.option);
-    const again = verify(placeholderNarration(view.result), fork(save, f.monthIndex, f.option));
-    assert.deepEqual(view.verification, again, `${f.option}`);
-    assert.ok(view.verification.ok, `${f.option}: ${JSON.stringify(view.verification.failures)}`);
+test("every attempt is verify()'s own verdict on that narration, and the last one is accepted", () => {
+  for (const view of views) {
+    const result = fork(save, view.monthIndex, view.ghost.option);
+    for (const a of view.attempts) {
+      const { ok, figures, failures } = verify(a.narration, result);
+      assert.deepEqual({ ok: a.ok, figures: a.figures, failures: a.failures }, { ok, figures, failures });
+    }
+    assert.equal(view.accepted, view.attempts.at(-1), view.ghost.option);
+    assert.ok(view.accepted.ok);
+    assert.deepEqual(view.rejected, view.attempts.slice(0, -1));
+    assert.ok(view.rejected.every((a) => !a.ok && a.failures.length > 0));
     assert.ok(view.rendered && !/[{}]/.test(view.rendered));
   }
 });
 
-test("the substitution fork names it on the chart and in the narration", () => {
-  const view = forkView(save, 15, "D16-B");
-  assert.deepEqual(view.notices.map((n) => n.month), [14]);
-  assert.match(view.notices[0].text, /was not on the table on this path/);
-  assert.ok(view.verification.figures.some((f) => f.token === "withdrawn_choice"));
+test("the demo has forks with rejected attempts, and forks without", () => {
+  assert.ok(views.some((v) => v.rejected.length > 0));
+  assert.ok(views.some((v) => v.rejected.length === 0));
 });
 
-test("a fork without substitutions has no notice and no substitution sentence", () => {
-  const view = forkView(save, 1, "D02-C");
-  assert.deepEqual(view.notices, []);
-  assert.doesNotMatch(view.narration, /substitution|withdrawn/);
+test("the D16 fork: the same money, a different life, said first", () => {
+  const view = forkView(save, 15, "D16-B");
+  assert.equal(view.sameMoney, "freedom");
+  assert.match(view.rendered, /^The same money, a different life\. /);
+  assert.match(view.rendered, /Freedom ends 15 points lower/);
+  assert.deepEqual(view.notices.map((n) => n.month), [14]);
+  assert.match(view.notices[0].text, /was not on the table on this path/);
+  // Its rehearsal leaves the substitution out, and verify() refuses it
+  assert.deepEqual(view.rejected.map((a) => a.failures.map((f) => f.rule)), [["substitution_unmentioned"]]);
+});
+
+test("same money means within a quarter unit of net worth, with a bar a unit apart", () => {
+  for (const view of views) {
+    const gap = Math.abs(view.result.divergence.at(-1).netWorth);
+    if (view.sameMoney) assert.ok(gap <= SAME_MONEY, view.ghost.option);
+    assert.equal(view.rendered.startsWith("The same money"), view.sameMoney !== null);
+  }
+  const rich = forkView(save, 1, "D02-C");
+  assert.equal(sameMoney(rich.result), null);
+  assert.doesNotMatch(placeholderNarration(rich.result), /same money/);
+});
+
+test("a typed figure is one reason, and the draft marks it whole", () => {
+  const inline = views.flatMap((v) => v.rejected).find((a) => a.flaw === "inline" && /\d,\d/.test(a.narration));
+  assert.ok(inline);
+  const typed = reasons(inline).filter((r) => r.rule === "numeral");
+  assert.equal(typed.length, 1);
+  assert.ok(typed[0].count >= 2);
+  const marked = markedDraft(inline.narration, inline.failures).filter((p) => p.mark).map((p) => p.text);
+  assert.ok(marked.every((t) => /^\d[\d,.]*\d$|^\d$/.test(t)) && marked.some((t) => t.includes(",")));
+  assert.equal(markedDraft(inline.narration, inline.failures).map((p) => p.text).join(""), inline.narration);
 });
 
 test("the lists: one alternative per choice, cost by money gained, surprise by its score", () => {
