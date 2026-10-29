@@ -283,10 +283,46 @@
 .verdict-note { margin: 6px 0 0; font-size: 13px; line-height: 1.4; color: var(--slate); }
 .failures { margin: 8px 0 0; padding-left: 18px; font-size: 14px; line-height: 1.4; }
 .failures code, .figures code { font-size: 12px; color: var(--deep); }
-.figures-toggle { margin-top: 10px; padding: 4px 0; background: none; border: 0; color: var(--deep); font-family: var(--body); font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .figures[hidden], .month-detail[hidden] { display: none; }
 .figures { margin: 8px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
 .figures span { color: var(--bone-dim); }
 
 .fork-foot { margin-top: 32px; }
 .ghost-error { margin: 40px 0 20px; font-size: 16px; color: var(--bone); }
+
+/* ---------- The narration's attempts ---------- */
+
+/* A same-money fork's first sentence leads, as a headline */
+.narration-lead { margin: 10px 0 0; font-family: var(--display); font-size: 25px; font-weight: 800; line-height: 1.12; color: var(--bone); }
+.narration-lead + .narration-text { margin-top: 8px; }
+.narration-text.is-missing { color: var(--slate); font-style: italic; }
+
+.rejected-count { margin: 6px 0 0; font-size: 15px; font-weight: 600; color: var(--slate); }
+.rejected-count.has-some { color: color-mix(in srgb, var(--vermilion), var(--bone) var(--toward-ink)); }
+
+.attempts { display: flex; flex-direction: column; gap: 10px; margin: 12px 0 0; padding: 0; list-style: none; }
+.attempt {
+  padding: 12px 14px;
+  background: color-mix(in srgb, var(--vermilion) 6%, var(--ink-raised));
+  border: 2px solid color-mix(in srgb, var(--vermilion) 35%, var(--ink-raised));
+  border-radius: 14px;
+}
+.attempt-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 8px; margin: 0; font-size: 15px; font-weight: 600; }
+.attempt-head b { color: color-mix(in srgb, var(--vermilion), var(--bone) var(--toward-ink)); }
+.attempt-rules { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: 12px; font-weight: 400; color: var(--slate); }
+.reasons { margin: 8px 0 0; padding-left: 18px; font-size: 14px; line-height: 1.45; color: var(--bone); }
+.reasons li + li { margin-top: 4px; }
+.draft { margin: 8px 0 0; padding: 10px 12px; background: var(--ink); border-radius: 10px; font-size: 14px; line-height: 1.5; color: var(--bone-dim); }
+.draft[hidden] { display: none; }
+.draft mark {
+  padding: 0 2px;
+  background: color-mix(in srgb, var(--vermilion) 18%, transparent);
+  color: color-mix(in srgb, var(--vermilion), var(--bone) var(--toward-ink));
+  font-weight: 600;
+  text-decoration: underline wavy color-mix(in srgb, var(--vermilion) 70%, transparent);
+  text-underline-offset: 3px;
+  border-radius: 3px;
+}
+.verdict-tally { margin: 8px 0 0; font-size: 13px; font-weight: 600; color: var(--bone-dim); }
+.text-toggle { display: block; margin-top: 8px; padding: 4px 0; background: none; border: 0; color: var(--deep); font-family: var(--body); font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.text-toggle:focus-visible { outline: 3px solid var(--deep-raised); outline-offset: 2px; border-radius: 4px; }
