@@ -1,0 +1,10 @@
+{
+  "name": "ghost-run",
+  "private": true,
+  "type": "module",
+  "description": "Branch runner over the Dry Run engine in vendor/. The engine is imported, never edited. No dependencies.",
+  "scripts": {
+    "test": "node --test runner/test/",
+    "measure": "node scripts/measure-forks.mjs"
+  }
+}
