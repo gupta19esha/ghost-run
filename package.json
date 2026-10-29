@@ -2,7 +2,7 @@
   "name": "ghost-run",
   "private": true,
   "type": "module",
-  "description": "Branch runner over the Dry Run engine in vendor/. The engine is imported, never edited. No dependencies.",
+  "description": "Ghost Run: replays a finished life and forks it at any choice. Runs on the Chapter 1 engine in vendor/, imported and never edited. No dependencies.",
   "scripts": {
     "test": "node --test runner/test/ verify/test/",
     "measure": "node scripts/measure-forks.mjs"

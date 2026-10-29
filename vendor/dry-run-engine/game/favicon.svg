@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="118" height="118" viewBox="0 0 118 118" fill="none">
-  <title>Dry Run</title>
+  <title>Ghost Run</title>
   <!-- 24 marks for the 24 months of Chapter 1: 9 in marigold, 15 in slate. The token names
        are game/tokens.css's. An image cannot read the page's stylesheet, so the values are
        declared here; keep them in step with that file. -->

@@ -2,7 +2,7 @@
 
 // The product name is decided and not trademark-checked (HANDOFF.md section 7). This is the
 // only place it lives.
-export const PRODUCT_NAME = "Dry Run";
+export const PRODUCT_NAME = "Ghost Run";
 
 // UI.md build rule 4: same seed, same choices, same run. Save and resume arrive in step 5;
 // until then every run starts from this seed.
