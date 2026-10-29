@@ -4,7 +4,7 @@
   "type": "module",
   "description": "Ghost Run: replays a finished life and forks it at any choice. Runs on the Chapter 1 engine in vendor/, imported and never edited. No dependencies.",
   "scripts": {
-    "test": "node --test runner/test/ verify/test/ agent/test/",
+    "test": "node --test runner/test/ verify/test/ agent/test/ web/test/",
     "measure": "node scripts/measure-forks.mjs"
   }
 }
