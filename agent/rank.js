@@ -112,15 +112,18 @@ export const SCORE = null;
 // Every fork of the save, in choice order then sheet order:
 // [{ monthIndex, decisionId, month, real, option, features, fork }]. fork is fork()'s full
 // result, so the UI can show and narrate it without running it again.
-export function forksOf(save) {
+// onFork(entry, done, total), when given, is called after each fork: the ghost screen's ranking
+// worker reports progress with it.
+export function forksOf(save, { onFork = null } = {}) {
+  const plan = save.choices.flatMap((_, monthIndex) => alternativesAt(save, monthIndex).map((option) => [monthIndex, option]));
   const forks = [];
-  for (let monthIndex = 0; monthIndex < save.choices.length; monthIndex++) {
-    for (const option of alternativesAt(save, monthIndex)) {
-      const result = fork(save, monthIndex, option);
-      const decisionId = option.split("-")[0];
-      const month = getDecision(decisionId).month;
-      forks.push({ monthIndex, decisionId, month, real: save.choices[monthIndex], option, features: features(result, month), fork: result });
-    }
+  for (const [monthIndex, option] of plan) {
+    const result = fork(save, monthIndex, option);
+    const decisionId = option.split("-")[0];
+    const month = getDecision(decisionId).month;
+    const entry = { monthIndex, decisionId, month, real: save.choices[monthIndex], option, features: features(result, month), fork: result };
+    forks.push(entry);
+    if (onFork) onFork(entry, forks.length, plan.length);
   }
   return forks;
 }
