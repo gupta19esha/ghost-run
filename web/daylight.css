@@ -44,16 +44,16 @@
   --progress: #C9B998;        /* the consequence timer */
   --concept-ground: #EAF0F8;  /* the concept card: a wash of deep */
 
-  /* The muted form: every colour halfway from its full value to the ground (part 2) */
+  /* The muted form (part 2): colours halfway to the ground, paper 55% into the muted block */
   --deep-muted: #8EA2BE;
-  --muted-paper: #FDF7EB;
+  --muted-paper: #C1C9D4;
   --muted-vermilion: #EF9983;
   --muted-marigold: #F8CA78;
   --muted-teal: #87CCB5;
-  --muted-line: #D8D8D9;
-  --muted-paper-side: #F2E9D7;
-  --muted-paper-dim: #F5EDDD;
-  --muted-paper-shadow: #E8DECB;
+  --muted-line: #9FAEC4;
+  --muted-paper-side: #B7BDC3;
+  --muted-paper-dim: #BAC1C8;
+  --muted-paper-shadow: #AEB3B8;
 
   /* A bar moving: the hatch is the colour a fifth of the way to ink */
   --teal-hatch: #15856B;
@@ -71,19 +71,21 @@
   /* Not a token in tokens.css. Accent text: an accent is a fill colour, and none of the three
      is dark enough to read as text on paper (marigold is 1.9:1). Text in an accent is the
      accent pulled 36% of the way to ink: marigold 3.8:1, teal 5.3:1, vermilion 6.6:1 on the
-     ground. Marigold text passes for large figures, not for small text: darker, it is brown */
+     ground. Marigold text is only ever large (below); small accent text is deep blue, 7.7:1 */
   --toward-ink: 36%;
 }
 
-/* Money, links and chips are text in an accent */
-.money,
-.decision-worth,
+/* Marigold is a fill. As text it appears only at 20px and up: the big net worth figures on
+   Home, month close and the chapter report. Every smaller accent text is deep blue: the balance
+   on the decision screen, the salary on the month card, How it works, your life so far. .money
+   defaults to deep, so a small money figure added later is blue too */
+.money { color: var(--deep); }
+.home-net-worth,
+.net-worth { color: color-mix(in srgb, var(--marigold), var(--bone) var(--toward-ink)); }
 .home-how,
-.home-where-link {
-  color: color-mix(in srgb, var(--marigold), var(--bone) var(--toward-ink));
-}
+.home-where-link { color: var(--deep); }
 .home-how:hover,
-.home-where:hover .home-where-link { color: color-mix(in srgb, var(--marigold), var(--bone) 46%); }
+.home-where:hover .home-where-link { color: var(--deep-raised); }
 .chip,
 .report-month-figure { color: color-mix(in srgb, var(--move), var(--bone) var(--toward-ink)); }
 .close-button.how-confirm-yes { color: color-mix(in srgb, var(--vermilion), var(--bone) var(--toward-ink)); }
@@ -118,11 +120,14 @@
 .illo { border-radius: 0 0 28px 28px; }
 .landing-band { border-radius: 22px; }
 
-/* The muted form, one step back on light. The dark build dimmed it twice: muted colours, then
-   the drawing at 45% opacity over a darker block. On paper, one step back is towards the
-   ground, so each muted colour is its full colour halfway to #FBF4E6, and the drawing is shown
-   at full opacity: the halving is already in the colours. Every pair inside a drawing keeps
-   half its contrast, so each shape reads as itself, quieter.
+/* The muted form: the moment receding. The dark build dimmed it twice: muted colours, then the
+   drawing at 45% opacity over a darker block. Here the drawing is shown at full opacity and the
+   receding is in the colours, two ways at once:
+   - its colours fade: marigold, vermilion and teal each go halfway to the ground, #FBF4E6
+   - its light goes: paper and its shades (side, dim, shadow, printed line) go 55% of the way
+     into the muted block, #8EA2BE, so they sit in the block's shade
+   Paper is then darker than the faded marigold, so what stays brightest in a past moment is the
+   colour that was in it, not the page it was drawn on.
 
    The swap table (MUTED in screens/illustrations.js) sends deep-raised to deep and deep to
    deep-muted. Deep is a full colour in part 1, so inside the muted block it takes the muted
