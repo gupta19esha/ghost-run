@@ -4,6 +4,7 @@
     { "source": "/game", "destination": "/game/", "permanent": false }
   ],
   "rewrites": [
+    { "source": "/", "destination": "/web/index.html" },
     { "source": "/game/", "destination": "/vendor/dry-run-engine/game/index.html" },
     { "source": "/game/:path*", "destination": "/vendor/dry-run-engine/game/:path*" },
     { "source": "/engine/:path*", "destination": "/vendor/dry-run-engine/engine/:path*" },

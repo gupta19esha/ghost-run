@@ -1,11 +1,18 @@
-# Upload only what the site serves: the holding page, the game with the engine and text it
-# imports, and web/ (Daylight, its fonts, the demo save). Everything else (vendor's docs and
-# sheet, runner/, verify/, tests, reports) stays off the site, so a path like
+# Upload only what the site serves: web/ (the ghost screen at the root, Daylight, its fonts, the
+# demo save), the browser code the ghost screen imports (runner/, agent/, verify/, without their
+# tests), and the game with the engine and text it imports. Everything else (vendor's docs and
+# sheet, scripts, reports, tests) stays off the site, so a path like
 # /vendor/dry-run-engine/SIMULATION-MATHS.md is a 404.
 /*
-!/index.html
 !/vercel.json
 !/web
+/web/test
+!/runner
+/runner/test
+!/agent
+/agent/test
+!/verify
+/verify/test
 !/vendor
 /vendor/*
 !/vendor/dry-run-engine

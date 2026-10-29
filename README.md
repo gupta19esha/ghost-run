@@ -16,8 +16,10 @@ any choice to see the ghost, the life you would have had with the other option.
 - `scripts/measure-forks.mjs` measures how often a fork's ghost cannot take a later real choice.
   `reports/` holds the measurements.
 - `web/daylight.css` is the game's visual direction, Daylight, laid over the vendored game.
-- `index.html` is a temporary holding page. `/game/` serves the playable game from `vendor/`
-  (see `vercel.json`).
+- `web/index.html` is the ghost screen, served at the site root: the finished demo life, and any
+  choice in it forked in the browser, drawn against the real run, with a placeholder narration
+  checked live by `verify()`. No model is called. `/game/` serves the playable game from
+  `vendor/` (see `vercel.json`).
 
 `npm test` runs every test. There are no dependencies.
 
