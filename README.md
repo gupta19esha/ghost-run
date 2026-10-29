@@ -10,8 +10,11 @@ any choice to see the ghost, the life you would have had with the other option.
   to the real run.
 - `verify/` checks a narration of a fork. Every figure must be a token resolved from the fork
   result, and `verify/render.js` is the only place figures are formatted.
+- `agent/rank.js` forks a save at every choice and orders the forks by a score. Which score is
+  not ruled yet; `scripts/measure-rank.mjs` measures the candidates.
+- `web/demo/save.json` is a finished 24-month save for the UI to load (see `web/demo/README.md`).
 - `scripts/measure-forks.mjs` measures how often a fork's ghost cannot take a later real choice.
-  `reports/` holds its output.
+  `reports/` holds the measurements.
 - `index.html` is a temporary holding page. `/game/` serves the playable game from `vendor/`
   (see `vercel.json`).
 
