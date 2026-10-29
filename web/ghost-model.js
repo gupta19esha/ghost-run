@@ -6,7 +6,7 @@
 
 import { play } from "../runner/replay.js";
 import { fork } from "../runner/fork.js";
-import { order, SCORES } from "../agent/rank.js";
+import { order, SCORE } from "../agent/rank.js";
 import { verify } from "../verify/verify.js";
 import { renderNarration, FORMATS } from "../verify/render.js";
 import { createState, getBars, getDecision, tokenValues } from "../vendor/dry-run-engine/engine/index.js";
@@ -56,9 +56,9 @@ export function costList(forks, n = 5) {
   return bestPerChoice(ranked).slice(0, n);
 }
 
-// "You wouldn't guess": agent/rank.js's surprise score, the one measured for this
+// "You wouldn't guess": agent/rank.js's ruled score
 export function surpriseList(forks, n = 5) {
-  return bestPerChoice(order(forks, SCORES.surprise).filter((f) => f.score > 0)).slice(0, n);
+  return bestPerChoice(order(forks, SCORE).filter((f) => f.score > 0)).slice(0, n);
 }
 
 // What a surprise reason means, in the player's words

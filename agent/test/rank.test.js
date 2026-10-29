@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { rank, forksOf, order, features, surpriseMeasures, SCORES, SCORE, UNITS } from "../rank.js";
+import { rank, forksOf, order, features, surpriseMeasures, SCORES, UNITS } from "../rank.js";
 import { fork, alternativesAt } from "../../runner/fork.js";
 
 const demo = JSON.parse(readFileSync(new URL("../../web/demo/save.json", import.meta.url), "utf8"));
@@ -15,9 +15,13 @@ const divergence = (gaps) => Array.from({ length: 24 }, (_, i) => {
 });
 const featuresOf = (gaps, forkMonth = 1) => features({ divergence: divergence(gaps) }, forkMonth);
 
-test("no score is ruled yet: rank() refuses without one", () => {
-  assert.equal(SCORE, null);
-  assert.throws(() => rank(demo), /No fork score is ruled yet/);
+test("rank() orders by the ruled score, surprise", () => {
+  const ranked = rank(demo);
+  assert.deepEqual(ranked.map((f) => `${f.monthIndex}:${f.option}`), order(forks, "surprise").map((f) => `${f.monthIndex}:${f.option}`));
+  assert.ok(ranked.every((f) => f.reason === null || !f.reason.startsWith("net-worth")));
+});
+
+test("an unknown score is refused", () => {
   assert.throws(() => rank(demo, { score: "loudest" }), /Unknown fork score/);
 });
 

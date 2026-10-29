@@ -2,9 +2,9 @@
 // run through runner/fork.js and scored from its numbers alone.
 //
 // rank(save) forks the save at every choice, to every alternative the run offered there, and
-// orders the forks by a score. The score is a parameter, as the substitution rule was, and none
-// is ruled yet: SCORE is null, so rank() needs { score } until it is set. scripts/measure-rank.mjs
-// measures what each score surfaces and buries.
+// orders the forks by a score. The score is a parameter, as the substitution rule was: SCORE
+// below is the ruled one, and { score } overrides it. scripts/measure-rank.mjs measures what each
+// score surfaces and buries.
 
 import { fork, alternativesAt } from "../runner/fork.js";
 import { getDecision } from "../vendor/dry-run-engine/engine/index.js";
@@ -105,9 +105,8 @@ export const SCORES = Object.freeze({
   },
 });
 
-// Not ruled. scripts/measure-rank.mjs reports what "surprise" surfaces and buries against
-// "net-worth-gap"; the ruling is setting this to a name in SCORES.
-export const SCORE = null;
+// Ruled: forks worth showing are the surprising ones (reports/RANK-2026-10-29.md)
+export const SCORE = "surprise";
 
 // Every fork of the save, in choice order then sheet order:
 // [{ monthIndex, decisionId, month, real, option, features, fork }]. fork is fork()'s full
@@ -131,15 +130,12 @@ export function forksOf(save, { onFork = null } = {}) {
 // Scores forks and orders them, highest first; ties keep choice order, then sheet order
 export function order(forks, score) {
   const scoreFn = typeof score === "string" ? SCORES[score] : score;
-  if (typeof scoreFn !== "function") {
-    throw new Error(score === null ? "No fork score is ruled yet: pass { score }" : `Unknown fork score ${JSON.stringify(score)}`);
-  }
+  if (typeof scoreFn !== "function") throw new Error(`Unknown fork score ${JSON.stringify(score)}`);
   return forks.map((f) => ({ ...f, ...scoreFn(f.features) })).sort((a, b) => b.score - a.score);
 }
 
 // rank(save, { score }) -> forksOf(save), each with { score, reason }, highest score first
 export function rank(save, { score = SCORE } = {}) {
   if (typeof score === "string" && !SCORES[score]) throw new Error(`Unknown fork score ${JSON.stringify(score)}`);
-  if (score === null) throw new Error("No fork score is ruled yet: pass { score }");
   return order(forksOf(save), score);
 }

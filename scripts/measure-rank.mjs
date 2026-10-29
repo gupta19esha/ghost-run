@@ -5,7 +5,7 @@
 // Prints a Markdown report, and writes it to FILE as well when --out is given. Progress on stderr.
 
 import { writeFileSync } from "node:fs";
-import { forksOf, order, surpriseMeasures, SCORES, UNITS, SHOCK_MONTH } from "../agent/rank.js";
+import { forksOf, order, surpriseMeasures, SCORES, SCORE, UNITS, SHOCK_MONTH } from "../agent/rank.js";
 import { typeSave, PLAYER_TYPES } from "./player-saves.mjs";
 import { formatRupees } from "../vendor/dry-run-engine/text/render.js";
 
@@ -116,7 +116,7 @@ out(`Real reversals are rare: ${crossed.length} forks (${pct(crossed.length, all
   `${ghostBetter.length} of them (${pct(ghostBetter.length, all.length)} of all forks) end with the ghost ahead after it was behind, the "looked worse, ended better" case.`, "");
 
 out("## 4. The proposed score: surprise", "",
-  "The largest of the four measures in section 3, each in units: reversal, shock, quiet-money, trade-off. The money gap on its own scores nothing. Not applied: SCORE in agent/rank.js is still null.", "");
+  `The largest of the four measures in section 3, each in units: reversal, shock, quiet-money, trade-off. The money gap on its own scores nothing. SCORE in agent/rank.js: ${SCORE ?? "not ruled"}.`, "");
 out(`Decisions in each save's top ${TOP}, counted over ${saves.length} saves: ` + decisionCounts("surprise").map(([d, c]) => `${d} ${c}`).join(", ") + ".", "");
 table(["Type", `Distinct top ${TOP}s over ${SEEDS.length} seeds`, "Most common", "Most common top 5"], sameness("surprise"));
 out(...habits("surprise"), "");
