@@ -2,7 +2,7 @@
 // (vendor/dry-run-engine/calibration/harness.js, maths doc section 13) played through Chapter 1,
 // as game/save.js would hold the run.
 
-import { typePlaythrough, PLAYER_TYPES } from "../vendor/dry-run-engine/calibration/harness.js";
+import { typePlaythrough, randomPlaythrough, PLAYER_TYPES } from "../vendor/dry-run-engine/calibration/harness.js";
 import DECISIONS from "../vendor/dry-run-engine/engine/decisions.js";
 
 export { PLAYER_TYPES };
@@ -19,4 +19,12 @@ export function typeSave(type, seed = 1) {
   const choices = DECISION_ORDER.map((id) => chosen[id]);
   if (choices.some((c) => !c)) throw new Error(`${type} on seed ${seed} skipped a decision`);
   return { version: 1, seed, choices, closed: 24, closedOn: null, streak: 0, explained: [] };
+}
+
+// A random player's save (the harness's randomPicker, seeded): paths the four types never take,
+// such as D16-A then D20-A, which is where rule 29 bites
+export function randomSave(seed) {
+  const { months } = randomPlaythrough(seed);
+  const chosen = Object.assign({}, ...months.map((m) => m.chosen));
+  return { version: 1, seed, choices: DECISION_ORDER.map((id) => chosen[id]), closed: 24, closedOn: null, streak: 0, explained: [] };
 }
