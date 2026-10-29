@@ -5,7 +5,8 @@
 // verify(narration, forkResult) -> { ok, figures, failures }
 //   figures   each token the narration uses, once, in order: { token, value }. The UI's
 //             "N figures checked against the simulation" counts these.
-//   failures  { rule, detail }, in rule order. ok is true when there are none.
+//   failures  { rule, detail, found }, in rule order. ok is true when there are none. found is
+//             what the rule caught: the numeral, the token name, or the withdrawn option ids.
 //
 // Rules, in order:
 //   numeral                   any digit in the narration. Numbers appear only as tokens; small
@@ -36,20 +37,20 @@ export function verify(narration, forkResult) {
   const failures = [];
 
   for (const [numeral] of narration.matchAll(NUMERAL)) {
-    failures.push({ rule: "numeral", detail: `Bare numeral "${numeral}": write a token, or spell a small number as a word` });
+    failures.push({ rule: "numeral", detail: `Bare numeral "${numeral}": write a token, or spell a small number as a word`, found: numeral });
   }
 
   const used = [];
   for (const [, name] of narration.matchAll(BRACED)) {
-    if (!known.has(name)) failures.push({ rule: "unknown_token", detail: `{${name}} is not a fork token` });
+    if (!known.has(name)) failures.push({ rule: "unknown_token", detail: `{${name}} is not a fork token`, found: name });
     else if (!used.includes(name)) used.push(name);
   }
   if (STRAY_BRACE.test(narration.replace(BRACED, ""))) {
-    failures.push({ rule: "unknown_token", detail: "A brace that opens or closes no token" });
+    failures.push({ rule: "unknown_token", detail: "A brace that opens or closes no token", found: null });
   }
 
   for (const name of used) {
-    if (isUnavailable(values[name])) failures.push({ rule: "null_token", detail: `{${name}} has no value for this fork` });
+    if (isUnavailable(values[name])) failures.push({ rule: "null_token", detail: `{${name}} has no value for this fork`, found: name });
   }
 
   if (forkResult.substitutions.length > 0) {
@@ -59,6 +60,7 @@ export function verify(narration, forkResult) {
       failures.push({
         rule: "substitution_unmentioned",
         detail: `The ghost could not take ${forkResult.substitutions.map((s) => s.withdrawn).join(", ")}, and no sentence says the choice was unavailable`,
+        found: forkResult.substitutions.map((s) => s.withdrawn),
       });
     }
   }
