@@ -1,0 +1,275 @@
+/* Daylight: Ghost Run's look, laid over the game in vendor/ without editing it. Loaded after
+   game/style.css by one link tag in game/index.html, so every rule here wins on order alone.
+
+   Warm paper ground, dark ink text, saturated accents, chunky pressable controls.
+
+   Part 1 redefines every token in game/tokens.css: the same names, new values. The ink/paper
+   axis inverts: --ink is the ground and is now paper, --bone is the text and is now ink. The
+   accents keep their hues and take the saturation a light ground allows.
+
+   Part 2 is the illustrations. They draw paper with --bone, which is now the text colour, so
+   inside an illustration the paper tokens are set back to paper. The consequence screen's muted
+   form gets its own palette, worked out by one rule (see there).
+
+   Part 3 is type: Baloo 2 for display, Mukta stays for body.
+
+   Part 4 is the controls: options as raised cards that press down. */
+
+/* ---------- 1. Tokens ---------- */
+
+:root {
+  color-scheme: light;   /* the page's meta says dark; this wins, so form controls draw light */
+
+  /* Named in UI.md */
+  --ink: #FBF4E6;          /* the ground: warm paper */
+  --ink-raised: #FFFFFF;   /* cards */
+  --bone: #211C16;         /* text: warm ink */
+  --slate: #6B6255;        /* secondary text, 5.5:1 on the ground */
+  --marigold: #F5A00A;
+  --teal: #12A383;
+  --vermilion: #E23D1F;
+  --deep: #1E4F96;
+
+  --ink-deepest: #211C16;     /* text on marigold, 8:1 */
+  --bone-dim: #4A4238;        /* bullets, bar labels */
+  --bone-dimmer: #5A5246;     /* the landing paragraph */
+  --slate-dim: #8A8070;       /* the disclaimer, the unlit months of the mark */
+  --marigold-hover: #FFB21F;
+  --deep-raised: #3A6DB8;     /* the shape behind an illustration: lighter than the block, as before */
+  --rule: #E6DAC4;            /* hairlines */
+  --paper-line: #B4BCCC;
+  --paper-side: #E8DDC8;
+  --paper-dim: #EFE6D4;
+  --paper-shadow: #D5C8B0;
+  --progress: #C9B998;        /* the consequence timer */
+  --concept-ground: #EAF0F8;  /* the concept card: a wash of deep */
+
+  /* The muted form: every colour halfway from its full value to the ground (part 2) */
+  --deep-muted: #8EA2BE;
+  --muted-paper: #FDF7EB;
+  --muted-vermilion: #EF9983;
+  --muted-marigold: #F8CA78;
+  --muted-teal: #87CCB5;
+  --muted-line: #D8D8D9;
+  --muted-paper-side: #F2E9D7;
+  --muted-paper-dim: #F5EDDD;
+  --muted-paper-shadow: #E8DECB;
+
+  /* A bar moving: the hatch is the colour a fifth of the way to ink */
+  --teal-hatch: #15856B;
+  --teal-faint: rgba(18, 163, 131, 0.14);
+  --vermilion-hatch: #B8361D;
+  --vermilion-faint: rgba(226, 61, 31, 0.12);
+
+  --display: "Baloo 2", "Mukta", system-ui, sans-serif;
+  --body: "Mukta", system-ui, sans-serif;
+
+  /* Spacing is layout, not look: the same values, so every screen fits as it was measured */
+  --gutter: 24px;
+  --gutter-landing: 26px;
+
+  /* Not a token in tokens.css. Accent text: an accent is a fill colour, and none of the three
+     is dark enough to read as text on paper (marigold is 1.9:1). Text in an accent is the
+     accent pulled 36% of the way to ink: marigold 3.8:1, teal 5.3:1, vermilion 6.6:1 on the
+     ground. Marigold text passes for large figures, not for small text: darker, it is brown */
+  --toward-ink: 36%;
+}
+
+/* Money, links and chips are text in an accent */
+.money,
+.decision-worth,
+.home-how,
+.home-where-link {
+  color: color-mix(in srgb, var(--marigold), var(--bone) var(--toward-ink));
+}
+.home-how:hover,
+.home-where:hover .home-where-link { color: color-mix(in srgb, var(--marigold), var(--bone) 46%); }
+.chip,
+.report-month-figure { color: color-mix(in srgb, var(--move), var(--bone) var(--toward-ink)); }
+.close-button.how-confirm-yes { color: color-mix(in srgb, var(--vermilion), var(--bone) var(--toward-ink)); }
+
+/* A track is a trough in the paper, not a white card on it */
+.bar-track,
+.home-bar-track,
+.close-bar-track,
+.progress {
+  background: #EDE3CF;
+  box-shadow: inset 0 1px 2px rgba(33, 28, 22, 0.12);
+}
+.bar-track,
+.home-bar-track,
+.close-bar-track { border-radius: 999px; }
+
+.streak { background: var(--ink-raised); box-shadow: inset 0 0 0 2px var(--rule); }
+.concept { border: 2px solid var(--deep-raised); border-radius: 18px; }
+.report-concepts { border-color: var(--deep); }
+
+/* ---------- 2. Illustrations ---------- */
+
+/* An illustration and the mark draw paper with --bone, which part 1 made the text colour. Inside
+   them it is paper again. The rest of their colours are part 1's: the block stays deep blue, so
+   every drawing keeps the ground it was composed on. */
+.illo,
+.landing-mark,
+.landing-band {
+  --bone: #FFF9EF;
+}
+.landing-mark { --slate-dim: #6F8DB8; }   /* the unlit months, on the mark's deep blue */
+.illo { border-radius: 0 0 28px 28px; }
+.landing-band { border-radius: 22px; }
+
+/* The muted form, one step back on light. The dark build dimmed it twice: muted colours, then
+   the drawing at 45% opacity over a darker block. On paper, one step back is towards the
+   ground, so each muted colour is its full colour halfway to #FBF4E6, and the drawing is shown
+   at full opacity: the halving is already in the colours. Every pair inside a drawing keeps
+   half its contrast, so each shape reads as itself, quieter.
+
+   The swap table (MUTED in screens/illustrations.js) sends deep-raised to deep and deep to
+   deep-muted. Deep is a full colour in part 1, so inside the muted block it takes the muted
+   value of the shape it stands for: deep-raised, halfway. The circle behind a drawing stays
+   lighter than its block, as it is in the full form. */
+.illo-muted {
+  --deep: #9BB1CF;
+  --deep-muted: #8EA2BE;
+}
+.illo-muted svg { opacity: 1; }
+
+/* ---------- 3. Type ---------- */
+
+/* Baloo 2 (Ek Type), SIL Open Font License: web/fonts/OFL-Baloo2.txt. One variable file,
+   weights 400 to 800, self-hosted like the game's own fonts, so the game still needs no network.
+   Its tnum feature keeps every money figure's digits one width, as .money asks */
+@font-face {
+  font-family: "Baloo 2";
+  src: url("fonts/Baloo2-wght.woff") format("woff-variations"), url("fonts/Baloo2-wght.woff") format("woff");
+  font-weight: 400 800;
+  font-display: swap;
+}
+
+/* The title's rule from style.css, for Baloo 2: "Four minutes a day." is 8.90em at 800
+   (measured with fontTools), so divide by 9.3 for the same little room */
+.landing-title {
+  font-size: min(40px, calc((min(100vw, 480px) - 2 * var(--landing-gutter)) / 9.3));
+  line-height: 1.02;
+}
+.situation,
+.result { font-weight: 600; line-height: 1.28; }
+.compact .situation { line-height: 1.24; }
+.month-label,
+.concept-head { color: var(--slate); }
+
+/* ---------- 4. Controls ---------- */
+
+/* Every option is the same raised card: white on paper, a warm edge, and a thick bottom edge
+   that makes it a thing to press. Colour never hints at an option (UI.md rule 7): every card
+   has the same edge. */
+:root {
+  --card-edge: #E3D5BB;
+  --card-lip: #CDB892;
+  --lip: 6px;
+}
+
+.option,
+.chosen,
+.close-button {
+  background: var(--ink-raised);
+  border: 2px solid var(--card-edge);
+  border-bottom: var(--lip) solid var(--card-lip);
+  border-radius: 18px;
+  color: var(--bone);
+  transition: transform 90ms ease-out, border-bottom-width 90ms ease-out, margin 90ms ease-out, background-color 120ms;
+}
+
+/* Sizes stay style.css's (58px cards, 16px labels, 10px apart), so decision.js's fit check and
+   the compact layout behave exactly as they were measured; the lip sits inside the 58px */
+.option { padding: 10px 20px; }
+
+.option:hover:not(:disabled),
+.close-button:hover { background: #FFFCF4; border-color: #D9C8A8; border-bottom-color: #C2AB80; }
+
+/* Pressed: the card goes down into its lip. The lip shrinks by as much as the card moves, so
+   nothing below it shifts */
+.option:active:not(:disabled),
+.close-button:active {
+  transform: translateY(calc(var(--lip) - 2px));
+  border-bottom-width: 2px;
+  margin-bottom: calc(var(--lip) - 2px);
+}
+.option:focus-visible,
+.close-button:focus-visible { outline: 3px solid var(--deep-raised); outline-offset: 3px; }
+
+/* The moment of choosing: the tapped card stays down and takes the chosen colours, the others
+   step back. A tapped button keeps focus, which is how the card is known (UI.md rule 7 holds:
+   colour appears only once a card is chosen) */
+.options:has(.option:disabled) .option:not(:focus) { opacity: 0.45; }
+.option:disabled:focus {
+  transform: translateY(calc(var(--lip) - 2px));
+  border-color: var(--marigold);
+  border-bottom-width: 2px;
+  margin-bottom: calc(var(--lip) - 2px);
+  background: #FFF6E3;
+}
+
+/* Chosen: the card that was pressed, riding over the muted illustration. It stays down, with a
+   marigold edge and a tick, so it reads as the one taken, not one of several */
+.chosen {
+  position: relative;
+  padding: 16px 56px 16px 20px;
+  border-color: var(--marigold);
+  border-bottom-width: 2px;
+  background: #FFF6E3;
+  box-shadow: 0 10px 22px rgba(33, 28, 22, 0.14);
+}
+.chosen::after {
+  content: "";
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  width: 26px;
+  height: 26px;
+  margin-top: -13px;
+  border-radius: 999px;
+  background: var(--marigold);
+}
+.chosen::before {
+  content: "";
+  position: absolute;
+  right: 23px;
+  top: 50%;
+  width: 6px;
+  height: 11px;
+  margin-top: -8px;
+  border: solid var(--ink-deepest);
+  border-width: 0 3px 3px 0;
+  transform: rotate(45deg);
+  z-index: 1;
+}
+.chosen-holder { margin-top: -40px; }
+
+/* The primary action: marigold, pressable the same way, a lip in marigold pulled toward ink */
+.action {
+  height: 64px;
+  border: 0;
+  border-bottom: var(--lip) solid color-mix(in srgb, var(--marigold), var(--bone) 28%);
+  border-radius: 18px;
+  font-size: 22px;
+  font-weight: 800;
+  transition: transform 90ms ease-out, border-bottom-width 90ms ease-out, margin 90ms ease-out, background-color 120ms;
+}
+.action:active:not(:disabled) {
+  transform: translateY(calc(var(--lip) - 2px));
+  border-bottom-width: 2px;
+  margin-bottom: calc(var(--lip) - 2px);
+}
+.action:disabled { border-bottom-color: var(--rule); }
+.action:focus-visible { outline: 3px solid var(--deep-raised); }
+
+.why:focus-visible,
+.home-how:focus-visible,
+.home-where:focus-visible,
+.timeline-row:focus-visible,
+.icon-button:focus-visible { outline-color: var(--deep-raised); }
+
+@media (prefers-reduced-motion: reduce) {
+  .option, .chosen, .close-button, .action { transition: none; }
+}
