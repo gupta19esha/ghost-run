@@ -28,3 +28,11 @@ export function randomSave(seed) {
   const chosen = Object.assign({}, ...months.map((m) => m.chosen));
   return { version: 1, seed, choices: DECISION_ORDER.map((id) => chosen[id]), closed: 24, closedOn: null, streak: 0, explained: [] };
 }
+
+// Cautious's save with D16-A and D20-A in place of D16-C and D20-C: forked back to D16-C, the
+// ghost has no index investment for D20-A to move (rule 29), so it takes a substitute
+export function indexSave() {
+  const save = typeSave("cautious");
+  const choices = save.choices.map((c) => (c === "D16-C" ? "D16-A" : c === "D20-C" ? "D20-A" : c));
+  return { ...save, choices };
+}
