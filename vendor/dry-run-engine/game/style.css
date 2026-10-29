@@ -1,0 +1,1180 @@
+/* Screens, built to design/. Sizes, spacing and colours are the artboard's, which is drawn
+   at 390px wide. Where a value has to change for a narrower phone it is in a media query at
+   the bottom, so the 390px reading stays exactly as designed (UI.md rule 6). */
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  min-height: 100%;
+  background: var(--ink);
+  color: var(--bone);
+  font-family: var(--body);
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#app { min-height: 100dvh; }
+
+.screen {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  max-width: 480px;
+  margin: 0 auto;
+}
+
+.grow { flex-grow: 1; }
+
+/* Money is the loudest thing in the product, and its digits never change width */
+.money {
+  font-family: var(--display);
+  font-variant-numeric: tabular-nums;
+  color: var(--marigold);
+}
+
+/* ---------- Landing ---------- */
+
+.landing {
+  --landing-gutter: var(--gutter-landing);
+  padding: 0 var(--landing-gutter);
+}
+
+.landing-mark { padding-top: 48px; }
+.landing-mark svg { width: 84px; height: 84px; display: block; }
+
+
+.landing-title {
+  margin: 20px 0 0;
+  font-family: var(--display);
+  /* The artboard sets the title in three lines. Its widest, "Four minutes a day.", is 10.39em
+     in Noto Serif Devanagari 800 (measured with fontTools), so the size follows the content
+     width, divided by 10.8 for a little room, and stops at 40px */
+  font-size: min(40px, calc((min(100vw, 480px) - 2 * var(--landing-gutter)) / 10.8));
+  font-weight: 800;
+  line-height: 1.08;
+  color: var(--bone);
+}
+
+.landing-title-line { display: block; }
+
+/* The opening (LANDING-MOTION.md, A and E). Every piece animates from its start to the still
+   screen's style, so taking the .intro class away at any moment shows the still screen. Only
+   opacity, position, stroke and dash move, which a cheap phone draws easily */
+.landing.intro .landing-title-line {
+  animation: landing-rise 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(var(--n) * 120ms);
+}
+.landing.intro .landing-lede { animation: landing-fade 420ms ease-out 380ms both; }
+.landing.intro .landing-points li { animation: landing-fade 400ms ease-out both; }
+.landing.intro .landing-points li:nth-child(1) { animation-delay: 500ms; }
+.landing.intro .landing-points li:nth-child(2) { animation-delay: 600ms; }
+.landing.intro .landing-points li:nth-child(3) { animation-delay: 700ms; }
+/* The ticks draw themselves round the circle, one month at a time, then the first nine turn
+   marigold in order */
+.landing.intro .tick {
+  stroke-dasharray: 1;
+  animation: landing-tick-draw 240ms ease-out both;
+  animation-delay: calc(250ms + var(--i) * 30ms);
+}
+.landing.intro .tick.lit {
+  animation: landing-tick-draw 240ms ease-out both, landing-tick-light 260ms ease-out both;
+  animation-delay: calc(250ms + var(--i) * 30ms), calc(1100ms + var(--i) * 50ms);
+}
+@keyframes landing-rise { from { opacity: 0; transform: translateY(10px); } }
+@keyframes landing-fade { from { opacity: 0; } }
+@keyframes landing-tick-draw { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes landing-tick-light { from { stroke: var(--slate-dim); } }
+/* Direction B: the band of pictures, above the title, on phones 640 px tall or more. It takes
+   the free height the landing has, up to 200 px, full width, on the illustrations' ground.
+   Still, it shows the last picture, the fork in the road */
+.landing-band { display: none; }
+@media (min-height: 640px) {
+  .landing-band {
+    display: block;
+    position: relative;
+    flex: 100 1 0;
+    min-height: 0;
+    max-height: 200px;
+    margin: 18px calc(-1 * var(--landing-gutter)) 0;
+    background: var(--deep);
+    overflow: hidden;
+  }
+  .landing-band .illo {
+    position: absolute;
+    inset: 0;
+    aspect-ratio: auto;
+    max-height: none;
+    background: none;
+    opacity: 0;
+  }
+  .landing-band .illo:last-child { opacity: 1; }
+  .landing .grow { flex-grow: 1; }
+}
+/* On a tall phone the mark gives the band some of the room above it */
+@media (min-height: 800px) {
+  .landing-mark { padding-top: 28px; }
+}
+.landing.pictures .landing-picture {
+  animation: landing-picture 3000ms ease-in-out both;
+  animation-delay: calc(var(--p) * 2500ms);
+}
+.landing.pictures .landing-picture:last-child { animation-name: landing-picture-last; }
+@keyframes landing-picture { 0% { opacity: 0; } 15% { opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes landing-picture-last { 0% { opacity: 0; } 15% { opacity: 1; } 100% { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .landing.intro *, .landing.pictures * { animation: none !important; }
+}
+
+.landing-lede {
+  margin: 16px 0 0;
+  font-size: 17px;
+  line-height: 1.55;
+  color: var(--bone-dimmer);
+}
+
+.landing-points {
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.landing-points li {
+  display: flex;
+  gap: 13px;
+  align-items: flex-start;
+  font-size: 16px;
+  line-height: 1.45;
+  color: var(--bone-dim);
+}
+
+.landing-points li::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: var(--dot);
+  flex-shrink: 0;
+}
+
+.landing-points li:nth-child(1) { --dot: var(--marigold); }
+.landing-points li:nth-child(2) { --dot: var(--teal); }
+.landing-points li:nth-child(3) { --dot: var(--vermilion); }
+
+.landing-foot { padding: 28px 0 24px; }   /* the top is a floor: .grow above it can shrink to nothing */
+
+.landing-note {
+  margin: 12px 0 0;
+  text-align: center;
+  font-size: 13px;
+  color: var(--slate-dim);
+}
+
+/* The primary action, marigold like money */
+.action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 62px;
+  background: var(--marigold);
+  color: var(--ink-deepest);
+  border: 0;
+  border-radius: 10px;
+  font-family: var(--display);
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+}
+
+.action:hover:not(:disabled) { background: var(--marigold-hover); }
+.action:disabled { background: var(--ink-raised); color: var(--slate); cursor: default; transform: none; }
+.action:active { transform: translateY(1px); }
+.action:focus-visible { outline: 2px solid var(--bone); outline-offset: 3px; }
+
+/* ---------- Illustration ---------- */
+
+/* The colour block: 390 by 286 on the artboard, the top third. It keeps that shape on a
+   narrower phone, and on a short one gives up height before the options do. */
+.illo {
+  flex-shrink: 0;
+  aspect-ratio: 390 / 286;
+  max-height: 34dvh;
+  background: var(--deep);
+  overflow: hidden;
+}
+.illo svg { display: block; width: 100%; height: 100%; }
+
+.illo-muted { background: var(--deep-muted); }
+.illo-muted svg { opacity: 0.45; }
+
+/* ---------- Decision ---------- */
+
+.decision-body { padding: 26px var(--gutter) 0; }
+
+/* The month, and net worth at the right in marigold, on one line (ruled 28 September 2026) */
+.decision-month {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+.decision-worth { font-size: 15px; color: var(--marigold); }
+
+.month-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--slate);
+}
+
+.situation {
+  margin: 10px 0 0;
+  font-family: var(--display);
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.34;
+  color: var(--bone);
+}
+
+.why {
+  margin-top: 14px;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--slate);
+  font-family: var(--body);
+  font-size: 14px;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.why:focus-visible { outline: 2px solid var(--bone); outline-offset: 3px; }
+
+.why-answer {
+  margin: 10px 0 0;
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--bone-dim);
+}
+
+/* Compact: the illustration and situation give up room, so the last card stays on screen.
+   Always for four options, such as D14's; for any other decision whose last card would end
+   below the screen, such as D01 and D02 on a 320 by 568 phone (decision.js) */
+.compact .illo { max-height: 24dvh; }
+.compact .situation { font-size: 21px; line-height: 1.3; }
+.compact .options { gap: 8px; padding-top: 14px; }
+.compact .option { min-height: 52px; }
+
+.options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 20px var(--gutter) 30px;
+}
+
+.option,
+.chosen {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  background: var(--ink-raised);
+  border: 0;
+  border-left: 3px solid var(--slate);   /* the same for every option: colour never hints (UI.md rule 7) */
+  border-radius: 8px;
+  color: var(--bone);
+  font-family: var(--body);
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.3;
+  text-align: left;
+}
+
+.option {
+  min-height: 58px;
+  padding: 12px 18px;
+  cursor: pointer;
+}
+.option:hover:not(:disabled) { background: var(--rule); }
+.option:focus-visible { outline: 2px solid var(--bone); outline-offset: 2px; }
+.option:disabled { cursor: default; }
+
+/* ---------- Consequence ---------- */
+
+.tappable { cursor: pointer; }
+
+/* The chosen card rides over the bottom of the illustration */
+.chosen-holder {
+  position: relative;
+  margin-top: -34px;
+  padding: 0 var(--gutter);
+}
+.chosen { padding: 16px 18px; }
+
+.result {
+  margin: 30px var(--gutter) 0;
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1.32;
+  color: var(--bone);
+}
+
+.bar {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 34px var(--gutter) 0;
+}
+.bar-up { --move: var(--teal); --move-hatch: var(--teal-hatch); --move-faint: var(--teal-faint); }
+.bar-down { --move: var(--vermilion); --move-hatch: var(--vermilion-hatch); --move-faint: var(--vermilion-faint); }
+
+.bar-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.bar-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--bone-dim);
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 9px;
+  border-radius: 6px;
+  background: var(--move-faint);
+  color: var(--move);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.bar-track {
+  display: flex;
+  height: 14px;
+  background: var(--ink-raised);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.bar-solid,
+.bar-change {
+  height: 100%;
+  transition: width 700ms cubic-bezier(0.2, 0.7, 0.2, 1) 300ms;
+}
+.bar-solid { background: var(--move); }
+/* What the bar measures, the first time it moves (UI.md rule 8). Slate whichever way the bar
+   moved: it explains the bar, never the choice */
+.bar-explained {
+  margin: 2px 0 0;
+  font-size: 14px;
+  line-height: 1.4;
+  color: var(--slate);
+}
+
+.bar-change {
+  background: repeating-linear-gradient(135deg, var(--move), var(--move) 3px, var(--move-hatch) 3px, var(--move-hatch) 6px);
+}
+
+.timer-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 24px var(--gutter) 46px;
+}
+
+.progress {
+  width: 100%;
+  height: 3px;
+  background: var(--ink-raised);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.progress-fill {
+  width: 0;
+  height: 100%;
+  background: var(--progress);
+  animation-name: progress;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+@keyframes progress { to { width: 100%; } }
+
+.hint { font-size: 13px; color: var(--slate); }
+
+/* ---------- Home ---------- */
+
+.home-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  min-height: 52px;
+  padding: 28px var(--gutter) 0;
+  box-sizing: content-box;
+}
+
+.home-heading { display: flex; flex-direction: column; gap: 2px; }
+
+/* Top right: How it works, then the streak. In the top row, so Home is no taller */
+.home-corner { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+.home-how {
+  padding: 8px 0;
+  background: none;
+  border: 0;
+  color: var(--marigold);
+  font-family: var(--body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.home-how:hover { color: var(--marigold-hover); }
+.home-how:focus-visible { outline: 2px solid var(--bone); outline-offset: 2px; border-radius: 4px; }
+
+.streak {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 13px;
+  background: var(--ink-raised);
+  border-radius: 999px;
+  color: var(--slate);   /* not marigold: marigold is money only */
+  font-size: 14px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.chapter-title {
+  font-family: var(--display);
+  font-size: 21px;
+  font-weight: 700;
+  color: var(--bone);
+}
+
+.home-worth { padding: 34px var(--gutter) 0; }
+
+.home-net-worth {
+  margin-top: 4px;
+  font-size: 58px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.home-chip { margin-top: 10px; padding: 4px 9px; }
+
+.home-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 32px var(--gutter) 0;
+}
+
+.home-bar { display: flex; flex-direction: column; gap: 7px; }
+.home-bar-figure {
+  font-size: 13px;
+  color: var(--slate);
+  font-variant-numeric: tabular-nums;
+}
+
+.home-bar-track {
+  position: relative;
+  height: 10px;
+  background: var(--ink-raised);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+/* Where good is (ONBOARDING.md section 5): a bone tick across the track, on top of the fill */
+.home-bar-mark {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--bone);
+}
+.home-bar-fill { height: 100%; background: var(--move); }
+
+/* Reopened partway through a month: the choices made so far, as the timeline draws them */
+.home-this-month {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 26px var(--gutter) 0;
+}
+.home-this-month .timeline-line { margin-bottom: 0; }
+/* With the month's choices listed, Home can be taller than a small phone (by up to 222px at
+   320 by 568 with two). The foot stays pinned to the bottom so the button never leaves the
+   screen, and the choices scroll under it */
+.home.continuing .home-foot {
+  position: sticky;
+  bottom: 0;
+  background: var(--ink);
+}
+
+.home-foot {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 24px var(--gutter) 34px;
+}
+
+.home-where {
+  width: 100%;
+  padding: 6px 0;
+  background: none;
+  border: 0;
+  font-family: var(--body);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--slate);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+.home-where div { flex-grow: 1; height: 1px; background: var(--rule); }
+.home-where-link { color: var(--marigold); }
+.home-where:hover .home-where-link { color: var(--marigold-hover); }
+.home-where:focus-visible { outline: 2px solid var(--bone); outline-offset: 2px; border-radius: 4px; }
+
+/* ---------- How it works ---------- */
+
+/* The board again, read-only: the landing's lede and bullets, then the four and what each
+   measures. It scrolls if it is taller than the phone; nothing on it is timed */
+.how { padding: 0 var(--gutter) 40px; }
+.how-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 28px 0 0;
+}
+.how-heading {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--bone);
+}
+.how-lede {
+  margin: 16px 0 0;
+  font-size: 16px;
+  line-height: 1.5;
+  color: var(--bone-dimmer);
+}
+.how-points { margin-top: 18px; }
+.how-bars {
+  margin: 26px 0 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+}
+.how-bars dt + dd { margin: 4px 0 0; }
+.how-bars dd + dt { margin-top: 16px; }
+.how-close { margin-top: 28px; }
+.how-bar-line {
+  font-size: 15px;
+  line-height: 1.45;
+  color: var(--slate);
+}
+
+/* Testing only: Start again, then its question and two buttons */
+.how-restart {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+}
+.how-restart-link {
+  align-self: flex-start;
+  padding: 8px 0;
+  background: none;
+  border: 0;
+  color: var(--slate);
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.how-confirm { margin: 0; font-size: 15px; line-height: 1.45; color: var(--bone); }
+.close-button.how-confirm-yes { color: var(--vermilion); }
+
+/* ---------- Testing tools (tester builds only, game/testing.js) ---------- */
+
+/* Top left, inside the 24px margin: the 22px icon covers no words. Its touch area reaches 36px,
+   over nothing tappable. Aligned to the screen's column on a wide window */
+.test-control {
+  position: fixed;
+  top: 0;
+  left: max(0px, calc(50% - 240px));
+  z-index: 20;
+  width: 36px;
+  height: 36px;
+  padding: 1px 0 0 1px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  background: none;
+  border: 0;
+  color: var(--slate);
+  cursor: pointer;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+.test-control[hidden] { display: none; }
+.test-control svg { display: block; }
+.test-ring-track { stroke: var(--rule); }
+.test-ring { stroke: var(--bone); stroke-dasharray: 100; stroke-dashoffset: 100; }
+.test-control.holding { color: var(--bone); }
+.test-control.holding .test-ring { stroke-dashoffset: 0; transition: stroke-dashoffset 1000ms linear; }
+.test-control:focus-visible { outline: 2px solid var(--bone); outline-offset: -2px; border-radius: 4px; }
+
+.test-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(14, 16, 22, 0.82);
+}
+.test-panel {
+  width: 100%;
+  max-width: 480px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 22px var(--gutter) 28px;
+  background: var(--ink);
+  border-top: 1px solid var(--rule);
+}
+.test-jump {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--rule);
+  font-size: 14px;
+  color: var(--bone-dim);
+}
+.test-jump label { flex: 1 1 100%; }
+.test-jump select {
+  flex: 1 1 auto;
+  height: 50px;
+  padding: 0 12px;
+  background: var(--ink-raised);
+  border: 1px solid var(--rule);
+  border-radius: 10px;
+  color: var(--bone);
+  font-family: var(--body);
+  font-size: 16px;
+}
+.close-button.test-jump-go { flex: 0 0 110px; height: 50px; }
+
+/* ---------- Timeline ---------- */
+
+.timeline { padding: 0 var(--gutter); }
+
+.timeline-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 28px 0 8px;
+}
+
+.icon-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin: -10px -12px 0 0;
+  background: none;
+  border: 0;
+  border-radius: 999px;
+  color: var(--slate);
+  cursor: pointer;
+}
+.icon-button:hover { color: var(--bone); }
+.icon-button:focus-visible { outline: 2px solid var(--bone); outline-offset: 0; }
+
+/* The rail runs down the left through every dot */
+.timeline-list {
+  position: relative;
+  margin: 12px 0 0;
+  padding: 0 0 40px;
+  list-style: none;
+}
+.timeline-list::before {
+  content: "";
+  position: absolute;
+  top: 26px;
+  bottom: 66px;
+  left: 5px;
+  width: 1px;
+  background: var(--rule);
+}
+
+.timeline-month { position: relative; }
+
+.timeline-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  min-height: 52px;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--bone-dim);
+  font-family: var(--body);
+  font-size: 15px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+}
+.timeline-row:focus-visible { outline: 2px solid var(--bone); outline-offset: 2px; border-radius: 4px; }
+.timeline-month.open .timeline-when { color: var(--bone); }
+
+.timeline-dot {
+  position: relative;
+  flex-shrink: 0;
+  width: 11px;
+  height: 11px;
+  border-radius: 999px;
+  background: var(--move);
+  box-shadow: 0 0 0 4px var(--ink);
+}
+
+.timeline-when { flex-grow: 1; }
+
+.timeline-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 2px 0 18px 25px;
+}
+
+/* A closed month shows only its row. hidden needs saying, because display: flex above wins */
+.timeline-detail[hidden] { display: none; }
+
+.timeline-line {
+  margin: 0 0 8px;
+  font-family: var(--display);
+  font-size: 17px;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--bone);
+}
+
+.home-waiting {
+  margin: 0;
+  text-align: center;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--bone-dimmer);
+}
+
+/* ---------- Month card ---------- */
+
+.month-card {
+  justify-content: center;
+  padding: 0 var(--gutter);
+  text-align: center;
+}
+
+.month-line {
+  margin: 0;
+  font-family: var(--display);
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.2;
+  color: var(--bone);
+}
+
+.salary-line {
+  margin: 14px 0 0;
+  font-size: 17px;
+  color: var(--bone-dimmer);
+}
+.salary-line .money { font-weight: 700; }
+
+/* ---------- Callback ---------- */
+
+.callback-text {
+  margin: 0 var(--gutter);
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 500;
+  line-height: 1.32;
+  color: var(--bone);
+}
+
+/* ---------- Month close ---------- */
+
+.month-close { padding: 0 var(--gutter); }
+
+.close-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 60px;
+  text-align: center;
+}
+
+.net-worth {
+  margin-top: 22px;
+  font-size: 66px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.move-up { --move: var(--teal); --move-faint: var(--teal-faint); }
+.move-down { --move: var(--vermilion); --move-faint: var(--vermilion-faint); }
+.move-flat { --move: var(--slate); }
+
+/* UI.md rule 4's one exception: Safety below the engine's danger line is vermilion whatever
+   it did this month. After the direction rules, so it wins. */
+.danger { --move: var(--vermilion); --move-hatch: var(--vermilion-hatch); --move-faint: var(--vermilion-faint); }
+
+.chip-large {
+  margin-top: 14px;
+  padding: 5px 11px;
+  font-size: 14px;
+}
+.tabular { font-variant-numeric: tabular-nums; }
+
+.close-bars {
+  display: flex;
+  gap: 8px;
+  margin-top: 40px;
+}
+
+.close-bar {
+  flex: 1 1 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.close-bar-name {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--slate);
+}
+
+.close-bar-track {
+  height: 8px;
+  background: var(--ink-raised);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.close-bar-fill {
+  height: 100%;
+  background: var(--move);
+  transition: width 900ms cubic-bezier(0.2, 0.7, 0.2, 1) 200ms;
+}
+
+.close-foot { padding: 20px 0 38px; }
+
+/* The month 1 close says what all four measure. Each bar becomes one row, its name beside its
+   track, with its line under both, so the lines cost as little height as they can. Every line
+   is slate, whichever way its bar moved */
+.explaining .close-bars { flex-direction: column; gap: 10px; margin-top: 22px; }
+.explaining .close-bar {
+  display: grid;
+  grid-template-columns: 64px 1fr;
+  align-items: center;
+  column-gap: 8px;
+  row-gap: 3px;
+}
+.explaining .close-bar .close-explained { grid-column: 1 / -1; }
+.close-explained {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.35;
+  color: var(--slate);
+}
+.close-head .close-explained { margin-top: 8px; }
+.explaining .concept { margin-top: 22px; }
+
+/* The concept card, from design/MonthClose.html. Label and lock in slate: marigold is money
+   only */
+.concept {
+  margin-top: 42px;
+  padding: 22px 20px;
+  background: var(--concept-ground);
+  border: 1px solid var(--deep-raised);
+  border-radius: 12px;
+}
+.concept-head {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: var(--slate);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+.concept-title {
+  margin-top: 12px;
+  font-family: var(--display);
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--bone);
+}
+.concept-body {
+  margin: 8px 0 0;
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--bone-dim);
+}
+
+/* ---------- Chapter report ---------- */
+
+/* design/ChapterReport.html. The one screen that scrolls: it is as tall as its content */
+.report { padding: 0 var(--gutter); }
+.report-head { padding-top: 56px; }
+.report-title {
+  margin: 10px 0 0;
+  font-family: var(--display);
+  font-size: 38px;
+  font-weight: 800;
+  line-height: 1.1;
+  color: var(--bone);
+}
+.report-worth { margin-top: 32px; }
+.report-bars { padding: 34px 0 0; gap: 16px; }
+.report-section {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--rule);
+}
+.report-months { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.report-month { display: flex; align-items: baseline; gap: 12px; }
+.report-dot {
+  flex-shrink: 0;
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--move);
+}
+.report-month-what { flex-grow: 1; }
+.report-month-name { font-size: 15px; font-weight: 600; color: var(--bone); }
+.report-month-summary { font-size: 14px; line-height: 1.45; color: var(--slate); }
+.report-month-figure {
+  /* A money figure never breaks across lines, whatever sits beside it */
+  flex-shrink: 0;
+  white-space: nowrap;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--move);
+  font-variant-numeric: tabular-nums;
+}
+.report-concepts { margin-top: 32px; padding: 20px; border-color: var(--deep); }
+.report-concepts .concept-body { margin-top: 10px; }
+.report-next { margin-top: 36px; }
+.report-next-line {
+  margin: 8px 0 0;
+  font-family: var(--display);
+  font-size: 24px;
+  font-weight: 500;
+  line-height: 1.34;
+  color: var(--bone);
+}
+.report-foot { padding: 24px 0 40px; }
+
+@media (max-width: 380px) {
+  .report-head { padding-top: 40px; }
+  .report-title { font-size: 32px; }
+}
+
+/* The hook, from design/MonthClose.html: above Close, under a hairline, the "Next month"
+   label and then the line */
+.hook {
+  margin: 0 0 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--rule);
+}
+.hook-line {
+  margin: 8px 0 0;
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 500;
+  line-height: 1.34;
+  color: var(--bone);
+}
+/* On the locked Home the month line below is the divider */
+.home-hook { margin-bottom: 4px; padding-top: 0; border-top: 0; }
+
+.close-button {
+  width: 100%;
+  height: 56px;
+  background: var(--ink-raised);
+  border: 0;
+  border-radius: 10px;
+  color: var(--bone);
+  font-family: var(--body);
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.close-button:hover { background: var(--rule); }
+.close-button:focus-visible { outline: 2px solid var(--bone); outline-offset: 3px; }
+
+/* ---------- Narrow phones ---------- */
+
+@media (max-width: 380px) {
+  .net-worth { font-size: 56px; }
+  .home-net-worth { font-size: 50px; }
+  .month-line { font-size: 28px; }
+  .landing { --landing-gutter: 20px; padding: 0 var(--landing-gutter); }
+  .landing-mark { padding-top: 40px; }
+  .landing-mark svg { width: 76px; height: 76px; }
+  .landing-lede { margin-top: 16px; font-size: 16px; }
+  .landing-points { margin-top: 18px; gap: 9px; }
+  .landing-points li { font-size: 15px; }
+  .landing-foot { padding-bottom: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .action:active { transform: none; }
+  /* The bar still ends where the engine puts it, and the screen still leaves on time */
+  .bar-solid, .bar-change, .close-bar-fill { transition: none; }
+  .progress-fill { animation: none; }
+}
+
+/* Month close carries the most: net worth, bars, a concept card and the hook. Below the
+   artboard's height it closes up so Close stays on screen */
+@media (max-height: 800px) {
+  /* A decision with four options, such as D07, or a long situation, such as D11, keeps its
+     last card on screen */
+  .illo { max-height: 30dvh; }
+  .situation { font-size: 22px; }
+  .close-head { padding-top: 36px; }
+  .close-bars { margin-top: 28px; }
+  .concept { margin-top: 24px; padding: 18px 18px; }
+  .concept-title { margin-top: 10px; }
+  .close-foot { padding-top: 16px; padding-bottom: 28px; }
+}
+
+/* Short screens, such as 320x568: the same screen, tighter, so the button stays in reach */
+@media (max-height: 700px) {
+  .landing-mark { padding-top: 12px; }
+  .landing-mark svg { width: 56px; height: 56px; }
+  .landing-title { margin-top: 16px; }
+  .landing-lede { margin-top: 14px; font-size: 15px; line-height: 1.45; }
+  .landing-points { margin-top: 16px; gap: 8px; }
+  .landing-points li { font-size: 14px; }
+  .landing-points li::before { margin-top: 6px; }
+  .landing-foot { padding-top: 16px; padding-bottom: 12px; }
+  .action { height: 56px; font-size: 19px; }
+  .landing-note { margin-top: 8px; }
+}
+
+/* Short screens: the options stay above the fold, so the illustration and the situation
+   give up room first (UI.md rule 5, the options sit in thumb reach) */
+@media (max-height: 700px) {
+  .illo { max-height: 28dvh; }
+  .decision-body { padding-top: 18px; }
+  .situation { font-size: 19px; line-height: 1.3; }
+  .why { margin-top: 10px; }
+  .options { gap: 8px; padding-bottom: 20px; }
+  .option { min-height: 52px; }
+  .result { margin-top: 24px; font-size: 23px; }
+  .compact .illo { max-height: 20dvh; }
+  .compact .situation { font-size: 18px; }
+  .compact .decision-body { padding-top: 14px; }
+  .compact .option { min-height: 46px; padding-top: 10px; padding-bottom: 10px; }
+  .bar { padding-top: 26px; }
+  .timer-foot { padding-bottom: 28px; }
+  .close-head { padding-top: 36px; }
+  .net-worth { font-size: 52px; }
+  .close-bars { margin-top: 28px; }
+  .close-foot { padding-bottom: 24px; }
+  .home-top { padding-top: 20px; }
+  .home-worth { padding-top: 22px; }
+  .home-bars { padding-top: 24px; gap: 14px; }
+  .home-foot { padding-bottom: 20px; }
+  .hook { padding-top: 14px; }
+  .hook-line { font-size: 19px; margin-top: 6px; }
+  /* The locked Home's foot carries four things: the hook, the month line, the button and
+     the line under it. On a short phone they close up so the last one stays in view */
+  .home-hook { padding-top: 0; }
+  .concept { margin-top: 16px; padding: 14px 16px; }
+  .concept-title { margin-top: 6px; font-size: 20px; }
+  .concept-body { margin-top: 6px; font-size: 14px; line-height: 1.4; }
+  .close-head { padding-top: 20px; }
+  .net-worth { font-size: 44px; }
+  .chip-large { margin-top: 10px; }
+  .close-bars { margin-top: 20px; }
+  .month-close .hook { padding-top: 12px; margin-bottom: 10px; }
+  .month-close .hook-line { font-size: 18px; margin-top: 4px; }
+  .close-foot { padding-top: 12px; padding-bottom: 16px; }
+  .close-button { height: 50px; }
+  .home-hook .hook-line { font-size: 18px; }
+  .home-foot { gap: 10px; }
+}
+
+/* The month 1 close with its four lines, on a short phone: the rest closes up further */
+@media (max-height: 800px) {
+  .explaining .close-bars { margin-top: 20px; gap: 8px; }
+  .explaining .concept { margin-top: 18px; }
+}
+@media (min-height: 801px) {
+  .explaining .close-head { padding-top: 44px; }
+  .explaining .net-worth { font-size: 58px; }
+}
+@media (max-height: 700px) {
+  .explaining .close-head { padding-top: 8px; }
+  .explaining .net-worth { font-size: 38px; }
+  .explaining .chip-large { margin-top: 8px; }
+  .explaining .close-bars { margin-top: 14px; gap: 6px; }
+  .explaining .concept { margin-top: 12px; padding: 12px 14px; }
+  .explaining .close-foot { padding-top: 8px; padding-bottom: 12px; }
+  .month-close.explaining .hook { padding-top: 8px; margin-bottom: 8px; }
+}
+
+@media (max-height: 700px) {
+  /* The locked Home is what a player sees every day once the month is played. Its foot
+     carries the most (the hook, the month line, the button, the line under it), so on a short
+     phone everything above closes up too and the whole screen fits, with the chapter's
+     longest hook, D12's, at 320 by 568 and 360 by 640 (ruled 30 September 2026) */
+  .home.locked .home-top { padding-top: 12px; }
+  .home.locked .home-worth { padding-top: 12px; }
+  .home.locked .home-net-worth { font-size: 40px; }
+  .home.locked .home-chip { margin-top: 6px; }
+  .home.locked .home-bars { padding-top: 16px; gap: 10px; }
+  .home.locked .home-bar { gap: 5px; }
+  .home.locked .home-foot { padding-top: 12px; padding-bottom: 14px; gap: 8px; }
+  .home.locked .home-hook .hook-line { font-size: 17px; line-height: 1.3; margin-top: 4px; }
+}
+@media (max-height: 600px) {
+  .home.locked .home-net-worth { font-size: 36px; }
+  .home.locked .home-bars { gap: 8px; }
+  .home.locked .home-top { min-height: 0; }
+  .home.locked .home-foot { padding-bottom: 10px; }
+  .home.locked .home-worth { padding-top: 8px; }
+  .home.locked .action { height: 52px; }
+}
+

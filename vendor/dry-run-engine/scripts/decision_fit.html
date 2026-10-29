@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="/game/tokens.css"><link rel="stylesheet" href="/game/style.css"></head>
+<body><main id="app"></main><pre id="out" hidden></pre>
+<script type="module">
+// Used by scripts/check_decision_fit.py. Renders every decision screen in turn, in this
+// frame's size, the way the game shows it (the screen's start() runs after it is on the page,
+// so a screen that would not fit takes the compact layout), and measures where the last option
+// card ends. Two paths, one taking each decision's first offered option and one its last, so
+// options offered only to some players (rule 29), such as D20-D, are rendered too.
+import { createState, applyDecision, advanceMonth, decisionsForMonth, tokenValues, getBars } from "/engine/index.js";
+import { renderText, formatMoney } from "/text/render.js";
+import { decisionScreen } from "/game/screens/decision.js";
+
+const app = document.getElementById("app");
+const results = [];
+await document.fonts.ready;
+for (const path of ["first", "last"]) {
+  let state = createState(1);
+  while (state.month <= 24) {
+    for (;;) {
+      const [decision] = decisionsForMonth(state);
+      if (!decision) break;
+      const situation = renderText(decision.situation_text, tokenValues(state, { decisionId: decision.decision_id, field: "situation_text" }));
+      const screen = decisionScreen({ decision, month: state.month, situation, netWorth: formatMoney(getBars(state).netWorth), onChoose: () => {} });
+      app.replaceChildren(screen);
+      screen.start?.();
+      screen.getBoundingClientRect();
+      const last = [...screen.querySelectorAll(".option")].pop();
+      const bottom = Math.round(last.getBoundingClientRect().bottom);
+      results.push({ path, id: decision.decision_id, options: Object.keys(decision.options).length, compact: screen.classList.contains("compact"), lastOptionBottom: bottom, viewport: innerHeight, over: bottom - innerHeight });
+      const ids = Object.keys(decision.options);
+      state = applyDecision(state, decision.decision_id, path === "first" ? ids[0] : ids[ids.length - 1]).state;
+    }
+    state = advanceMonth(state).state;
+  }
+}
+document.getElementById("out").textContent = "RESULT" + JSON.stringify(results) + "END";
+parent.postMessage("RESULT" + JSON.stringify(results) + "END", "*");
+</script></body></html>

@@ -1,0 +1,5 @@
+# Keep text files as the scripts write them (LF), on every platform
+* text=auto eol=lf
+
+# Spreadsheets are binary: never convert line endings or try to merge them
+*.xlsx binary

@@ -1,0 +1,10 @@
+{
+  "name": "finance-sim-calibration",
+  "private": true,
+  "type": "module",
+  "description": "Calibration harness, ENGINE.md step 7. Reports against SIMULATION-MATHS.md section 13. No dependencies.",
+  "scripts": {
+    "calibrate": "node run.js",
+    "test": "node --test test/"
+  }
+}

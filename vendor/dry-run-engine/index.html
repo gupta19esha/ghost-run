@@ -1,0 +1,1094 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f1115">
+<title>Chapter 1</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --surface: #1a1d23;
+    --surface-press: #262a32;
+    --border: #2c3039;
+    --text: #ece8e1;
+    --muted: #8b8f98;
+    --accent: #d9a860;
+    --fit: 1;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html, body {
+    height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -webkit-tap-highlight-color: transparent;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    height: 100dvh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+
+  .topbar {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 52px;
+    padding: 0 8px 0 20px;
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .title {
+    font-size: 0.8rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    touch-action: none;
+    padding: 14px 24px 14px 0;
+  }
+
+  .quit {
+    font: inherit;
+    font-size: 0.9rem;
+    color: var(--muted);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 16px;
+    min-height: 40px;
+    cursor: pointer;
+  }
+  .quit:active { background: var(--surface-press); color: var(--text); }
+  .quit.armed { color: var(--bg); background: var(--accent); border-color: var(--accent); }
+  .quit[hidden] { display: none; }
+
+  #stage {
+    flex: 1 1 auto;
+    min-height: 0;
+    position: relative;
+    width: 100%;
+    max-width: 520px;
+    margin: 0 auto;
+  }
+
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 20px 24px;
+    overflow: hidden;
+    animation: fade-in 280ms ease-out;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .screen { animation: none; }
+  }
+
+  .center {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+
+  /* Month card */
+  .month-card { display: flex; flex-direction: column; align-items: center; }
+  .month { font-size: clamp(2rem, 9vw, 2.6rem); font-weight: 600; letter-spacing: -0.01em; }
+  .age { margin-top: 10px; font-size: 1.15rem; color: var(--muted); }
+
+  /* Decision */
+  .situation {
+    font-size: calc(clamp(1.35rem, 5.4vw, 1.75rem) * var(--fit));
+    line-height: 1.38;
+    font-weight: 500;
+    max-width: 30ch;
+    text-wrap: pretty;
+  }
+
+  .options {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: calc(10px * var(--fit));
+    padding-top: 16px;
+  }
+
+  .option {
+    font: inherit;
+    font-size: calc(1.05rem * var(--fit));
+    line-height: 1.3;
+    text-align: left;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: calc(15px * var(--fit)) 18px;
+    min-height: 54px;
+    width: 100%;
+    cursor: pointer;
+    touch-action: manipulation;
+  }
+  .option:active, .option.chosen { background: var(--surface-press); border-color: var(--accent); }
+  .option:disabled { cursor: default; }
+
+  /* Immediate result and callback */
+  .tap-screen { cursor: pointer; }
+  .result { font-size: clamp(1.35rem, 5.4vw, 1.75rem); line-height: 1.4; max-width: 28ch; text-wrap: pretty; }
+  .callback {
+    font-size: clamp(1.25rem, 5vw, 1.6rem);
+    line-height: 1.45;
+    max-width: 28ch;
+    color: var(--accent);
+    text-wrap: pretty;
+  }
+  .hint { flex: 0 0 auto; text-align: center; font-size: 0.85rem; color: var(--muted); opacity: 0.7; }
+
+  /* End questions */
+  .question { font-size: clamp(1.35rem, 5.4vw, 1.75rem); line-height: 1.38; font-weight: 500; max-width: 26ch; }
+  .actions { flex: 0 0 auto; display: flex; flex-direction: column; gap: 10px; padding-top: 16px; }
+  .primary {
+    font: inherit;
+    font-size: 1.05rem;
+    color: var(--bg);
+    background: var(--text);
+    border: 0;
+    border-radius: 14px;
+    min-height: 54px;
+    width: 100%;
+    cursor: pointer;
+  }
+  .primary:active { opacity: 0.85; }
+  .secondary {
+    font: inherit;
+    font-size: 1rem;
+    color: var(--text);
+    background: none;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    min-height: 54px;
+    width: 100%;
+    cursor: pointer;
+  }
+  .secondary:active { background: var(--surface-press); }
+  .answer {
+    font: inherit;
+    font-size: 1.05rem;
+    line-height: 1.4;
+    color: var(--text);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 14px 16px;
+    width: 100%;
+    min-height: 120px;
+    resize: none;
+    margin-top: 20px;
+  }
+  .answer:focus { outline: none; border-color: var(--accent); }
+  .ask-top { flex: 1 1 auto; display: flex; flex-direction: column; justify-content: center; }
+</style>
+</head>
+<body>
+  <header class="topbar">
+    <span class="title" id="title">Chapter 1</span>
+    <button class="quit" id="quit" type="button" hidden>Quit</button>
+  </header>
+  <main id="stage"></main>
+
+<!-- Generated by scripts/xlsx_to_json.py. Do not edit by hand. -->
+<script id="decision-data" type="application/json">
+[
+  {
+    "decision_id": "D01",
+    "month": 1,
+    "age": 22,
+    "situation_text": "First salary in. The letter said 52,000. The bank says 41,300. HR wants your tax declaration by Friday, and asks if you want to raise your EPF contribution.",
+    "options": [
+      {
+        "option_id": "D01-A",
+        "option_label": "Submit the tax declaration now",
+        "immediate_text": "Less tax deducted. About 1,800 more reaches you each month.",
+        "deferred_offset_months": 2,
+        "deferred_text": "Payroll emails you about a correction. You spot it. Nobody else on your team did.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D01-B",
+        "option_label": "Deal with it in March like everyone else",
+        "immediate_text": "Nothing changes. The extra tax keeps going out.",
+        "deferred_offset_months": 14,
+        "deferred_text": "March. You scramble to invest 60,000 you do not have, just to claim a refund.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D01-C",
+        "option_label": "Raise your EPF contribution by 5%",
+        "immediate_text": "Take home drops to 38,700. The money is not gone, it is locked away.",
+        "deferred_offset_months": 18,
+        "deferred_text": "Your retirement balance is 41,000. You have never looked at it before today.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D02",
+    "month": 1,
+    "age": 22,
+    "situation_text": "You need a place. You have 20,000 saved from before. A studio near office is 18,000. A shared 2BHK is 9,000 for your half. A room 40 minutes out is 6,000.",
+    "options": [
+      {
+        "option_id": "D02-A",
+        "option_label": "The studio near office, 18,000, deposit 20,000",
+        "immediate_text": "Your own place. Rent is 44% of your take home.",
+        "deferred_offset_months": 12,
+        "deferred_text": "A full year gone. Rent has eaten one third of every rupee you earned.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D02-B",
+        "option_label": "Shared 2BHK, 9,000 your half, deposit 12,000",
+        "immediate_text": "Less space, more money, a flatmate you barely know.",
+        "deferred_offset_months": 12,
+        "deferred_text": "A year in a place you never invite anyone to. Rent took a fifth of your pay.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D02-C",
+        "option_label": "Room 40 minutes out, 6,000, deposit 8,000",
+        "immediate_text": "Cheapest option. Three hours a day belong to the road now.",
+        "deferred_offset_months": 6,
+        "deferred_text": "You have stopped going out on weekdays. It is too far to come back into town.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D05",
+    "month": 3,
+    "age": 22,
+    "situation_text": "Your mother's friend sells insurance. Your parents want you to start a policy. 3,000 a month, pays out after 20 years, small life cover included.",
+    "options": [
+      {
+        "option_id": "D05-A",
+        "option_label": "Sign up, 3,000 a month",
+        "immediate_text": "Your parents are visibly relieved. The agent shakes your hand.",
+        "deferred_offset_months": 14,
+        "deferred_text": "You work out the return. Roughly 4.5% a year, and the life cover is 3 lakhs.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D05-B",
+        "option_label": "Refuse outright",
+        "immediate_text": "Your mother is hurt. Her friend calls twice more.",
+        "deferred_offset_months": 6,
+        "deferred_text": "It is still brought up at every family dinner.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D05-C",
+        "option_label": "Ask what the return and the cover actually are",
+        "immediate_text": "Nobody in the room can answer. Your mother stops talking to you for two days.",
+        "deferred_offset_months": 1,
+        "deferred_text": "Your father starts asking the same question about his own policies.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D08",
+    "month": 4,
+    "age": 22,
+    "situation_text": "A close friend is starting something and needs 25,000. He says three months. You have 38,000 in total.",
+    "options": [
+      {
+        "option_id": "D08-A",
+        "option_label": "Lend the full 25,000",
+        "immediate_text": "He is grateful. You have 13,000 left.",
+        "deferred_offset_months": 9,
+        "deferred_text": "Nine months. He has not mentioned it. Neither have you.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D08-B",
+        "option_label": "Give 10,000 and call it a gift",
+        "immediate_text": "Smaller help, no repayment expected, no resentment either.",
+        "deferred_offset_months": 9,
+        "deferred_text": "He never brought it up. You have not either.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D08-C",
+        "option_label": "Say no",
+        "immediate_text": "He says he understands. The call ends early.",
+        "deferred_offset_months": 6,
+        "deferred_text": "He found the money elsewhere. Your conversations are shorter now.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D11",
+    "month": 6,
+    "age": 22,
+    "situation_text": "Cracked screen, battery dead by 4pm. Repair is 3,000. A decent replacement is 18,000. The one you want is 73,000, or 6,600 a month for twelve months on no-cost EMI.",
+    "options": [
+      {
+        "option_id": "D11-A",
+        "option_label": "Repair it, 3,000",
+        "immediate_text": "Works fine. Looks bad.",
+        "deferred_offset_months": 10,
+        "deferred_text": "Ten months on. It still works. The crack has spread across the top third.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D11-B",
+        "option_label": "Buy the 18,000 phone in cash",
+        "immediate_text": "Paid for, owned, done.",
+        "deferred_offset_months": 8,
+        "deferred_text": "Eight months on. It does everything the 73,000 one does, a little slower.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D11-C",
+        "option_label": "6,600 a month for twelve months, no-cost EMI",
+        "immediate_text": "Best phone in the office. 6,600 committed every month for a year.",
+        "deferred_offset_months": 12,
+        "deferred_text": "Final EMI paid. The phone is a year old and the new model is out.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D12",
+    "month": 7,
+    "age": 22,
+    "situation_text": "Your sister wants a coaching class. It costs 8,000. She has not asked your parents. She asked you.",
+    "options": [
+      {
+        "option_id": "D12-A",
+        "option_label": "Pay the full 8,000",
+        "immediate_text": "She is thrilled. She asks you not to tell your parents.",
+        "deferred_offset_months": 6,
+        "deferred_text": "She asks again, for something else. You are the default now.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D12-B",
+        "option_label": "Pay half, ask her to tell your parents",
+        "immediate_text": "Slightly awkward. Handled in the open.",
+        "deferred_offset_months": 6,
+        "deferred_text": "Your parents cover the rest without being asked twice.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D12-C",
+        "option_label": "Tell her to ask your parents",
+        "immediate_text": "She does. It takes two weeks and a fight.",
+        "deferred_offset_months": 6,
+        "deferred_text": "She got the class. She did not come to you again.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D16",
+    "month": 10,
+    "age": 22,
+    "situation_text": "You can start investing monthly. 5,000 into a broad equity index, 5,000 into a recurring deposit, or wait until you earn more.",
+    "options": [
+      {
+        "option_id": "D16-A",
+        "option_label": "5,000 a month into a broad equity index",
+        "immediate_text": "First investment. A month later it is down 2%.",
+        "deferred_offset_months": 14,
+        "deferred_text": "Fourteen months. Four of them were red. The balance is 78,000 on 70,000 put in.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D16-B",
+        "option_label": "5,000 a month into a recurring deposit",
+        "immediate_text": "Safe, predictable, about 6.5% a year before tax.",
+        "deferred_offset_months": 14,
+        "deferred_text": "It grew exactly as promised. Inflation took most of it.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D16-C",
+        "option_label": "Wait until you earn more",
+        "immediate_text": "Nothing committed. Full flexibility.",
+        "deferred_offset_months": 12,
+        "deferred_text": "A year gone. You are still waiting to earn more.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D20",
+    "month": 14,
+    "age": 23,
+    "situation_text": "A colleague says he made 40% last year in small companies. He shows you the screen. Your index investment is up 9%.",
+    "options": [
+      {
+        "option_id": "D20-A",
+        "option_label": "Move your monthly investment there",
+        "immediate_text": "Feels smart. First month it is up 7%.",
+        "deferred_offset_months": 8,
+        "deferred_text": "That colleague has stopped mentioning it. Your balance is down 22%.",
+        "requires": null,
+        "modifies_commitment": [
+          "D16-A"
+        ]
+      },
+      {
+        "option_id": "D20-B",
+        "option_label": "Keep the index, add small extra there",
+        "immediate_text": "A contained bet. You check it daily now.",
+        "deferred_offset_months": 8,
+        "deferred_text": "Down 22%. It was 20,000, not everything.",
+        "requires": "index",
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D20-C",
+        "option_label": "Ignore it",
+        "immediate_text": "Nothing happens. He brings it up again at lunch, twice, in front of others.",
+        "deferred_offset_months": 8,
+        "deferred_text": "He has stopped mentioning it. So has everyone else at lunch.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D20-D",
+        "option_label": "Start with 30,000 in small caps, like him",
+        "immediate_text": "Feels smart. You check the app before breakfast.",
+        "deferred_offset_months": 8,
+        "deferred_text": "Down 22%. You started with 30,000, at the top.",
+        "requires": "no_index",
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D26",
+    "month": 20,
+    "age": 23,
+    "situation_text": "Two offers. A large company at 9.5 LPA, stable. A six person startup at 7.3 LPA plus equity you cannot value.",
+    "options": [
+      {
+        "option_id": "D26-A",
+        "option_label": "Large company, 9.5 LPA",
+        "immediate_text": "Take home jumps by about 18,000. Predictable.",
+        "deferred_offset_months": 2,
+        "deferred_text": "A restructure hits your team anyway. Nobody is safe, only slower to fall.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D26-B",
+        "option_label": "Startup, 7.3 LPA plus equity",
+        "immediate_text": "Small raise, real ownership, no idea what the equity is worth.",
+        "deferred_offset_months": 2,
+        "deferred_text": "Funding does not close. The layoff in month 22 is this decision arriving.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D26-C",
+        "option_label": "Stay where you are",
+        "immediate_text": "Nothing changes. Nothing risked either.",
+        "deferred_offset_months": 2,
+        "deferred_text": "Your team is cut anyway.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D28",
+    "month": 22,
+    "age": 23,
+    "situation_text": "Friday, 3pm. Role eliminated. One month severance. Your monthly costs are 34,000. You have whatever you have.",
+    "options": [
+      {
+        "option_id": "D28-A",
+        "option_label": "Cut everything, live off the emergency fund",
+        "immediate_text": "Costs down to 22,000. You calculate your runway daily.",
+        "deferred_offset_months": 3,
+        "deferred_text": "Six weeks of runway left. The number has not gone up.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D28-B",
+        "option_label": "Stop the monthly investment",
+        "immediate_text": "5,000 a month back. The habit breaks in week one.",
+        "deferred_offset_months": 6,
+        "deferred_text": "You restarted four months later. Those months never come back.",
+        "requires": null,
+        "modifies_commitment": [
+          "D16-A",
+          "D16-B",
+          "D27-B",
+          "D27-C"
+        ]
+      },
+      {
+        "option_id": "D28-C",
+        "option_label": "Put the gap on the credit card",
+        "immediate_text": "Nothing changes day to day. The balance grows quietly.",
+        "deferred_offset_months": 6,
+        "deferred_text": "You have a job again. The card balance is still there, and the minimum barely touches it.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D28-D",
+        "option_label": "Ask your parents to cover you",
+        "immediate_text": "They say yes immediately. You hate it.",
+        "deferred_offset_months": 6,
+        "deferred_text": "Handled. It is mentioned at every family gathering for two years.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D29",
+    "month": 23,
+    "age": 23,
+    "situation_text": "Two months without income. One offer at 6.3 LPA, below what you made. Another process reaches final round in three weeks.",
+    "options": [
+      {
+        "option_id": "D29-A",
+        "option_label": "Take the 6.3 LPA offer now",
+        "immediate_text": "Income restarts at a lower number. The bleeding stops.",
+        "deferred_offset_months": 4,
+        "deferred_text": "Safe, smaller, and it took three years to get back to where you were.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D29-B",
+        "option_label": "Wait three weeks for the better process",
+        "immediate_text": "No income, no certainty, one more month of runway gone.",
+        "deferred_offset_months": 4,
+        "deferred_text": "It came through at 10.5 LPA. The three weeks had no income at all.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D29-C",
+        "option_label": "Freelance while you wait",
+        "immediate_text": "Irregular money, long days, no benefits.",
+        "deferred_offset_months": 4,
+        "deferred_text": "You kept the runway alive and took the better offer anyway.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D30",
+    "month": 24,
+    "age": 23,
+    "situation_text": "A cousin is putting money into a scheme paying 3% a month, guaranteed. He has been paid on time for eight months. He wants you in.",
+    "options": [
+      {
+        "option_id": "D30-A",
+        "option_label": "Put in 50,000",
+        "immediate_text": "Three months of payments arrive exactly on time.",
+        "deferred_offset_months": 6,
+        "deferred_text": "The payments stop. So does the cousin's phone.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D30-B",
+        "option_label": "Put in 5,000 just to test it",
+        "immediate_text": "Small amounts come back on schedule. You consider adding more.",
+        "deferred_offset_months": 6,
+        "deferred_text": "The scheme collapses. The 5,000 does not come back.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D30-C",
+        "option_label": "Stay out, and warn your parents",
+        "immediate_text": "Your cousin tells the family you called him a fraud. Your father almost invests anyway.",
+        "deferred_offset_months": 6,
+        "deferred_text": "It collapses. Your cousin has not spoken to you since Diwali.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  }
+]
+</script>
+
+<script>
+(function () {
+  "use strict";
+
+  var MONTH_CARD_MS = 2000;
+  var IMMEDIATE_MS = 2500;
+  var CALLBACK_MS = 3500;
+  var TAP_GUARD_MS = 300;       // ignore taps that land right after a screen change
+  var QUIT_CONFIRM_MS = 3000;   // how long "Tap again to quit" stays armed
+  var LONG_PRESS_MS = 800;      // hidden CSV download on the title
+  var STORAGE_KEY = "phase0_events_v1";
+
+  var DECISIONS = JSON.parse(document.getElementById("decision-data").textContent);
+
+  var stage = document.getElementById("stage");
+  var quitButton = document.getElementById("quit");
+  var title = document.getElementById("title");
+
+  var state = {
+    index: 0,          // next decision to show
+    lastMonth: null,   // month of the last month card shown
+    pending: [],       // callbacks waiting for their month: { month, order, text }
+    choices: 0,        // number of choices made, used to order callbacks
+    picked: {},        // option ids chosen so far, for rule 29 below
+    finished: false
+  };
+  var current = { kind: null, shownAt: 0 };  // the screen on display
+  var timer = null;
+  var fitCurrent = null;
+
+  // ---------- event log ----------
+  // Events from every session on this device are kept together, so one
+  // download collects all testers. Storage is a mirror only: if it fails,
+  // the in-memory array still works and the CSV still downloads.
+
+  var CSV_COLUMNS = ["session_id", "timestamp", "event", "decision_id", "option_id", "ms_on_screen", "screen", "value"];
+  var events = loadEvents();
+  var sessionId = null;
+
+  function loadEvents() {
+    try {
+      var parsed = JSON.parse(window.localStorage.getItem(STORAGE_KEY) || "[]");
+      return Array.isArray(parsed) ? parsed : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function saveEvents() {
+    try {
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(events));
+    } catch (e) {
+      // Storage full, blocked or unavailable. Keep going in memory.
+    }
+  }
+
+  function logEvent(event, fields) {
+    var entry = {
+      session_id: sessionId,
+      timestamp: new Date().toISOString(),
+      event: event,
+      decision_id: "",
+      option_id: "",
+      ms_on_screen: "",
+      screen: current.kind || "",
+      value: ""
+    };
+    for (var key in fields) entry[key] = fields[key];
+    events.push(entry);
+    saveEvents();
+  }
+
+  function msOnScreen() {
+    return Math.round(performance.now() - current.shownAt);
+  }
+
+  function newSessionId() {
+    return Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+  }
+
+  function csvCell(value) {
+    var text = value == null ? "" : String(value);
+    if (/^[=+\-@\t\r]/.test(text)) text = "'" + text;  // stop spreadsheets running free text as a formula
+    if (/[",\r\n]/.test(text)) text = '"' + text.replace(/"/g, '""') + '"';
+    return text;
+  }
+
+  function downloadCsv() {
+    var lines = [CSV_COLUMNS.join(",")];
+    events.forEach(function (entry) {
+      lines.push(CSV_COLUMNS.map(function (col) { return csvCell(entry[col]); }).join(","));
+    });
+    var blob = new Blob(["﻿" + lines.join("\r\n") + "\r\n"], { type: "text/csv;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var stamp = new Date().toISOString().slice(0, 16).replace(/[-:]/g, "").replace("T", "-");
+    var link = el("a");
+    link.href = url;
+    link.download = "phase0_events_" + stamp + ".csv";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 10000);
+  }
+
+  // Hidden: long-press the title to download at any point.
+  (function () {
+    var pressTimer = null;
+    function cancel() { clearTimeout(pressTimer); }
+    title.addEventListener("pointerdown", function () {
+      cancel();
+      pressTimer = setTimeout(downloadCsv, LONG_PRESS_MS);
+    });
+    ["pointerup", "pointerleave", "pointercancel"].forEach(function (type) {
+      title.addEventListener(type, cancel);
+    });
+    title.addEventListener("contextmenu", function (e) { e.preventDefault(); });
+  })();
+
+  // ---------- rendering helpers ----------
+
+  function el(tag, className, text) {
+    var node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text != null) node.textContent = text;
+    return node;
+  }
+
+  function show(screen, kind, options) {
+    options = options || {};
+    clearTimeout(timer);
+    timer = null;
+    fitCurrent = null;
+    if (options.hideQuit) disarmQuit();
+    quitButton.hidden = !!options.hideQuit;
+    current = { kind: kind, shownAt: performance.now() };
+    screen.dataset.shownAt = String(Date.now());
+    stage.replaceChildren(screen);
+    return screen;
+  }
+
+  function tooSoon(screen) {
+    return Date.now() - Number(screen.dataset.shownAt) < TAP_GUARD_MS;
+  }
+
+  function afterDelay(ms, fn) {
+    clearTimeout(timer);
+    timer = setTimeout(fn, ms);
+  }
+
+  // A tap-to-skip screen that also advances on its own.
+  function timedScreen(screen, kind, ms, next) {
+    var advanced = false;
+    function go() {
+      if (advanced) return;
+      advanced = true;
+      next();
+    }
+    screen.classList.add("tap-screen");
+    screen.addEventListener("click", function () {
+      if (tooSoon(screen)) return;
+      go();
+    });
+    show(screen, kind);
+    afterDelay(ms, go);
+  }
+
+  // Shrink the decision screen until it fits without scrolling.
+  function fitToScreen(screen) {
+    var scale = 1;
+    screen.style.setProperty("--fit", scale);
+    while (screen.scrollHeight > screen.clientHeight + 1 && scale > 0.6) {
+      scale = Math.round((scale - 0.05) * 100) / 100;
+      screen.style.setProperty("--fit", scale);
+    }
+  }
+
+  window.addEventListener("resize", function () {
+    if (fitCurrent) fitCurrent();
+  });
+
+  function downloadButton() {
+    var actions = el("div", "actions");
+    var button = el("button", "secondary", "Download CSV");
+    button.type = "button";
+    button.addEventListener("click", downloadCsv);
+    actions.appendChild(button);
+    return actions;
+  }
+
+  // ---------- quit, with a second tap to confirm ----------
+
+  var quitArmedAt = 0;
+  var quitTimer = null;
+
+  function disarmQuit() {
+    clearTimeout(quitTimer);
+    quitArmedAt = 0;
+    quitButton.textContent = "Quit";
+    quitButton.classList.remove("armed");
+  }
+
+  quitButton.addEventListener("click", function () {
+    if (!quitArmedAt) {
+      quitArmedAt = Date.now();
+      quitButton.textContent = "Tap again to quit";
+      quitButton.classList.add("armed");
+      quitTimer = setTimeout(disarmQuit, QUIT_CONFIRM_MS);
+      return;
+    }
+    if (Date.now() - quitArmedAt < TAP_GUARD_MS) return;  // an accidental double tap is not a confirmation
+    disarmQuit();
+    quit();
+  });
+
+  // ---------- flow ----------
+
+  function showStart() {
+    var screen = el("section", "screen");
+    var center = el("div", "center");
+    center.appendChild(el("p", "month", "Chapter 1"));
+    screen.appendChild(center);
+    var actions = el("div", "actions");
+    var start = el("button", "primary", "Start");
+    start.type = "button";
+    start.addEventListener("click", function () {
+      sessionId = newSessionId();
+      logEvent("session_start", {});
+      nextDecision();
+    });
+    actions.appendChild(start);
+    screen.appendChild(actions);
+    show(screen, "start", { hideQuit: true });
+  }
+
+  function nextDecision() {
+    if (state.index >= DECISIONS.length) {
+      showWantMore();
+      return;
+    }
+    var decision = DECISIONS[state.index];
+    if (decision.month !== state.lastMonth) {
+      state.lastMonth = decision.month;
+      showMonthCard(decision, function () { showCallbacks(decision); });
+    } else {
+      showCallbacks(decision);
+    }
+  }
+
+  function showMonthCard(decision, next) {
+    var screen = el("section", "screen");
+    var center = el("div", "center");
+    var line = el("p", "month-card");
+    line.appendChild(el("span", "month", "Month " + decision.month + "."));
+    line.appendChild(document.createTextNode(" "));
+    line.appendChild(el("span", "age", "You are " + decision.age + "."));
+    center.appendChild(line);
+    screen.appendChild(center);
+    show(screen, "month");
+    afterDelay(MONTH_CARD_MS, next);
+  }
+
+  // Callbacks due on or before this decision's month, oldest first.
+  function showCallbacks(decision) {
+    var due = state.pending
+      .filter(function (c) { return c.month <= decision.month; })
+      .sort(function (a, b) { return a.month - b.month || a.order - b.order; });
+    state.pending = state.pending.filter(function (c) { return c.month > decision.month; });
+
+    (function step(i) {
+      if (i >= due.length) {
+        showDecision(decision);
+        return;
+      }
+      var screen = el("section", "screen");
+      var center = el("div", "center");
+      center.appendChild(el("p", "callback", due[i].text));
+      screen.appendChild(center);
+      screen.appendChild(el("p", "hint", "Tap to continue"));
+      timedScreen(screen, "callback", CALLBACK_MS, function () { step(i + 1); });
+    })(0);
+  }
+
+  // Rule 29 (maths doc section 10): an option that cannot apply is not offered. With no engine,
+  // the harness reads it from what the tester chose: an option that modifies commitments needs
+  // one of those options chosen, "index" needs D16-A, "no_index" needs it not chosen.
+  function offered(option) {
+    var targets = option.modifies_commitment || [];
+    if (targets.length && !targets.some(function (t) { return state.picked[t]; })) return false;
+    if (option.requires === "index") return !!state.picked["D16-A"];
+    if (option.requires === "no_index") return !state.picked["D16-A"];
+    return true;
+  }
+
+  function showDecision(decision) {
+    var screen = el("section", "screen");
+    var center = el("div", "center");
+    center.appendChild(el("p", "situation", decision.situation_text));
+    screen.appendChild(center);
+
+    var list = el("div", "options");
+    var buttons = decision.options.filter(offered).map(function (option) {
+      var button = el("button", "option", option.option_label);
+      button.type = "button";
+      button.addEventListener("click", function () {
+        if (tooSoon(screen)) return;
+        buttons.forEach(function (b) { b.disabled = true; });
+        button.classList.add("chosen");
+        choose(decision, option);
+      });
+      list.appendChild(button);
+      return button;
+    });
+    screen.appendChild(list);
+
+    show(screen, "decision");
+    fitCurrent = function () { fitToScreen(screen); };
+    fitCurrent();
+  }
+
+  function choose(decision, option) {
+    logEvent("choice", {
+      decision_id: decision.decision_id,
+      option_id: option.option_id,
+      ms_on_screen: msOnScreen()
+    });
+    state.choices += 1;
+    state.picked[option.option_id] = true;
+    if (option.deferred_offset_months > 0 && option.deferred_text) {
+      state.pending.push({
+        month: decision.month + option.deferred_offset_months,
+        order: state.choices,
+        text: option.deferred_text
+      });
+    }
+    showImmediate(option);
+  }
+
+  function showImmediate(option) {
+    var screen = el("section", "screen");
+    var center = el("div", "center");
+    center.appendChild(el("p", "result", option.immediate_text));
+    screen.appendChild(center);
+    screen.appendChild(el("p", "hint", "Tap to continue"));
+    timedScreen(screen, "immediate", IMMEDIATE_MS, function () {
+      state.index += 1;
+      nextDecision();
+    });
+  }
+
+  function showWantMore() {
+    var screen = el("section", "screen");
+    var center = el("div", "center");
+    center.appendChild(el("p", "question", "Do you want to know what happens next?"));
+    screen.appendChild(center);
+    var actions = el("div", "actions");
+    ["Yes", "No"].forEach(function (label) {
+      var button = el("button", "option", label);
+      button.type = "button";
+      button.addEventListener("click", function () {
+        if (tooSoon(screen)) return;
+        logEvent("want_next", { value: label, ms_on_screen: msOnScreen() });
+        showLongestDecision();
+      });
+      actions.appendChild(button);
+    });
+    screen.appendChild(actions);
+    show(screen, "want_next");
+  }
+
+  function showLongestDecision() {
+    var screen = el("section", "screen");
+    var top = el("div", "ask-top");
+    var label = el("label", "question", "Which decision did you think about longest?");
+    label.htmlFor = "longest";
+    top.appendChild(label);
+    var answer = el("textarea", "answer");
+    answer.id = "longest";
+    answer.rows = 4;
+    top.appendChild(answer);
+    screen.appendChild(top);
+    var actions = el("div", "actions");
+    var done = el("button", "primary", "Done");
+    done.type = "button";
+    done.addEventListener("click", function () {
+      logEvent("longest_decision", { value: answer.value.trim(), ms_on_screen: msOnScreen() });
+      showThanks();
+    });
+    actions.appendChild(done);
+    screen.appendChild(actions);
+    show(screen, "longest_decision");
+  }
+
+  function showThanks() {
+    state.finished = true;
+    var screen = el("section", "screen");
+    var center = el("div", "center");
+    center.appendChild(el("p", "question", "Thank you."));
+    screen.appendChild(center);
+    screen.appendChild(downloadButton());
+    show(screen, "end", { hideQuit: true });
+    logEvent("session_end", {});
+  }
+
+  function quit() {
+    if (state.finished) return;
+    state.finished = true;
+    var decision = DECISIONS[state.index];
+    logEvent("quit", {
+      decision_id: decision ? decision.decision_id : "",
+      ms_on_screen: msOnScreen()
+    });
+    var screen = el("section", "screen");
+    var center = el("div", "center");
+    center.appendChild(el("p", "question", "You stopped here. Thank you."));
+    screen.appendChild(center);
+    screen.appendChild(downloadButton());
+    show(screen, "quit", { hideQuit: true });
+  }
+
+  showStart();
+})();
+</script>
+</body>
+</html>

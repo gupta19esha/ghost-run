@@ -1,0 +1,9 @@
+{
+  "name": "finance-sim-text",
+  "private": true,
+  "type": "module",
+  "description": "Fills the engine's token values into the copy. No dependencies. See SIMULATION-MATHS.md section 10.1.",
+  "scripts": {
+    "test": "node --test test/"
+  }
+}

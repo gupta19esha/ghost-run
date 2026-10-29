@@ -1,0 +1,9 @@
+{
+  "name": "finance-sim-engine",
+  "private": true,
+  "type": "module",
+  "description": "Pure JavaScript simulation engine. No dependencies. See ENGINE.md.",
+  "scripts": {
+    "test": "node --test test/"
+  }
+}

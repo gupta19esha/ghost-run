@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Engine browser check</title>
+</head>
+<body>
+<p>Runs the engine unchanged in a browser: 24 months, with D11-C taken in month 6 and D16-A in month 10. Used by scripts/check_engine_browser.py.</p>
+<pre id="result">pending</pre>
+<script type="module">
+  const out = document.getElementById("result");
+  try {
+    const { createState, advanceMonth, applyDecision, getHistory } = await import("./index.js");
+    let state = createState(1);
+    for (let i = 0; i < 24; i++) {
+      if (state.month === 6) state = applyDecision(state, "D11", "D11-C").state;
+      if (state.month === 10) state = applyDecision(state, "D16", "D16-A").state;
+      state = advanceMonth(state).state;
+    }
+    out.textContent = JSON.stringify({ ok: true, userAgent: navigator.userAgent, history: getHistory(state) });
+  } catch (error) {
+    out.textContent = JSON.stringify({ ok: false, error: String(error && error.stack || error) });
+  }
+</script>
+</body>
+</html>

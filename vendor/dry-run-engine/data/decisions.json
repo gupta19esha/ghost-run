@@ -1,0 +1,447 @@
+[
+  {
+    "decision_id": "D01",
+    "month": 1,
+    "age": 22,
+    "situation_text": "First salary in. The letter said 52,000. The bank says 41,300. HR wants your tax declaration by Friday, and asks if you want to raise your EPF contribution.",
+    "options": [
+      {
+        "option_id": "D01-A",
+        "option_label": "Submit the tax declaration now",
+        "immediate_text": "Less tax deducted. About 1,800 more reaches you each month.",
+        "deferred_offset_months": 2,
+        "deferred_text": "Payroll emails you about a correction. You spot it. Nobody else on your team did.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D01-B",
+        "option_label": "Deal with it in March like everyone else",
+        "immediate_text": "Nothing changes. The extra tax keeps going out.",
+        "deferred_offset_months": 14,
+        "deferred_text": "March. You scramble to invest 60,000 you do not have, just to claim a refund.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D01-C",
+        "option_label": "Raise your EPF contribution by 5%",
+        "immediate_text": "Take home drops to 38,700. The money is not gone, it is locked away.",
+        "deferred_offset_months": 18,
+        "deferred_text": "Your retirement balance is 41,000. You have never looked at it before today.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D02",
+    "month": 1,
+    "age": 22,
+    "situation_text": "You need a place. You have 20,000 saved from before. A studio near office is 18,000. A shared 2BHK is 9,000 for your half. A room 40 minutes out is 6,000.",
+    "options": [
+      {
+        "option_id": "D02-A",
+        "option_label": "The studio near office, 18,000, deposit 20,000",
+        "immediate_text": "Your own place. Rent is 44% of your take home.",
+        "deferred_offset_months": 12,
+        "deferred_text": "A full year gone. Rent has eaten one third of every rupee you earned.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D02-B",
+        "option_label": "Shared 2BHK, 9,000 your half, deposit 12,000",
+        "immediate_text": "Less space, more money, a flatmate you barely know.",
+        "deferred_offset_months": 12,
+        "deferred_text": "A year in a place you never invite anyone to. Rent took a fifth of your pay.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D02-C",
+        "option_label": "Room 40 minutes out, 6,000, deposit 8,000",
+        "immediate_text": "Cheapest option. Three hours a day belong to the road now.",
+        "deferred_offset_months": 6,
+        "deferred_text": "You have stopped going out on weekdays. It is too far to come back into town.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D05",
+    "month": 3,
+    "age": 22,
+    "situation_text": "Your mother's friend sells insurance. Your parents want you to start a policy. 3,000 a month, pays out after 20 years, small life cover included.",
+    "options": [
+      {
+        "option_id": "D05-A",
+        "option_label": "Sign up, 3,000 a month",
+        "immediate_text": "Your parents are visibly relieved. The agent shakes your hand.",
+        "deferred_offset_months": 14,
+        "deferred_text": "You work out the return. Roughly 4.5% a year, and the life cover is 3 lakhs.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D05-B",
+        "option_label": "Refuse outright",
+        "immediate_text": "Your mother is hurt. Her friend calls twice more.",
+        "deferred_offset_months": 6,
+        "deferred_text": "It is still brought up at every family dinner.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D05-C",
+        "option_label": "Ask what the return and the cover actually are",
+        "immediate_text": "Nobody in the room can answer. Your mother stops talking to you for two days.",
+        "deferred_offset_months": 1,
+        "deferred_text": "Your father starts asking the same question about his own policies.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D08",
+    "month": 4,
+    "age": 22,
+    "situation_text": "A close friend is starting something and needs 25,000. He says three months. You have 38,000 in total.",
+    "options": [
+      {
+        "option_id": "D08-A",
+        "option_label": "Lend the full 25,000",
+        "immediate_text": "He is grateful. You have 13,000 left.",
+        "deferred_offset_months": 9,
+        "deferred_text": "Nine months. He has not mentioned it. Neither have you.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D08-B",
+        "option_label": "Give 10,000 and call it a gift",
+        "immediate_text": "Smaller help, no repayment expected, no resentment either.",
+        "deferred_offset_months": 9,
+        "deferred_text": "He never brought it up. You have not either.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D08-C",
+        "option_label": "Say no",
+        "immediate_text": "He says he understands. The call ends early.",
+        "deferred_offset_months": 6,
+        "deferred_text": "He found the money elsewhere. Your conversations are shorter now.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D11",
+    "month": 6,
+    "age": 22,
+    "situation_text": "Cracked screen, battery dead by 4pm. Repair is 3,000. A decent replacement is 18,000. The one you want is 73,000, or 6,600 a month for twelve months on no-cost EMI.",
+    "options": [
+      {
+        "option_id": "D11-A",
+        "option_label": "Repair it, 3,000",
+        "immediate_text": "Works fine. Looks bad.",
+        "deferred_offset_months": 10,
+        "deferred_text": "Ten months on. It still works. The crack has spread across the top third.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D11-B",
+        "option_label": "Buy the 18,000 phone in cash",
+        "immediate_text": "Paid for, owned, done.",
+        "deferred_offset_months": 8,
+        "deferred_text": "Eight months on. It does everything the 73,000 one does, a little slower.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D11-C",
+        "option_label": "6,600 a month for twelve months, no-cost EMI",
+        "immediate_text": "Best phone in the office. 6,600 committed every month for a year.",
+        "deferred_offset_months": 12,
+        "deferred_text": "Final EMI paid. The phone is a year old and the new model is out.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D12",
+    "month": 7,
+    "age": 22,
+    "situation_text": "Your sister wants a coaching class. It costs 8,000. She has not asked your parents. She asked you.",
+    "options": [
+      {
+        "option_id": "D12-A",
+        "option_label": "Pay the full 8,000",
+        "immediate_text": "She is thrilled. She asks you not to tell your parents.",
+        "deferred_offset_months": 6,
+        "deferred_text": "She asks again, for something else. You are the default now.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D12-B",
+        "option_label": "Pay half, ask her to tell your parents",
+        "immediate_text": "Slightly awkward. Handled in the open.",
+        "deferred_offset_months": 6,
+        "deferred_text": "Your parents cover the rest without being asked twice.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D12-C",
+        "option_label": "Tell her to ask your parents",
+        "immediate_text": "She does. It takes two weeks and a fight.",
+        "deferred_offset_months": 6,
+        "deferred_text": "She got the class. She did not come to you again.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D16",
+    "month": 10,
+    "age": 22,
+    "situation_text": "You can start investing monthly. 5,000 into a broad equity index, 5,000 into a recurring deposit, or wait until you earn more.",
+    "options": [
+      {
+        "option_id": "D16-A",
+        "option_label": "5,000 a month into a broad equity index",
+        "immediate_text": "First investment. A month later it is down 2%.",
+        "deferred_offset_months": 14,
+        "deferred_text": "Fourteen months. Four of them were red. The balance is 78,000 on 70,000 put in.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D16-B",
+        "option_label": "5,000 a month into a recurring deposit",
+        "immediate_text": "Safe, predictable, about 6.5% a year before tax.",
+        "deferred_offset_months": 14,
+        "deferred_text": "It grew exactly as promised. Inflation took most of it.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D16-C",
+        "option_label": "Wait until you earn more",
+        "immediate_text": "Nothing committed. Full flexibility.",
+        "deferred_offset_months": 12,
+        "deferred_text": "A year gone. You are still waiting to earn more.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D20",
+    "month": 14,
+    "age": 23,
+    "situation_text": "A colleague says he made 40% last year in small companies. He shows you the screen. Your index investment is up 9%.",
+    "options": [
+      {
+        "option_id": "D20-A",
+        "option_label": "Move your monthly investment there",
+        "immediate_text": "Feels smart. First month it is up 7%.",
+        "deferred_offset_months": 8,
+        "deferred_text": "That colleague has stopped mentioning it. Your balance is down 22%.",
+        "requires": null,
+        "modifies_commitment": [
+          "D16-A"
+        ]
+      },
+      {
+        "option_id": "D20-B",
+        "option_label": "Keep the index, add small extra there",
+        "immediate_text": "A contained bet. You check it daily now.",
+        "deferred_offset_months": 8,
+        "deferred_text": "Down 22%. It was 20,000, not everything.",
+        "requires": "index",
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D20-C",
+        "option_label": "Ignore it",
+        "immediate_text": "Nothing happens. He brings it up again at lunch, twice, in front of others.",
+        "deferred_offset_months": 8,
+        "deferred_text": "He has stopped mentioning it. So has everyone else at lunch.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D20-D",
+        "option_label": "Start with 30,000 in small caps, like him",
+        "immediate_text": "Feels smart. You check the app before breakfast.",
+        "deferred_offset_months": 8,
+        "deferred_text": "Down 22%. You started with 30,000, at the top.",
+        "requires": "no_index",
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D26",
+    "month": 20,
+    "age": 23,
+    "situation_text": "Two offers. A large company at 9.5 LPA, stable. A six person startup at 7.3 LPA plus equity you cannot value.",
+    "options": [
+      {
+        "option_id": "D26-A",
+        "option_label": "Large company, 9.5 LPA",
+        "immediate_text": "Take home jumps by about 18,000. Predictable.",
+        "deferred_offset_months": 2,
+        "deferred_text": "A restructure hits your team anyway. Nobody is safe, only slower to fall.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D26-B",
+        "option_label": "Startup, 7.3 LPA plus equity",
+        "immediate_text": "Small raise, real ownership, no idea what the equity is worth.",
+        "deferred_offset_months": 2,
+        "deferred_text": "Funding does not close. The layoff in month 22 is this decision arriving.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D26-C",
+        "option_label": "Stay where you are",
+        "immediate_text": "Nothing changes. Nothing risked either.",
+        "deferred_offset_months": 2,
+        "deferred_text": "Your team is cut anyway.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D28",
+    "month": 22,
+    "age": 23,
+    "situation_text": "Friday, 3pm. Role eliminated. One month severance. Your monthly costs are 34,000. You have whatever you have.",
+    "options": [
+      {
+        "option_id": "D28-A",
+        "option_label": "Cut everything, live off the emergency fund",
+        "immediate_text": "Costs down to 22,000. You calculate your runway daily.",
+        "deferred_offset_months": 3,
+        "deferred_text": "Six weeks of runway left. The number has not gone up.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D28-B",
+        "option_label": "Stop the monthly investment",
+        "immediate_text": "5,000 a month back. The habit breaks in week one.",
+        "deferred_offset_months": 6,
+        "deferred_text": "You restarted four months later. Those months never come back.",
+        "requires": null,
+        "modifies_commitment": [
+          "D16-A",
+          "D16-B",
+          "D27-B",
+          "D27-C"
+        ]
+      },
+      {
+        "option_id": "D28-C",
+        "option_label": "Put the gap on the credit card",
+        "immediate_text": "Nothing changes day to day. The balance grows quietly.",
+        "deferred_offset_months": 6,
+        "deferred_text": "You have a job again. The card balance is still there, and the minimum barely touches it.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D28-D",
+        "option_label": "Ask your parents to cover you",
+        "immediate_text": "They say yes immediately. You hate it.",
+        "deferred_offset_months": 6,
+        "deferred_text": "Handled. It is mentioned at every family gathering for two years.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D29",
+    "month": 23,
+    "age": 23,
+    "situation_text": "Two months without income. One offer at 6.3 LPA, below what you made. Another process reaches final round in three weeks.",
+    "options": [
+      {
+        "option_id": "D29-A",
+        "option_label": "Take the 6.3 LPA offer now",
+        "immediate_text": "Income restarts at a lower number. The bleeding stops.",
+        "deferred_offset_months": 4,
+        "deferred_text": "Safe, smaller, and it took three years to get back to where you were.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D29-B",
+        "option_label": "Wait three weeks for the better process",
+        "immediate_text": "No income, no certainty, one more month of runway gone.",
+        "deferred_offset_months": 4,
+        "deferred_text": "It came through at 10.5 LPA. The three weeks had no income at all.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D29-C",
+        "option_label": "Freelance while you wait",
+        "immediate_text": "Irregular money, long days, no benefits.",
+        "deferred_offset_months": 4,
+        "deferred_text": "You kept the runway alive and took the better offer anyway.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  },
+  {
+    "decision_id": "D30",
+    "month": 24,
+    "age": 23,
+    "situation_text": "A cousin is putting money into a scheme paying 3% a month, guaranteed. He has been paid on time for eight months. He wants you in.",
+    "options": [
+      {
+        "option_id": "D30-A",
+        "option_label": "Put in 50,000",
+        "immediate_text": "Three months of payments arrive exactly on time.",
+        "deferred_offset_months": 6,
+        "deferred_text": "The payments stop. So does the cousin's phone.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D30-B",
+        "option_label": "Put in 5,000 just to test it",
+        "immediate_text": "Small amounts come back on schedule. You consider adding more.",
+        "deferred_offset_months": 6,
+        "deferred_text": "The scheme collapses. The 5,000 does not come back.",
+        "requires": null,
+        "modifies_commitment": []
+      },
+      {
+        "option_id": "D30-C",
+        "option_label": "Stay out, and warn your parents",
+        "immediate_text": "Your cousin tells the family you called him a fraud. Your father almost invests anyway.",
+        "deferred_offset_months": 6,
+        "deferred_text": "It collapses. Your cousin has not spoken to you since Diwali.",
+        "requires": null,
+        "modifies_commitment": []
+      }
+    ]
+  }
+]

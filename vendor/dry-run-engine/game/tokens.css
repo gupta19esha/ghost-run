@@ -1,0 +1,82 @@
+/* Every colour and face in the product, in one file (UI.md build rule 5). Values are taken
+   from design/, which is the source of truth for look. Names that UI.md gives are kept;
+   the rest are values design/ uses that UI.md does not list.
+
+   Fonts are self-hosted, so the game needs no network. design/ loads them from Google, which
+   is the only deliberate difference from the artboards.
+   Noto Serif Devanagari (the Noto Project) for display and Mukta (Ek Type) for body, both SIL
+   Open Font License: see OFL-*.txt in fonts/. Noto Serif Devanagari is one variable file,
+   width fixed at normal, covering every weight from 500 to 800. Its digits share one width at
+   every weight, so a counting money figure does not jitter. */
+
+@font-face {
+  font-family: "Noto Serif Devanagari";
+  src: url("fonts/NotoSerifDevanagari-wght.woff") format("woff-variations");
+  font-weight: 500 800;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Mukta";
+  src: url("fonts/Mukta-Regular.woff") format("woff");
+  font-weight: 400;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Mukta";
+  src: url("fonts/Mukta-SemiBold.woff") format("woff");
+  font-weight: 600;
+  font-display: swap;
+}
+
+:root {
+  /* Named in UI.md */
+  --ink: #0E1016;
+  --ink-raised: #1A1E29;
+  --bone: #F2ECE0;
+  --slate: #7C8296;
+  --marigold: #F0A830;
+  --teal: #4FB79E;
+  --vermilion: #D6402C;
+  --deep: #1B3A5C;
+
+  /* Used in design/, not named in UI.md */
+  --ink-deepest: #12141C;     /* text on marigold */
+  --bone-dim: #C9CEDD;        /* bullets, bar labels */
+  --bone-dimmer: #A8AFC2;     /* the landing paragraph */
+  --slate-dim: #626879;       /* the disclaimer */
+  --marigold-hover: #FFC163;
+  --deep-raised: #22486E;     /* the shape behind an illustration */
+  --rule: #232838;            /* hairlines */
+  --paper-line: #B9BECD;      /* printed lines on paper in an illustration */
+  --paper-side: #E0D9CB;      /* paper in shade: a building's side */
+  --paper-dim: #E4DED2;       /* paper, one step back: past days, a katori, a lid */
+  --paper-shadow: #CFC7B6;    /* paper in deep shade: a cuff, an umbrella's handle, a baseline */
+  --progress: #3C4356;        /* the consequence timer */
+  --concept-ground: #16202B;  /* the concept card at month close */
+
+  /* The consequence screen: the decision's illustration, muted (design/Consequence.html) */
+  --deep-muted: #14293F;      /* its colour block */
+  --muted-paper: #8C8578;
+  --muted-vermilion: #7A2C20;
+  --muted-marigold: #8A6524;
+  --muted-teal: #3A7568;
+  --muted-line: #6E7280;
+  /* Not in ILLUSTRATIONS-1.md's swap table: derived at its own ratio, paper #F2ECE0 to
+     #8C8578, about 0.575 of each channel */
+  --muted-paper-side: #817D75;
+  --muted-paper-dim: #838079;
+  --muted-paper-shadow: #77746D; /* batch 2's value, at the same paper ratio */
+
+  /* A bar moving: the change is hatched, the chip is the colour on a faint ground */
+  --teal-hatch: #2E8B7A;
+  --teal-faint: rgba(79, 183, 158, 0.16);
+  --vermilion-hatch: #A33222; /* not in design/: its falling bar is not drawn. Teal's, matched */
+  --vermilion-faint: rgba(214, 64, 44, 0.16);
+
+  --display: "Noto Serif Devanagari", Georgia, serif;
+  --body: "Mukta", system-ui, sans-serif;
+
+  /* The artboards are drawn at 390px wide */
+  --gutter: 24px;
+  --gutter-landing: 26px;
+}

@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+
+# Excel and Office lock and temp files, created while a workbook is open
+~$*
+*.tmp
+*.bak
+
+# Scratch work
+scratch/
+scratchpad/
+tmp/
+temp/
+
+# Editor and OS clutter
+.vscode/
+.idea/
+*.swp
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# The folder Cloudflare Pages publishes, built by scripts/build_site.sh
+site/
+.wrangler/

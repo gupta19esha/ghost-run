@@ -1,0 +1,18 @@
+// Cloudflare Workers configuration (HOSTING.md section 6). An assets-only Worker: no server
+// code, only the files scripts/build_site.sh copies into site/. Cloudflare runs the build
+// command, then `npx wrangler deploy`, which reads this file.
+//
+// name must match the project name in the Cloudflare dashboard, game-finance, or the build fails.
+// The branch that deploys is not set here: it is set in the dashboard, Settings > Build >
+// Branch control, and must be live.
+{
+  "name": "game-finance",
+  "compatibility_date": "2026-05-01",
+  "assets": {
+    // site/ holds _redirects (the root opens /game/) and _headers (revalidate every load, no
+    // indexing). Cloudflare reads both from here and does not serve them as files.
+    // html_handling is left at its default, auto-trailing-slash: /game/ serves
+    // game/index.html and /game redirects to /game/. A missing file is a plain 404.
+    "directory": "./site"
+  }
+}
