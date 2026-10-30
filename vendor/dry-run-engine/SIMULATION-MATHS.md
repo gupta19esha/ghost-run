@@ -1024,6 +1024,7 @@ tax product on the UNVERIFIED retirement rate.
     | D29 situation, D29-A label | "5.8 LPA" | D29-A's `money_monthly` on `SALARY_NET_START`, as CTC at D01's ratio |
     | D29-B deferred | "10 LPA" | D29-B's `def_money_monthly` on `SALARY_NET_START`, as CTC at D01's ratio |
     | D02-A, D02-B, D02-C labels | "deposit 20,000", "deposit 12,000", "deposit 8,000" | Each option's `money_once`. Stated since v27: before it the copy never mentioned the deposits, which broke this rule |
+    | D31 to D40, chapter 2's opening (v35, v36) | Every figure after "States:" in their placeholder copy, and D40's from v36: 62 terms, from "40,000 once" to "1 crore for 1,000 a month" | The option's own column, or the named option's for a situation: `money_once`, `money_once_2`, `money_monthly`, `money_monthly_2`, `def_money_monthly`, `asset_acquired_value`, `income_event`, `term_cover_delta` in crore or lakh, and `commitment_months` or `term_months` for a term. D35-C's "84,000 in all" is its `money_monthly` over its `commitment_months`, a new check kind, `monthly_total`. The copy is placeholder text until the product owner writes it; the checker's patterns then move to its wording, as chapter 1's did |
 
     Category B text rewritten with tokens in v8: D01-C, D04-A, D04-B, D04-C, D06-C,
     D15-A, D16-A, D20-A, D20-B. Only the figure changed, except D16-A's immediate text,
@@ -1160,6 +1161,10 @@ tax product on the UNVERIFIED retirement rate.
     calibration harness, the text tests and the Phase 0 harness all read it. A calibration
     test plays every housing and D16 choice, the four player types and 300 random players and
     fails if any decision offers fewer than two options: the fewest anywhere is two, at D20.
+    Chapter 2's opening uses the same two values and nothing new (v35): D39-A modifies D16-A,
+    so it is offered only while that investment runs; D39-B requires `index` and D39-D
+    `no_index`; D39-C is offered to everyone. A player with D16-A running sees three options, one
+    without it sees two.
     The table below is the first draft, kept for the record.
 
     *What the first draft said it needs:*
@@ -1656,6 +1661,55 @@ chosen, every other decision on its quiet option among those that do not redirec
 (D20-A and D28-B are left out). Target: at least 80% (§14).
 
 ---
+
+### Chapter 2's opening, months 25 to 30 (sheets v35 and v36, measured 30 October 2026)
+
+`calibration/REPORT-2026-10-30b.md`, after v36; `REPORT-2026-10-30.md` is v35's. Ten decisions,
+D31 to D40, with placeholder copy. Chapter 1's figures are unchanged by them, checked against
+`REPORT-2026-09-30c.md`: the same month 21 and 24 results and the same chapter 1 choices for every
+player type. Chapter 1's decisions are still scored at month 24; a decision after it is scored at
+month 30, the last month the sheet has decisions in (`OPENING_END` in `calibration/harness.js`),
+because month 24 cannot see it.
+
+**Chapter two's opening has no ruled target.** This section sets none between month 24 and month
+120. The month 30 figures below are derived by its own rule for a month between checkpoints,
+geometric interpolation, to show where the opening lands. A verdict against them is a reading,
+not a pass or a failure. Weak play cannot be interpolated that way, because its month 24 target is
+negative, so it uses the league `ref`. There is no Safety target after month 24 to derive one from.
+
+| Month 30 net worth | Derived from | Derived target | Judged against | Measured | Reading |
+|---|---|---|---|---|---|
+| Weak | `ref` 50,000 at month 24 to 8,00,000 at 120 | under 59,460 | Spender | -9,38,656 | In range |
+| Median | 1.7L at month 24 to 45L at 120 | 2,08,628 | Balanced, Cautious | 1,19,709 and 4,42,562 | Bracketed |
+| Strong | 5.4L at month 24 to 1.2Cr at 120 | 6,55,493 | Maximum saving | 8,91,423 | Above, by 36%: recorded and left |
+
+- **Strong play above its derived target: recorded and left, ruled 30 October 2026,** because the
+  target is interpolated, not ruled. Maximum saving is already 11% above at month 24 (5,98,969
+  against 5.4L) and adds about 40,000 a month through the opening, its salary restarted at month
+  24 and its costs low; the opening adds D37's 50,000 bonus and two raises. The geometric line from
+  5.4L assumes slow growth this early, so the gap is partly the target's shape.
+- **D40, term insurance (v36), costs a saver money every month and cannot be avoided by choosing:**
+  1 crore for 1,000, 50 lakh for 600, or 2,500 to the parents. Maximum saving takes 50 lakh for
+  600. Scored at month 30 it has paid twice, so validation 1 barely moves: maximum saving scores 77.0
+  (77.2 before) and 1 random player of 1,000 still scores above it, on the interpolated league
+  benchmark (`ref` 59,460, `target` 7,23,545). The cost is real from month 29 on; month 30 shows
+  little of it. The cover itself moves no bar: the term component counts only while `dependents`
+  is above zero (§4), and nothing in the sheet can set `dependents` without an engine change. Open.
+- **Validation 3, after D36-A went from 70,000 to 50,000 (v36), with chapter 1's shock windows
+  unchanged:** D28's window passes, 0 of 7 prepared players at step 4 or 5. D30's still fails, 1
+  of 5: seed 811 reaches family money in month 28. It began month 28 with nothing reachable, no
+  cash, liquid fund or equity: salary had only restarted at month 27, after D32-A's trip, D35-A's
+  80,000 and a liquid fund drawn down. With nothing reachable, any cash purchase goes to family
+  money, so the laptop's price no longer decides it. D30's window runs to its month 30 callback,
+  so it counts chapter 2's choices. Reported, not adjusted.
+- **Validation 2: no new free lunch.** D38-B was flagged on v35's first run, a raise with weekends
+  kept and no cost, and carries Life -1 for longer weekdays since; a content fix, not a target. The
+  eight flags left are chapter 1's own.
+- **Balanced holds no runway through the opening.** Its Safety reads 30, the cover points alone, at
+  every month from 25 to 30. It comes out of the layoff on D29-C's freelance money with no cash.
+- **Maximum saving takes D35-C, the payment plan.** Scored at month 30 it has paid 6 of 12
+  instalments, 42,000 against 80,000 at once, so it looks cheaper than it is (84,000 in all). A
+  scoring horizon effect, not a choice a saver would make with the whole plan in view.
 
 ## 14. Where I am not confident
 

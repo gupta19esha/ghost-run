@@ -85,7 +85,10 @@ console.log(`"In range" for a single-value target means within 20% of it. "Under
 const opening = openingTargets(targets);
 const OPENING_MONTHS = Array.from({ length: OPENING_END - CHAPTER_END }, (_, i) => CHAPTER_END + 1 + i);
 console.log(`## Chapter 2's opening, months ${CHAPTER_END + 1} to ${OPENING_END}\n`);
-console.log(`Section 13 has no target between month 24 and month 120. These month ${OPENING_END} targets are derived by its own rule for a month between checkpoints, geometric interpolation; they are not ruled. Weak play uses the league ref, because the month 24 weak target is negative and a geometric rule cannot cross zero. There is no Safety target after month 24 to derive one from.\n`);
+console.log(`**Chapter two's opening has no ruled target.** Section 13 has no target between month 24 and month 120. These month ${OPENING_END} targets are derived by its own rule for a month between checkpoints, geometric interpolation, to show where the opening lands; they are not ruled, so a verdict against them is a reading, not a pass or a failure. Weak play uses the league ref, because the month 24 weak target is negative and a geometric rule cannot cross zero. There is no Safety target after month 24 to derive one from.\n`);
+// Ruled 30 October 2026: strong play's overshoot of the derived month 30 target is recorded and
+// left, because the target is interpolated, not ruled
+const recorded = (verdict) => (verdict === "above" ? "above, recorded and left: the target is derived, not ruled" : verdict);
 const openingNw = (type) => median(across[type], OPENING_END, (b) => b.netWorth);
 const [osp, oba, oca, oms] = ["spender", "balanced", "cautious", "maximum saving"].map(openingNw);
 table(
@@ -93,7 +96,7 @@ table(
   [
     ["Weak", opening.weak.from, `under ${rupees(opening.weak.below)}`, "Spender", rupees(osp), targetVerdict({ below: opening.weak.below }, osp)],
     ["Median", opening.median.from, rupees(opening.median.value), "Balanced, Cautious", `${rupees(oba)}, ${rupees(oca)}`, medianVerdict("net worth", { value: opening.median.value }, oba, oca)],
-    ["Strong", opening.strong.from, rupees(opening.strong.value), "Maximum saving", rupees(oms), targetVerdict({ value: opening.strong.value }, oms)],
+    ["Strong", opening.strong.from, rupees(opening.strong.value), "Maximum saving", rupees(oms), recorded(targetVerdict({ value: opening.strong.value }, oms))],
   ],
 );
 table(

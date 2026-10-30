@@ -426,6 +426,7 @@ If Day 7 is under 12%, stop and fix the loop. Do not build Chapter 2.
 |---|---|
 | File | `chapter1_decisions_v34.xlsx`, with tabs README, Decisions and Options |
 | Chapter 1 | 30 decisions, 94 options, months 1 to 24, ages 22 to 23 |
+| Chapter 2, opening | 10 decisions, D31 to D40, 31 options, months 25 to 30, age 24, sheets v35 and v36 (D40 term insurance, D36-A at 50,000). Numbers, preconditions, callbacks and illustrations done; every text field is a placeholder, `[PLACEHOLDER <id> <field>. Brief: ... States: ...]`, until the product owner writes the copy. Calibration: maths doc section 13, chapter 2's opening |
 | Type mix | 9 Allocation, 9 Temptation, 7 Obligation, 3 Shock, 2 Fork |
 | Phase 0 test set | 12 decisions marked `phase0_test = Y`: D01, D02, D05, D08, D11, D12, D16, D20, D26, D28, D29, D30 |
 | Copy | The owner's text, kept as written. The one exception: a figure the engine computes is now a placeholder token, such as `{equity_balance}` |
