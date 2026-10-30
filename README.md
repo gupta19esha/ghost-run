@@ -51,6 +51,27 @@ Every paid response is cached on disk by fork and attempt, so running a fork aga
 and the committed cache lets the demo narrate with no network. Only the demo save is accepted, so
 the forks a paid model can be asked about are finite.
 
+## Motion and sound
+
+`web/motion.js` runs the ghost screen's motion with `requestAnimationFrame` and the Web
+Animations API, no libraries. The fork screen's hero is the ghost line drawing itself from the
+split month, ringing each month where the ghost could not take the real choice as it passes.
+Figures count instead of cutting, and bars move from their old value to their new one: a rise
+overshoots and settles, a fall is flatter and quicker. Screens slide forward into a fork and back
+to the run, and the tapped choice travels into place. The run's 24 month ticks fill on first view.
+
+- Under `prefers-reduced-motion`, everything lands on its finished state at once.
+- A tap or key press anywhere finishes every running animation and waiting step first.
+- Motion moves transforms, opacity, stroke offsets and widths inside fixed tracks, never layout,
+  so it cannot change whether a screen fits.
+- Leaving a screen drops its motion where it is, so nothing of it plays over the next one.
+
+`web/sound.js` synthesizes every sound with Web Audio: a tap, a choice, the chapter closing, a bar
+rising or falling, and the ghost line landing. The audio context starts on the first tap. Sound is
+on by default; the mute control, top right on every view, is remembered in `localStorage`.
+Choosing a fork and the ghost line landing give a short vibration where `navigator.vibrate`
+exists. The mute control is about sound only, so it doesn't turn vibration off.
+
 ## vendor/
 
 `vendor/dry-run-engine/` is the prior work Ghost Run is built on: the engine, the sheet's
