@@ -326,3 +326,6 @@
 .verdict-tally { margin: 8px 0 0; font-size: 13px; font-weight: 600; color: var(--bone-dim); }
 .text-toggle { display: block; margin-top: 8px; padding: 4px 0; background: none; border: 0; color: var(--deep); font-family: var(--body); font-size: 14px; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .text-toggle:focus-visible { outline: 3px solid var(--deep-raised); outline-offset: 2px; border-radius: 4px; }
+.narration-wait { display: flex; align-items: center; gap: 10px; margin: 10px 0 0; font-size: 15px; color: var(--slate); }
+.narration-wait .ghost-mark { animation: float 1.6s ease-in-out infinite; }
+.verdict-warning { margin: 10px 0 0; font-size: 13px; font-weight: 600; color: color-mix(in srgb, var(--vermilion), var(--bone) var(--toward-ink)); }

@@ -5,7 +5,7 @@
 //
 // Two views, by the address: the run (#), and a fork (#fork/<choice index>/<option id>).
 
-import { readRun, forkView, costList, surpriseList, surpriseWords, reasons, markedDraft, BAR_KEYS, BAR_NAMES, optionLabel } from "./ghost-model.js";
+import { readRun, forkView, checkAttempts, costList, surpriseList, surpriseWords, reasons, markedDraft, BAR_KEYS, BAR_NAMES, optionLabel } from "./ghost-model.js";
 import { formatMoney, formatRupees } from "../vendor/dry-run-engine/text/render.js";
 import { FORMATS } from "../verify/render.js";
 
@@ -243,7 +243,7 @@ function forkScreen(index, option) {
       h("p", { class: "ghost-error" }, `That fork cannot be run: ${error.message}`),
       h("button", { type: "button", class: "close-button", onclick: () => { location.hash = ""; } }, "Back to your run")) };
   }
-  const { result, accepted } = view;
+  const { result } = view;
   const screen = h("section", { class: "screen ghost-screen", "data-screen": "fork" });
 
   screen.append(
@@ -277,32 +277,71 @@ function forkScreen(index, option) {
       h("div", { class: "gbar-head" }, h("span", { class: "gbar-name" }, c.name), h("span", { class: "gbar-gap" }, c.gap === "level" ? "Level" : `Ghost ${c.gap}`)),
       track(c.real), track(c.ghost, true))))));
 
-  // The narration, and every attempt at it: verify()'s verdict on each, in this browser
-  record(view);
-  const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
-  const toggleFor = (target, show, hide) => {
-    const button = h("button", { type: "button", class: "text-toggle", "aria-expanded": "false",
-      onclick: () => {
-        target.hidden = !target.hidden;
-        button.setAttribute("aria-expanded", String(!target.hidden));
-        button.textContent = target.hidden ? show : hide;
-      } }, show);
-    return button;
-  };
+  // The narration: asked of api/narrate.js, then every attempt it made checked here by verify()
+  const card = h("div", { class: "card narration" },
+    h("p", { class: "month-label" }, "Narration"),
+    h("p", { class: "narration-wait" }, ghostMark(18), "The narrator is writing, and every attempt is being checked…"));
+  screen.append(h("section", { class: "ghost-section" }, card),
+    h("div", { class: "fork-foot" },
+      h("button", { type: "button", class: "action", onclick: () => { location.hash = ""; } }, "Back to your run")));
+  let gone = false;
+  requestNarration(index, option)
+    .then((served) => { if (!gone) card.replaceChildren(...narrationCard(view, checkAttempts(result, served))); })
+    .catch((error) => {
+      if (gone) return;
+      card.replaceChildren(
+        h("p", { class: "month-label" }, "Narration"),
+        h("p", { class: "narration-text is-missing" }, error.message));
+    });
+  return { screen, cleanup: () => { gone = true; } };
+}
+
+// Asks the server to narrate a fork of the demo life: every attempt it made, in order
+async function requestNarration(index, option) {
+  let response;
+  try {
+    response = await fetch("/api/narrate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ seed: save.seed, choices: save.choices, monthIndex: index, option }),
+    });
+  } catch {
+    throw new Error("The narrator could not be reached.");
+  }
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error ? `${data.error}.` : `The narrator answered ${response.status}.`);
+  return data.attempts;
+}
+
+const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
+function toggleFor(target, show, hide) {
+  const button = h("button", { type: "button", class: "text-toggle", "aria-expanded": "false",
+    onclick: () => {
+      target.hidden = !target.hidden;
+      button.setAttribute("aria-expanded", String(!target.hidden));
+      button.textContent = target.hidden ? show : hide;
+    } }, show);
+  return button;
+}
+
+// The card's contents once the attempts are in and checked
+function narrationCard(view, checked) {
+  record(view, checked);
+  const { accepted, rejected, attempts } = checked;
 
   // The accepted narration. A same-money fork's first sentence is its headline
   let lead = null;
-  let body = view.rendered;
-  if (view.rendered && view.sameMoney) {
-    const cut = view.rendered.indexOf(". ") + 1;
-    lead = view.rendered.slice(0, cut);
-    body = view.rendered.slice(cut + 1);
+  let body = checked.rendered;
+  if (checked.rendered && view.sameMoney) {
+    const cut = checked.rendered.indexOf(". ") + 1;
+    lead = checked.rendered.slice(0, cut);
+    body = checked.rendered.slice(cut + 1);
   }
 
   const figures = accepted && h("ul", { class: "figures", hidden: true }, accepted.figures.map((f) =>
     h("li", {}, h("code", {}, `{${f.token}}`), " ", h("span", {}, FORMATS[f.token](f.value)))));
 
-  const rejectedList = view.rejected.map((a) => {
+  const rejectedList = rejected.map((a) => {
     const draft = h("p", { class: "draft", hidden: true },
       markedDraft(a.narration, a.failures).map((part) => (part.mark ? h("mark", {}, part.text) : part.text)));
     return h("li", { class: "attempt" },
@@ -313,31 +352,28 @@ function forkScreen(index, option) {
       draft);
   });
 
-  const total = view.attempts.length;
-  screen.append(h("section", { class: "ghost-section" },
-    h("div", { class: "card narration" },
-      h("p", { class: "month-label" }, "Narration · placeholder"),
-      lead && h("p", { class: "narration-lead" }, lead),
-      view.rendered
-        ? h("p", { class: "narration-text" }, body)
-        : h("p", { class: "narration-text is-missing" }, "No attempt passed, so there is nothing to show."),
-      h("div", { class: `verdict ${accepted ? "is-ok" : "is-bad"}` },
-        accepted
-          ? h("p", { class: "verdict-line" }, h("b", {}, "✓"),
-            ` Accepted on attempt ${accepted.number} of ${total}. ${plural(accepted.figures.length, "figure", "figures")} checked against the simulation.`)
-          : h("p", { class: "verdict-line" }, h("b", {}, "✕"), ` None of ${plural(total, "attempt", "attempts")} passed.`),
-        h("p", { class: `rejected-count${view.rejected.length ? " has-some" : ""}` },
-          view.rejected.length ? `${plural(view.rejected.length, "attempt", "attempts")} rejected` : "No attempts rejected on this fork"),
-        rejectedList.length > 0 && h("ol", { class: "attempts" }, rejectedList),
-        h("p", { class: "verdict-note" },
-          "Every attempt is checked by verify() in this browser, against this fork, and kept, passed or not. ",
-          "No model has written anything yet: the rejected drafts are deliberate rehearsals of the mistakes a model will make."),
-        h("p", { class: "verdict-tally" }, tallyLine()),
-        figures && toggleFor(figures, "Show the figures", "Hide the figures"),
-        figures))),
-  h("div", { class: "fork-foot" },
-    h("button", { type: "button", class: "action", onclick: () => { location.hash = ""; } }, "Back to your run")));
-  return { screen };
+  return [
+    h("p", { class: "month-label" }, "Narration"),
+    lead && h("p", { class: "narration-lead" }, lead),
+    checked.rendered
+      ? h("p", { class: "narration-text" }, body)
+      : h("p", { class: "narration-text is-missing" }, `No attempt passed in ${plural(attempts.length, "try", "tries")}, so there is nothing to show.`),
+    h("div", { class: `verdict ${accepted ? "is-ok" : "is-bad"}` },
+      accepted
+        ? h("p", { class: "verdict-line" }, h("b", {}, "✓"),
+          ` Accepted on attempt ${accepted.number} of ${attempts.length}. ${plural(accepted.figures.length, "figure", "figures")} checked against the simulation.`)
+        : h("p", { class: "verdict-line" }, h("b", {}, "✕"), ` None of ${plural(attempts.length, "attempt", "attempts")} passed.`),
+      h("p", { class: `rejected-count${rejected.length ? " has-some" : ""}` },
+        rejected.length ? `${plural(rejected.length, "attempt", "attempts")} rejected` : "No attempts rejected on this fork"),
+      rejectedList.length > 0 && h("ol", { class: "attempts" }, rejectedList),
+      !checked.agrees && h("p", { class: "verdict-warning" }, "This browser's check disagrees with the server's on at least one attempt. The browser's verdict is shown."),
+      h("p", { class: "verdict-note" },
+        "Every attempt the narrator made is checked again by verify() in this browser, against this fork, and kept, passed or not. ",
+        "A rejected attempt's reasons went back to the narrator before it tried again."),
+      h("p", { class: "verdict-tally" }, tallyLine()),
+      figures && toggleFor(figures, "Show the figures", "Hide the figures"),
+      figures),
+  ].filter(Boolean);
 }
 
 // ---------- The attempt record ----------
@@ -345,8 +381,8 @@ function forkScreen(index, option) {
 // Every attempt on every fork opened this session, kept by fork so reopening one does not count
 // it twice
 const attemptLog = new Map();
-function record(view) {
-  attemptLog.set(`${view.monthIndex}:${view.ghost.option}`, view.attempts.map((a) => ({ number: a.number, ok: a.ok, rules: a.failures.map((f) => f.rule) })));
+function record(view, checked) {
+  attemptLog.set(`${view.monthIndex}:${view.ghost.option}`, checked.attempts.map((a) => ({ number: a.number, ok: a.ok, rules: a.failures.map((f) => f.rule) })));
 }
 function tallyLine() {
   const all = [...attemptLog.values()].flat();
