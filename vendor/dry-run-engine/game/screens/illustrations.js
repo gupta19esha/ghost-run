@@ -6,7 +6,8 @@
 // shapes with every colour swapped for its muted one (MUTED below). Colours are tokens from
 // game/tokens.css, never hex (UI.md build rule 5).
 //
-// All thirty Chapter 1 decisions have one. A decision with no entry here gets an empty colour
+// All thirty Chapter 1 decisions have one, and the nine of chapter 2's opening, D31 to D39, drawn for
+// sheet v35. A decision with no entry here gets an empty colour
 // block, never filler (UI.md rule 4).
 
 const VIEWBOX = "0 0 390 286";
@@ -515,9 +516,142 @@ const D30 = derived(`
     </g>
     <rect x="56" y="240" width="182" height="5" rx="2" fill="var(--paper-shadow)"/>`);
 
+// Chapter 2's opening, D31 to D39 (sheet v35). Drawn in the batches' style: the decision's object
+// on the deep block, one lighter circle off an edge, paper tones and marigold. As rule 7 asks,
+// nothing is teal or vermilion, and no drawing colours one option's object over another's
+
+// D31: a jar for the emergency fund, a little in it
+const D31 = derived(`
+    <circle cx="64" cy="58" r="72" fill="var(--deep-raised)"/>
+    <rect x="146" y="62" width="98" height="18" rx="5" fill="var(--paper-shadow)"/>
+    <rect x="152" y="78" width="86" height="18" rx="4" fill="var(--paper-dim)"/>
+    <rect x="140" y="92" width="110" height="152" rx="18" fill="var(--bone)"/>
+    <rect x="158" y="128" width="74" height="34" rx="3" fill="var(--paper-dim)"/>
+    <rect x="168" y="140" width="54" height="5" rx="2" fill="var(--paper-line)"/>
+    <rect x="168" y="150" width="34" height="5" rx="2" fill="var(--paper-line)"/>
+    <g fill="var(--marigold)">
+      <circle cx="170" cy="224" r="13"/>
+      <circle cx="197" cy="227" r="13"/>
+      <circle cx="224" cy="223" r="13"/>
+      <circle cx="184" cy="203" r="13"/>
+    </g>
+    <rect x="96" y="246" width="198" height="5" rx="2" fill="var(--paper-shadow)"/>`);
+
+// D32: a rucksack and a ticket
+const D32 = derived(`
+    <circle cx="326" cy="60" r="74" fill="var(--deep-raised)"/>
+    <path d="M154 96v-14a26 26 0 0 1 52 0v14" stroke="var(--paper-shadow)" stroke-width="8" fill="none" stroke-linecap="round"/>
+    <rect x="118" y="92" width="124" height="154" rx="34" fill="var(--paper-dim)"/>
+    <path d="M118 132a34 34 0 0 1 34-34h56a34 34 0 0 1 34 34v8H118Z" fill="var(--paper-side)"/>
+    <rect x="140" y="176" width="80" height="50" rx="10" fill="var(--bone)"/>
+    <rect x="172" y="176" width="16" height="10" rx="2" fill="var(--paper-shadow)"/>
+    <g transform="rotate(-8 304 196)">
+      <rect x="258" y="174" width="92" height="44" rx="4" fill="var(--bone)"/>
+      <rect x="258" y="174" width="92" height="10" rx="3" fill="var(--marigold)"/>
+      <path d="M326 186v32" stroke="var(--paper-line)" stroke-width="2" stroke-dasharray="4 4"/>
+      <rect x="268" y="196" width="44" height="5" rx="2" fill="var(--paper-line)"/>
+    </g>
+    <rect x="90" y="248" width="270" height="5" rx="2" fill="var(--paper-shadow)"/>`);
+
+// D33: a small amount, every month
+const D33 = derived(`
+    <circle cx="66" cy="60" r="70" fill="var(--deep-raised)"/>
+    <rect x="112" y="64" width="198" height="176" rx="6" fill="var(--paper-shadow)"/>
+    <rect x="104" y="70" width="198" height="176" rx="6" fill="var(--paper-dim)"/>
+    <rect x="96" y="76" width="198" height="176" rx="6" fill="var(--bone)"/>
+    <rect x="96" y="76" width="198" height="34" rx="6" fill="var(--paper-dim)"/>
+    <rect x="128" y="64" width="8" height="22" rx="3" fill="var(--paper-shadow)"/>
+    <rect x="254" y="64" width="8" height="22" rx="3" fill="var(--paper-shadow)"/>
+    <g fill="var(--paper-line)">
+      <rect x="112" y="124" width="20" height="16" rx="2"/><rect x="138" y="124" width="20" height="16" rx="2"/><rect x="164" y="124" width="20" height="16" rx="2"/><rect x="190" y="124" width="20" height="16" rx="2"/><rect x="216" y="124" width="20" height="16" rx="2"/><rect x="242" y="124" width="20" height="16" rx="2"/>
+      <rect x="112" y="148" width="20" height="16" rx="2"/><rect x="138" y="148" width="20" height="16" rx="2"/><rect x="164" y="148" width="20" height="16" rx="2"/><rect x="190" y="148" width="20" height="16" rx="2"/><rect x="216" y="148" width="20" height="16" rx="2"/><rect x="242" y="148" width="20" height="16" rx="2"/>
+      <rect x="112" y="172" width="20" height="16" rx="2"/><rect x="138" y="172" width="20" height="16" rx="2"/><rect x="164" y="172" width="20" height="16" rx="2"/><rect x="190" y="172" width="20" height="16" rx="2"/><rect x="216" y="172" width="20" height="16" rx="2"/><rect x="242" y="172" width="20" height="16" rx="2"/>
+      <rect x="112" y="196" width="20" height="16" rx="2"/><rect x="138" y="196" width="20" height="16" rx="2"/><rect x="164" y="196" width="20" height="16" rx="2"/><rect x="190" y="196" width="20" height="16" rx="2"/><rect x="216" y="196" width="20" height="16" rx="2"/><rect x="242" y="196" width="20" height="16" rx="2"/>
+    </g>
+    <circle cx="122" cy="132" r="11" fill="var(--marigold)"/>`);
+
+// D34: a certificate with its seal
+const D34 = derived(`
+    <circle cx="322" cy="64" r="76" fill="var(--deep-raised)"/>
+    <rect x="86" y="78" width="218" height="150" rx="4" fill="var(--bone)"/>
+    <rect x="98" y="90" width="194" height="126" rx="2" fill="none" stroke="var(--paper-line)" stroke-width="2"/>
+    <rect x="140" y="110" width="110" height="10" rx="2" fill="var(--paper-shadow)"/>
+    <rect x="118" y="138" width="154" height="6" rx="2" fill="var(--paper-line)"/>
+    <rect x="118" y="154" width="120" height="6" rx="2" fill="var(--paper-line)"/>
+    <rect x="118" y="190" width="70" height="4" rx="2" fill="var(--paper-shadow)"/>
+    <path d="M250 210l-10 34 16-8 8 14 6-38Z" fill="var(--marigold)"/>
+    <circle cx="256" cy="196" r="22" fill="var(--marigold)"/>
+    <circle cx="256" cy="196" r="13" fill="none" stroke="var(--bone)" stroke-width="3"/>
+    <rect x="70" y="250" width="250" height="5" rx="2" fill="var(--paper-shadow)"/>`);
+
+// D35: a hospital bed, a drip beside it
+const D35 = derived(`
+    <circle cx="70" cy="62" r="72" fill="var(--deep-raised)"/>
+    <rect x="66" y="108" width="14" height="140" rx="3" fill="var(--paper-shadow)"/>
+    <rect x="80" y="146" width="232" height="26" rx="8" fill="var(--bone)"/>
+    <rect x="88" y="126" width="66" height="24" rx="11" fill="var(--paper-dim)"/>
+    <rect x="160" y="140" width="152" height="20" rx="8" fill="var(--paper-side)"/>
+    <rect x="72" y="170" width="248" height="16" rx="4" fill="var(--paper-shadow)"/>
+    <rect x="92" y="186" width="10" height="58" fill="var(--paper-shadow)"/>
+    <rect x="296" y="186" width="10" height="58" fill="var(--paper-shadow)"/>
+    <path d="M340 70v178" stroke="var(--paper-shadow)" stroke-width="5" stroke-linecap="round"/>
+    <rect x="324" y="76" width="30" height="44" rx="7" fill="var(--bone)"/>
+    <path d="M339 120c0 30-20 30-30 26" stroke="var(--paper-line)" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <rect x="50" y="248" width="310" height="5" rx="2" fill="var(--paper-shadow)"/>`);
+
+// D36: a laptop, a note stuck to it
+const D36 = derived(`
+    <circle cx="324" cy="62" r="74" fill="var(--deep-raised)"/>
+    <rect x="112" y="72" width="166" height="114" rx="8" fill="var(--bone)"/>
+    <rect x="122" y="82" width="146" height="94" rx="3" fill="var(--deep)"/>
+    <rect x="134" y="98" width="70" height="6" rx="2" fill="var(--paper-line)"/>
+    <rect x="134" y="112" width="96" height="6" rx="2" fill="var(--paper-line)"/>
+    <rect x="134" y="126" width="54" height="6" rx="2" fill="var(--paper-line)"/>
+    <path d="M92 194h206l-14 28H106Z" fill="var(--paper-dim)"/>
+    <rect x="172" y="202" width="46" height="12" rx="3" fill="var(--paper-shadow)"/>
+    <rect x="240" y="88" width="26" height="26" rx="2" fill="var(--marigold)" transform="rotate(8 253 101)"/>
+    <rect x="78" y="226" width="234" height="5" rx="2" fill="var(--paper-shadow)"/>`);
+
+// D37: a diya lit for Diwali, and an envelope
+const D37 = derived(`
+    <circle cx="66" cy="60" r="70" fill="var(--deep-raised)"/>
+    <rect x="208" y="118" width="128" height="86" rx="4" fill="var(--bone)"/>
+    <path d="M210 120l62 44 62-44" stroke="var(--paper-line)" stroke-width="3" fill="none" stroke-linejoin="round"/>
+    <path d="M78 206h120c-6 26-30 40-60 40s-54-14-60-40Z" fill="var(--paper-shadow)"/>
+    <path d="M78 206h120" stroke="var(--paper-side)" stroke-width="6" stroke-linecap="round"/>
+    <path d="M138 196c-14-12-14-30 0-50 14 20 14 38 0 50Z" fill="var(--marigold)"/>
+    <path d="M138 192c-6-6-6-14 0-24 6 10 6 18 0 24Z" fill="var(--bone)"/>
+    <rect x="60" y="248" width="290" height="5" rx="2" fill="var(--paper-shadow)"/>`);
+
+// D38: a week, its weekend, and a phone
+const D38 = derived(`
+    <circle cx="326" cy="60" r="74" fill="var(--deep-raised)"/>
+    <g fill="var(--bone)">
+      <rect x="48" y="104" width="34" height="42" rx="4"/><rect x="88" y="104" width="34" height="42" rx="4"/><rect x="128" y="104" width="34" height="42" rx="4"/><rect x="168" y="104" width="34" height="42" rx="4"/><rect x="208" y="104" width="34" height="42" rx="4"/>
+    </g>
+    <g fill="var(--paper-dim)">
+      <rect x="248" y="104" width="34" height="42" rx="4"/><rect x="288" y="104" width="34" height="42" rx="4"/>
+    </g>
+    <rect x="152" y="160" width="62" height="96" rx="10" fill="var(--bone)"/>
+    <rect x="160" y="172" width="46" height="70" rx="3" fill="var(--deep)"/>
+    <rect x="166" y="180" width="34" height="10" rx="3" fill="var(--marigold)"/>
+    <path d="M226 184a26 26 0 0 1 0 32M238 174a40 40 0 0 1 0 52" stroke="var(--paper-line)" stroke-width="3" fill="none" stroke-linecap="round"/>
+    <rect x="40" y="256" width="300" height="5" rx="2" fill="var(--paper-shadow)"/>`);
+
+// D39: the market on a screen, rising
+const D39 = derived(`
+    <circle cx="324" cy="226" r="74" fill="var(--deep-raised)"/>
+    <rect x="86" y="58" width="218" height="146" rx="8" fill="var(--bone)"/>
+    <rect x="98" y="70" width="194" height="122" rx="3" fill="var(--deep)"/>
+    <path d="M110 176l38-16 30 8 34-36 32 8 34-42" stroke="var(--bone)" stroke-width="4" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+    <circle cx="278" cy="98" r="6" fill="var(--marigold)"/>
+    <rect x="180" y="204" width="30" height="24" fill="var(--paper-shadow)"/>
+    <rect x="148" y="226" width="94" height="10" rx="3" fill="var(--paper-dim)"/>`);
+
 const ILLUSTRATIONS = {
   D01, D02, D03, D04, D05, D06, D07, D08, D09, D10, D11, D12, D13, D14, D15,
   D16, D17, D18, D19, D20, D21, D22, D23, D24, D25, D26, D27, D28, D29, D30,
+  D31, D32, D33, D34, D35, D36, D37, D38, D39,
 };
 
 // The colour block, with the drawing in it when the decision has one
