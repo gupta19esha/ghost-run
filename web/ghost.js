@@ -408,10 +408,10 @@ function forkScreen(index, option) {
   const { result } = view;
   const screen = h("section", { class: "screen ghost-screen", "data-screen": "fork" });
 
-  // The top right corner is the mute control's, on every view
   screen.append(
     h("div", { class: "fork-top" },
-      h("button", { type: "button", class: "back", onclick: () => { location.hash = ""; } }, "‹ Your run")),
+      h("button", { type: "button", class: "back", onclick: () => { location.hash = ""; } }, "‹ Your run"),
+      h("div", { class: "brand" }, ghostMark(20), "Ghost Run")),
     h("p", { class: "month-label" }, `What if · Month ${view.month}`));
   const ghostCard = h("div", { class: "ghost-card" }, view.ghost.label);
   const forkChart = chart({ real: result.real.bars, ghost: result.ghost.bars, split: view.month, marks: view.notices.map((n) => n.month) });
@@ -648,7 +648,7 @@ function route() {
   next.play?.(from);
 }
 
-// The mute control: always on screen, top right, sound on until the player turns it off
+// The mute control: always on screen, in the dock at the foot, sound on until the player turns it off
 function muteControl() {
   const button = h("button", { type: "button", class: "mute", "data-silent": "" });
   const draw = () => {
@@ -665,7 +665,7 @@ function muteControl() {
     sound.tap();
   });
   draw();
-  return button;
+  return h("div", { class: "dock" }, h("div", { class: "dock-inner" }, button));
 }
 
 // Every button taps; choosing a fork confirms, with a short buzz where the device can

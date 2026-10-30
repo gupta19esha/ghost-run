@@ -13,10 +13,12 @@
   --ghost-fill: #E6EEF9;
   --ghost-halo: rgba(58, 109, 184, 0.16);
   --mark: var(--marigold);
+  --dock-height: 64px;
 }
 
 .ghost-screen {
-  padding: 0 var(--gutter) 40px;
+  /* Room at the foot for the dock (below), so the last line scrolls clear of it */
+  padding: 0 var(--gutter) calc(40px + var(--dock-height) + env(safe-area-inset-bottom));
   min-height: 100dvh;
 }
 
@@ -348,24 +350,43 @@
 .month-num { transition: background-color 200ms ease-out, box-shadow 200ms ease-out; }
 .month-num.is-closed { box-shadow: inset 0 0 0 2.5px var(--marigold); }
 
-/* The mute control: fixed, top right of the column, on every view */
-.mute {
+/* The dock: a strip of its own at the foot of every view, where a thumb rests in portrait. It is
+   opaque and the screen leaves room for it, so it never sits over content at any scroll
+   position: content passes behind it, and the end of the page stops above it */
+.dock {
   position: fixed;
-  top: 14px;
-  right: max(14px, calc(50vw - 240px + 14px));
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 10;
+  background: var(--ink);
+  border-top: 2px solid var(--card-edge);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+.dock-inner {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  max-width: 480px;
+  height: var(--dock-height);
+  margin: 0 auto;
+  padding: 0 var(--gutter);
+}
+
+/* The mute control, in the dock on the right, under the right thumb */
+.mute {
   display: inline-flex;
   align-items: center;
-  gap: 5px;
-  height: 36px;
-  padding: 0 12px 0 10px;
+  gap: 6px;
+  height: 44px;
+  padding: 0 16px 0 13px;
   background: var(--ink-raised);
   border: 2px solid var(--card-edge);
   border-bottom-width: 4px;
   border-radius: 999px;
   color: var(--deep);
   font-family: var(--body);
-  font-size: 13px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
 }

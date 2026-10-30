@@ -68,7 +68,7 @@ to the run, and the tapped choice travels into place. The run's 24 month ticks f
 
 `web/sound.js` synthesizes every sound with Web Audio: a tap, a choice, the chapter closing, a bar
 rising or falling, and the ghost line landing. The audio context starts on the first tap. Sound is
-on by default; the mute control, top right on every view, is remembered in `localStorage`.
+on by default; the mute control, in a dock at the foot of every view where a thumb reaches it, is remembered in `localStorage`.
 Choosing a fork and the ghost line landing give a short vibration where `navigator.vibrate`
 exists. The mute control is about sound only, so it doesn't turn vibration off.
 
