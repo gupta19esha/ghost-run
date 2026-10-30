@@ -126,3 +126,36 @@ Separately, the end of chapter one has been added to the game, in `game/` only. 
   REPORT-COPY.md.
 - `game/labels.js` holds the line beside Safety and Freedom, which `game/main.js` had, so the
   card and the report share it.
+
+## Chapters three to six: the blocker
+
+Chapters three to six are not started. They can't be, because the market isn't written that far.
+
+Broad equity's script runs to month 240, the end of chapter six. Small caps' script stops at
+month 40 (`SIMULATION-MATHS.md` section 7: "41 to 240, not yet authored"). The engine refuses to
+guess past that point: `engine/market.js` throws "The small_cap script is authored through month
+40, not month 41" when a run that holds small caps reaches month 41. Any run that took D20-A, B
+or D can hold small caps, and a run still holding them at month 40 stops there.
+
+Chapter three starts at month 61, but the wall is earlier: it falls at month 41, inside chapter
+two (months 25 to 60). Chapter two can be written to month 40. Nothing after month 40 can run
+for every player until the script is extended.
+
+To lift it:
+
+1. Author small caps from month 41 to month 240 in the section 7 table, regime by regime. The
+   broad equity regimes are recovery from 41 to 60, a long rise from 61 to 120, a correction
+   from 121 to 132, then mixed. Small caps should take the same events, rougher and with a
+   higher long-run drift (about 13% a year against equity's 11%).
+2. Regenerate with `python scripts/export_market_script.py`. That writes `data/market-script.json`
+   and `engine/market-script.js`. Neither is edited by hand.
+3. If a later chapter's copy depends on the market's direction, add a lesson window for it in
+   the same section, then run `engine/test/market.test.js`. It checks every window's direction
+   over 200 seeds.
+4. Measure it: extend the calibration harness past month 30, with targets that section 13 doesn't
+   set yet, and rule on the small cap figures that section 14 still lists as uncalibrated.
+5. Only then write content past month 40. A callback that lands after month 40 is safe once
+   steps 1 to 4 are done.
+
+Until then, a decision whose callbacks land after month 40 can't be written, in chapter two or
+later.
