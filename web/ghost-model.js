@@ -2,13 +2,15 @@
 // web/test/ghost-model.test.js checks it against the same runner and verifier the page uses.
 //
 // Every figure here comes from the engine through runner/: replay() for the real run, fork()
-// for the ghost. verify() checks the narration against the fork it narrates. No model is called.
+// for the ghost. The narration comes from api/narrate.js; every attempt it returns is checked
+// again here, by verify() against the fork it narrates, before it is shown.
 
 import { play } from "../runner/replay.js";
 import { fork } from "../runner/fork.js";
-import { order, SCORE, UNITS } from "../agent/rank.js";
-import { attempt } from "../verify/attempts.js";
-import { resolveTokens } from "../verify/tokens.js";
+import { order, SCORE } from "../agent/rank.js";
+import { judge } from "../verify/attempts.js";
+import { leadCheck } from "../agent/checks.js";
+import { sameMoney, SAME_MONEY_LEAD } from "../agent/prompt.js";
 import { renderNarration, FORMATS } from "../verify/render.js";
 import { createState, getBars, getDecision, tokenValues } from "../vendor/dry-run-engine/engine/index.js";
 import { renderText } from "../vendor/dry-run-engine/text/render.js";
@@ -74,76 +76,23 @@ export function surpriseWords(reason, end) {
   return "";
 }
 
-// The same money, a different life: net worth ends within a quarter of a unit (agent/rank.js
-// UNITS, so about 8,750) while a bar ends a whole unit or more apart. The bar that moved most, in
-// units, is the one the narration turns on. -> that bar, or null
-export const SAME_MONEY = UNITS.netWorth / 4;
-export function sameMoney(result) {
-  const end = result.divergence.at(-1);
-  if (!end || Math.abs(end.netWorth) > SAME_MONEY) return null;
-  const [bar, units] = BAR_KEYS.map((k) => [k, Math.abs(end[k]) / UNITS[k]]).sort((a, b) => b[1] - a[1])[0];
-  return units >= 1 ? bar : null;
-}
+export { sameMoney, SAME_MONEY_LEAD };
 
-const SUBSTITUTION_SENTENCE = "In month {substitution_month}, {withdrawn_choice} was not available on this path, so the ghost took {substitute_choice}.";
-const DISCLAIMER = "This is placeholder narration, written before any model is connected.";
-
-// The placeholder narration: tokens only, so verify() can check every figure in it. A fork where
-// money barely moves leads on that, because it is the outcome the feature exists to show; any
-// other leads on the choice. A substitution sentence is there when the ghost had one, as a real
-// narration must have
-export function placeholderNarration(result) {
-  const bar = sameMoney(result);
-  const parted = resolveTokens(result).identical_months === 0
-    ? "The two lives parted at once, in month {first_divergent_month}."
-    : "The two lives were the same for {identical_months} months and parted in month {first_divergent_month}.";
-  const others = BAR_KEYS.filter((k) => k !== bar);
-  const sentences = bar
-    ? [
-      "The same money, a different life.",
-      `By month {end_month} the two lives are worth almost the same, the ghost has {net_worth_gap}, but its ${BAR_NAMES[bar]} ends {${bar}_gap}.`,
-      "It turns on month {fork_month}, when the ghost took {ghost_choice} instead of {real_choice}.",
-      `Its ${BAR_NAMES[others[0]]} ends {${others[0]}_gap}, and its ${BAR_NAMES[others[1]]} {${others[1]}_gap}.`,
-    ]
-    : [
-      "In month {fork_month} you chose {real_choice}, and the ghost took {ghost_choice}.",
-      parted,
-      "By month {end_month} the ghost has {net_worth_gap}: {ghost_net_worth} against your {real_net_worth}.",
-      "Its Safety ends {safety_gap}, its Freedom {freedom_gap}, and its Life {life_gap}.",
-    ];
-  if (result.substitutions.length > 0) sentences.splice(bar ? 3 : 1, 0, SUBSTITUTION_SENTENCE);
-  return [...sentences, DISCLAIMER].join(" ");
-}
-
-// Rehearsal drafts: deliberately flawed narrations, the mistakes a model will make, offered before
-// the good one so the checking has something to refuse. Each breaks one verify() rule:
-//   inline        a figure typed into the text instead of its token
-//   invent        a figure the simulation does not have
-//   substitution  the choice that was not on the table, left out
-export const FLAWS = {
-  inline: (narration, values) => {
-    const token = ["net_worth_gap", "ghost_net_worth", "real_net_worth"].find((t) => narration.includes(`{${t}}`));
-    return narration.replace(`{${token}}`, FORMATS[token](values[token]));
-  },
-  invent: (narration) => narration.replace(DISCLAIMER, `That leaves the ghost {retirement_years_earlier} years nearer to retiring. ${DISCLAIMER}`),
-  substitution: (narration) => narration.replace(`${SUBSTITUTION_SENTENCE} `, ""),
-};
-
-// Which flaws a fork rehearses: none, one or two, the same every time for the same fork. A fork
-// with a substitution always rehearses leaving it out, the mistake that matters most
-export function rehearsal(result, monthIndex, option) {
-  const n = [...`${monthIndex}:${option}`].reduce((sum, c) => sum + c.charCodeAt(0), 0) % 3;
-  const kinds = n % 2 ? ["invent", "inline"] : ["inline", "invent"];
-  return result.substitutions.length > 0 ? ["substitution", ...kinds].slice(0, Math.max(1, n)) : kinds.slice(0, n);
-}
-
-// The narrator for now: the rehearsal drafts, then the good placeholder. Lazy, as a model's
-// attempts will be: nothing after the accepted one is written
-export function* placeholderAttempts(result, flaws) {
-  const good = placeholderNarration(result);
-  const values = resolveTokens(result);
-  for (const flaw of flaws) yield { narration: FLAWS[flaw](good, values), flaw };
-  yield { narration: good, flaw: null };
+// The narrator's attempts for a fork, as api/narrate.js returned them, each checked again here:
+// verify() and the same-money lead, against the fork the screen shows.
+// served: [{ number, narration, ok }]. -> { attempts, accepted, rejected, rendered, agrees }
+// agrees is false if this check disagrees with the server's on any attempt
+export function checkAttempts(result, served) {
+  const check = leadCheck(result);
+  const attempts = served.map((a) => judge(a.narration, result, a.number, check));
+  const accepted = attempts.find((a) => a.ok) ?? null;
+  return {
+    attempts,
+    accepted,
+    rejected: attempts.filter((a) => !a.ok),
+    rendered: accepted ? renderNarration(accepted.narration, accepted) : null,
+    agrees: attempts.every((a, i) => a.ok === served[i].ok),
+  };
 }
 
 // The figures a draft typed in itself: whole numbers as written, "2,400" not "2" and "400"
@@ -174,6 +123,7 @@ export function failureWords(failure) {
   if (failure.rule === "substitution_unmentioned") {
     return `Never said that ${failure.found.map((o) => `“${label(o)}”`).join(" and ")} was not on the table on the ghost's path.`;
   }
+  if (failure.rule === "lead") return `Did not open with “${SAME_MONEY_LEAD}”, though the money ends almost level.`;
   return failure.detail;
 }
 
@@ -202,16 +152,12 @@ export function substitutionNotices(result) {
   });
 }
 
-// A fork, ready to draw: both runs, where they split, the month 24 comparison and the
-// placeholder checked by verify()
+// A fork, ready to draw: both runs, where they split, the month 24 comparison. Its narration
+// arrives separately (checkAttempts)
 export function forkView(save, monthIndex, option) {
   const result = fork(save, monthIndex, option);
   const decisionId = option.split("-")[0];
   const month = getDecision(decisionId).month;
-  // Every attempt, checked and kept; the first that passes is shown
-  const drafts = [...placeholderAttempts(result, rehearsal(result, monthIndex, option))];
-  const log = attempt(drafts.map((d) => d.narration), result);
-  log.attempts.forEach((a, i) => { a.flaw = drafts[i].flaw; });
   const end = result.divergence.at(-1);
   const realEnd = result.real.bars.find((b) => b.month === end.month);
   const ghostEnd = result.ghost.bars.find((b) => b.month === end.month);
@@ -232,9 +178,5 @@ export function forkView(save, monthIndex, option) {
     })),
     endMonth: end.month,
     sameMoney: sameMoney(result),
-    attempts: log.attempts,
-    accepted: log.accepted,
-    rejected: log.rejected,
-    rendered: log.accepted ? renderNarration(log.accepted.narration, log.accepted) : null,
   };
 }

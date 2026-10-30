@@ -2,3 +2,6 @@
 .dev.vars
 .env
 *.log
+.env.*
+!.env.example
+.vercel/
