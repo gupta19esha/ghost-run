@@ -1,5 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/narrate.js": { "maxDuration": 60, "includeFiles": "{cache/narrations/**,web/demo/save.json}" }
+  },
   "redirects": [
     { "source": "/game", "destination": "/game/", "permanent": false }
   ],
