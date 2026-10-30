@@ -11,13 +11,16 @@
 import { createState, applyDecision, advanceMonth, decisionsForMonth, tokenValues, getBars } from "/engine/index.js";
 import { renderText, formatMoney } from "/text/render.js";
 import { decisionScreen } from "/game/screens/decision.js";
+import DECISIONS from "/engine/decisions.js";
+// Every month the sheet has decisions in: chapter 1, and chapter 2's opening since sheet v35
+const LAST_MONTH = Math.max(...Object.values(DECISIONS).map((d) => d.month));
 
 const app = document.getElementById("app");
 const results = [];
 await document.fonts.ready;
 for (const path of ["first", "last"]) {
   let state = createState(1);
-  while (state.month <= 24) {
+  while (state.month <= LAST_MONTH) {
     for (;;) {
       const [decision] = decisionsForMonth(state);
       if (!decision) break;

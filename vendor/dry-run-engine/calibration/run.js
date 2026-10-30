@@ -11,7 +11,7 @@ import CONSTANTS from "../engine/constants.js";
 import {
   readTargets, randomPlaythrough, checkpoints, noDominantStrategy, noFreeLunch, shocksSurvivable,
   compoundingVisible, saverThroughShocks, typePlaythrough, PLAYER_TYPES, firstInvestmentUp, leagueScore, measuredMonths, percentile, CHAPTER_END, LAST_CALLBACK_MONTH,
-  MEASURES, targetVerdict, medianVerdict,
+  MEASURES, targetVerdict, medianVerdict, OPENING_END, openingTargets, noDominantStrategyAt,
 } from "./harness.js";
 
 const args = process.argv.slice(2);
@@ -79,6 +79,34 @@ table(
   }),
 );
 console.log(`"In range" for a single-value target means within 20% of it. "Under X" and "negative to X" targets are in range below X. For net worth the median target is "bracketed" when it lies between Balanced and Cautious; otherwise it takes the nearer type's verdict, or "in range" if either type is. For Safety the median is Balanced's verdict alone, since Cautious holds full runway and reads 100 by definition.\n`);
+
+// Chapter 2's opening, months 25 to OPENING_END: the player types against targets derived by
+// section 13's own rule, and validation 1 read at OPENING_END
+const opening = openingTargets(targets);
+const OPENING_MONTHS = Array.from({ length: OPENING_END - CHAPTER_END }, (_, i) => CHAPTER_END + 1 + i);
+console.log(`## Chapter 2's opening, months ${CHAPTER_END + 1} to ${OPENING_END}\n`);
+console.log(`Section 13 has no target between month 24 and month 120. These month ${OPENING_END} targets are derived by its own rule for a month between checkpoints, geometric interpolation; they are not ruled. Weak play uses the league ref, because the month 24 weak target is negative and a geometric rule cannot cross zero. There is no Safety target after month 24 to derive one from.\n`);
+const openingNw = (type) => median(across[type], OPENING_END, (b) => b.netWorth);
+const [osp, oba, oca, oms] = ["spender", "balanced", "cautious", "maximum saving"].map(openingNw);
+table(
+  [`Month ${OPENING_END} net worth`, "Derived from", "Target", "Judged against", "Measured", "Verdict"],
+  [
+    ["Weak", opening.weak.from, `under ${rupees(opening.weak.below)}`, "Spender", rupees(osp), targetVerdict({ below: opening.weak.below }, osp)],
+    ["Median", opening.median.from, rupees(opening.median.value), "Balanced, Cautious", `${rupees(oba)}, ${rupees(oca)}`, medianVerdict("net worth", { value: opening.median.value }, oba, oca)],
+    ["Strong", opening.strong.from, rupees(opening.strong.value), "Maximum saving", rupees(oms), targetVerdict({ value: opening.strong.value }, oms)],
+  ],
+);
+table(
+  [`Median of seeds 1 to ${TYPE_SEEDS}`, "Month", "Net worth", "Safety", "Freedom", "Life"],
+  [CHAPTER_END, ...OPENING_MONTHS].flatMap((m) => PLAYER_TYPES.map((type) => {
+    const rs = across[type];
+    return [type, m, rupees(median(rs, m, (b) => b.netWorth)), one(median(rs, m, (b) => b.safety)), one(median(rs, m, (b) => b.freedom)), one(median(rs, m, (b) => b.life))];
+  })),
+);
+const chapterTwo = (r) => Object.entries(r.chosen).filter(([id]) => Number(id.slice(1)) >= 31).map(([, o]) => o).join(" ");
+for (const r of seedOne) console.log(`${r.type}, chapter 2 choices, seed 1: ${chapterTwo(r)}\n`);
+const v1o = noDominantStrategyAt(runs, opening.league, OPENING_END, constants);
+console.log(`Validation 1 at month ${OPENING_END}, on the interpolated league benchmark (ref ${rupees(opening.league.ref)}, target ${rupees(opening.league.target)}): maximum saving scores ${one(v1o.score)} with ${rupees(v1o.saver.netWorth)}, Safety ${one(v1o.saver.safety)}, Freedom ${one(v1o.saver.freedom)}, Life ${one(v1o.saver.life)}. ${v1o.beatenBy} of ${v1o.league - 1} random players score above it: ${v1o.beatenBy > 0 ? "PASS" : "FAIL"}.\n`);
 
 // Deterministic player types
 console.log(`## Player types\n`);
@@ -168,11 +196,11 @@ table(
     ];
   }),
 );
-const v1Status = !v1.live ? "NOT PASSABLE IN CHAPTER 1" : v1.pass ? "PASS" : "FAIL";
+// Month 24 sees chapter 1 alone, which cannot pass it whatever comes later in the sheet; since
+// v35 validation 1 is judged at OPENING_END, in chapter 2's opening section above
+const v1Status = "NOT PASSABLE IN CHAPTER 1";
 console.log(`${v1Status}: ${v1.beatenBy} of ${v1.league - 1} random players score above maximum-saving play.\n`);
-if (!v1.live) {
-  console.log(`Not judged. No Chapter 1 decision costs a maximum saver real money, so this measures missing content, not the score (maths doc section 14). It goes live again when the sheet has Chapter 2 decisions.\n`);
-}
+console.log(`Not judged here. No Chapter 1 decision costs a maximum saver real money, so at month 24 this measures missing content, not the score (maths doc section 14). The sheet has chapter 2 decisions since v35, so it is judged at month ${OPENING_END}, in chapter 2's opening section above.\n`);
 console.log(`Maximum-saving choices: ${Object.values(v1.saver.choices).join(" ")}\n`);
 
 // Validation 2

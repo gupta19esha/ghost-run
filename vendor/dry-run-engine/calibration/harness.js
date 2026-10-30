@@ -24,6 +24,10 @@ import { explainSafety, explainFreedom } from "../engine/bars.js";
 const DOC_PATH = fileURLToPath(new URL("../SIMULATION-MATHS.md", import.meta.url));
 
 export const CHAPTER_END = 24;
+// The last month the sheet has decisions in: 30 since sheet v35, the end of chapter 2's opening.
+// A decision after CHAPTER_END is scored to here, never to month 24, which cannot see it
+export const OPENING_END = Math.max(...Object.values(DECISIONS).map((d) => d.month));
+const horizon = (decision) => (decision.month <= CHAPTER_END ? CHAPTER_END : OPENING_END);
 // Every callback lands by this month, so shocks can be followed to the end
 export const LAST_CALLBACK_MONTH = Math.max(
   ...Object.values(DECISIONS).flatMap((d) => Object.values(d.options).map((o) => d.month + (o.deferred_offset_months || 0))),
@@ -246,7 +250,8 @@ export function maximumSavingPlay(seed = 1, constants = CONSTANTS) {
     const before = play(createState(seed, constants), pick, decision.month - 1, constants).state;
     for (const optionId of Object.keys(offered(before, decision).options)) {
       const trial = { ...choices, [decision.decision_id]: optionId };
-      const run = play(createState(seed, constants), (d) => trial[d.decision_id] || quietOption(d), CHAPTER_END, constants);
+      // Chapter 1's decisions are scored at month 24, as they always were; a later one at OPENING_END
+      const run = play(createState(seed, constants), (d) => trial[d.decision_id] || quietOption(d), horizon(decision), constants);
       const nw = getBars(run.state, constants).netWorth;
       if (!best || nw > best.nw) best = { optionId, nw };
     }
@@ -343,7 +348,7 @@ export function typePicker(type, constants = CONSTANTS) {
       const options = Object.values(decision.options);
       const scored = new Map(options.map((o) => {
         const after = afterOption(state, decision, o, constants);
-        const worth = getBars(play(after, (d) => quietOption(d), CHAPTER_END, constants).state, constants).netWorth;
+        const worth = getBars(play(after, (d) => quietOption(d), horizon(decision), constants).state, constants).netWorth;
         const crosses = (explainFreedom(after, constants).committed_ratio > BALANCED_COMMITTED_LIMIT ? 1 : 0) +
           (explainSafety(after, constants).runway_months < BALANCED_RUNWAY_LIMIT ? 1 : 0);
         return [o.option_id, { worth, crosses }];
@@ -511,4 +516,39 @@ export function saverThroughShocks(seed = 1, constants = CONSTANTS) {
     const window = run.months.filter((m) => m.month >= shock.month);
     return { shock: `${shock.decision_id} at month ${shock.month}`, runway: before.runwayBefore, deepest: Math.max(...window.map((m) => m.deepestStep)) };
   });
+}
+
+// ---------- Chapter 2's opening: targets at OPENING_END (maths doc section 13) ----------
+
+// Section 13 sets no target between month 24 and month 120. Its rule for a month between two
+// checkpoints is geometric interpolation, "since net worth grows by compounding" (the chapter
+// benchmarks table), so that is how the targets at OPENING_END are derived here. They are
+// derived, not ruled. Weak play at month 24 is "under -65k", which a geometric rule cannot
+// cross zero from, so the weak figure comes from the league ref instead, as section 13 sets a
+// ref for every chapter end. Section 13 has no Safety target after month 24, so none is made.
+export const interpolate = (a, b, m1, m2, m) => a * (b / a) ** ((m - m1) / (m2 - m1));
+export function openingTargets(targets, month = OPENING_END) {
+  const at = (m, measure) => targets.checkpoints.find((c) => c.month === m && c.measure === measure);
+  const nw24 = at(24, "net worth");
+  const nw120 = at(120, "net worth");
+  const l24 = targets.league.find((l) => l.month === 24);
+  const l120 = targets.league.find((l) => l.month === 120);
+  return {
+    month,
+    weak: { below: interpolate(l24.ref, l120.ref, 24, 120, month), from: "league ref " + l24.ref + " at month 24 to " + l120.ref + " at month 120" },
+    median: { value: interpolate(nw24.median.value, nw120.median.value, 24, 120, month), from: nw24.median.text + " at month 24 to " + nw120.median.text + " at month 120" },
+    strong: { value: interpolate(nw24.strong.value, nw120.strong.value, 24, 120, month), from: nw24.strong.text + " at month 24 to " + nw120.strong.text + " at month 120" },
+    league: { ref: interpolate(l24.ref, l120.ref, 24, 120, month), target: interpolate(l24.target, l120.target, 24, 120, month) },
+  };
+}
+
+// Validation 1 read at OPENING_END: maximum-saving play, its choices made as above, against the
+// random players at the same month, on the interpolated league benchmark
+export function noDominantStrategyAt(runs, bench, month = OPENING_END, constants = CONSTANTS) {
+  const { choices } = maximumSavingPlay(1, constants);
+  const run = play(createState(1, constants), (d) => choices[d.decision_id] || quietOption(d), month, constants);
+  const saver = getBars(run.state, constants);
+  const saverScore = leagueScore(saver, bench);
+  const beatenBy = runs.filter((r) => leagueScore(r.barsAt[month], bench).score > saverScore.score).length;
+  return { month, saver, ...saverScore, beatenBy, league: runs.length + 1 };
 }

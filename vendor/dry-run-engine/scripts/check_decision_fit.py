@@ -1,6 +1,7 @@
 """Check that every decision screen fits a phone, height as well as width.
 
-Renders all 30 decisions at 320 by 568, 360 by 640 and 390 by 844 in headless Chrome, on the
+Renders every decision in the sheet (chapter 1, and chapter 2's opening since v35) at 320 by 568, 360
+by 640 and 390 by 844 in headless Chrome, on the
 paths that take each decision's first option and its last, and fails if any option card ends below the
 screen. UI.md rule 6. Written after D02 was found to overflow a 320 by 568 phone that a check
 at 320 wide on a taller frame had passed.

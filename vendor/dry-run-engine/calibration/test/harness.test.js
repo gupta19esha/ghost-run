@@ -53,9 +53,9 @@ test("a trial constant changes the run without touching section 12", () => {
 });
 
 test("validation 1 is not passable with Chapter 1 alone, and goes live with a Chapter 2 decision", () => {
-  assert.equal(validationOneLive(), false);
-  const withChapter2 = { ...DECISIONS, D31: { ...DECISIONS.D30, decision_id: "D31", chapter: 2 } };
-  assert.equal(validationOneLive(withChapter2), true);
+  const chapterOne = Object.fromEntries(Object.entries(DECISIONS).filter(([, d]) => d.chapter === 1));
+  assert.equal(validationOneLive(chapterOne), false);
+  assert.equal(validationOneLive(), true, "the sheet holds chapter 2's opening since v35");
 });
 
 test("percentiles are nearest rank", () => {
