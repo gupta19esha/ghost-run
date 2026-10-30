@@ -13,7 +13,7 @@
   --ghost-fill: #E6EEF9;
   --ghost-halo: rgba(58, 109, 184, 0.16);
   --mark: var(--marigold);
-  --dock-height: 64px;
+  --dock-height: 76px;
 }
 
 .ghost-screen {
@@ -33,16 +33,13 @@
 }
 .ghost-mark { display: block; flex-shrink: 0; }
 
-.ghost-head { padding-top: 26px; }
-.ghost-head .month-label { margin: 26px 0 0; }
 .ghost-title {
-  margin: 6px 0 0;
+  margin: 4px 0 0;
   font-family: var(--display);
-  font-size: 34px;
+  font-size: 32px;
   font-weight: 800;
   line-height: 1.05;
 }
-.ghost-lede,
 .section-lede {
   margin: 10px 0 0;
   font-size: 16px;
@@ -50,7 +47,7 @@
   color: var(--bone-dimmer);
 }
 
-.ghost-worth { margin-top: 26px; }
+.ghost-worth { margin-top: 18px; }
 .ghost-worth .month-label { margin: 0; }
 .ghost-worth .home-net-worth { margin: 6px 0 0; }
 .ghost-worth .chip { margin-top: 10px; }
@@ -64,7 +61,7 @@
   border-radius: 18px;
 }
 
-.chart-card { margin-top: 22px; padding: 12px 10px 12px; }
+.chart-card { margin-top: 18px; padding: 12px 10px 12px; }
 .chart { display: block; width: 100%; height: auto; overflow: visible; }
 .chart-grid { stroke: var(--rule); stroke-width: 1; }
 .chart-zero { stroke: var(--slate-dim); stroke-width: 1; stroke-dasharray: 2 3; }
@@ -96,7 +93,7 @@
 
 /* ---------- Bars ---------- */
 
-.gbars { display: flex; flex-direction: column; gap: 16px; margin-top: 26px; }
+.gbars { display: flex; flex-direction: column; gap: 14px; margin-top: 20px; }
 .gbar { display: flex; flex-direction: column; gap: 7px; }
 .gbar-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
 .gbar-name { font-size: 14px; font-weight: 600; color: var(--bone-dim); }
@@ -126,34 +123,6 @@
   line-height: 1.1;
 }
 
-.list-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
-.list-tab {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  min-height: 96px;
-  padding: 12px 14px;
-  background: var(--ink-raised);
-  border: 2px solid var(--card-edge);
-  border-bottom: var(--lip) solid var(--card-lip);
-  border-radius: 18px;
-  color: var(--bone);
-  text-align: left;
-  font-family: var(--body);
-  cursor: pointer;
-  transition: transform 90ms ease-out, border-bottom-width 90ms ease-out, margin 90ms ease-out;
-}
-.list-tab:active,
-.list-tab.is-open {
-  transform: translateY(calc(var(--lip) - 2px));
-  border-bottom-width: 2px;
-  margin-bottom: calc(var(--lip) - 2px);
-}
-.list-tab.is-open { border-color: var(--marigold); background: #FFF6E3; }
-.list-tab:focus-visible { outline: 3px solid var(--deep-raised); outline-offset: 3px; }
-.list-tab-title { font-family: var(--display); font-size: 19px; font-weight: 800; line-height: 1.1; }
-.list-tab-caption { font-size: 13px; line-height: 1.3; color: var(--slate); }
 
 .list-body:empty { display: none; }
 .list-body { margin-top: 16px; }
@@ -216,23 +185,10 @@
 .or-label { margin: 14px 0 0; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: var(--slate); }
 .month-detail .options { padding: 8px 0 0; }
 
-.ghost-foot { margin: 36px 0 0; font-size: 12px; text-align: center; color: var(--slate-dim); }
+.ghost-foot { margin: 24px 0 0; font-size: 12px; text-align: center; color: var(--slate-dim); }
 
 /* ---------- A fork ---------- */
 
-.fork-top { display: flex; justify-content: space-between; align-items: center; padding-top: 18px; }
-.fork-top + .month-label { margin: 22px 0 0; }
-.back {
-  padding: 8px 0;
-  background: none;
-  border: 0;
-  color: var(--deep);
-  font-family: var(--body);
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-}
-.back:focus-visible { outline: 3px solid var(--deep-raised); outline-offset: 2px; border-radius: 6px; }
 
 .pair { margin-top: 10px; }
 .pair-label { display: flex; align-items: center; gap: 6px; margin: 14px 0 8px; font-size: 13px; font-weight: 600; letter-spacing: 0.04em; color: var(--slate); }
@@ -289,7 +245,6 @@
 .figures { margin: 8px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 4px; font-size: 14px; }
 .figures span { color: var(--bone-dim); }
 
-.fork-foot { margin-top: 32px; }
 .ghost-error { margin: 40px 0 20px; font-size: 16px; color: var(--bone); }
 
 /* ---------- The narration's attempts ---------- */
@@ -347,8 +302,6 @@
 .tick { height: 10px; border-radius: 3px; background: #EDE3CF; box-shadow: inset 0 1px 1px rgba(33, 28, 22, 0.1); }
 .tick.is-closed { background: var(--marigold); box-shadow: none; }
 
-.month-num { transition: background-color 200ms ease-out, box-shadow 200ms ease-out; }
-.month-num.is-closed { box-shadow: inset 0 0 0 2.5px var(--marigold); }
 
 /* The dock: a strip of its own at the foot of every view, where a thumb rests in portrait. It is
    opaque and the screen leaves room for it, so it never sits over content at any scroll
@@ -373,21 +326,37 @@
   padding: 0 var(--gutter);
 }
 
-/* The mute control, in the dock on the right, under the right thumb */
+/* In the dock: Back on the left, the sound control, Next taking the rest, under the right thumb */
+.dock-inner { justify-content: space-between; gap: 10px; }
+.dock-back {
+  flex-shrink: 0;
+  height: 48px;
+  padding: 0 6px 0 0;
+  background: none;
+  border: 0;
+  color: var(--deep);
+  font-family: var(--body);
+  font-size: 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.dock-back:focus-visible { outline: 3px solid var(--deep-raised); outline-offset: 2px; border-radius: 6px; }
+.dock .action.dock-next { flex: 1; width: auto; min-width: 0; height: 54px; padding: 0 14px; font-size: 18px; white-space: nowrap; }
+.dock-hint { flex: 1; margin: 0; font-size: 14px; font-weight: 600; text-align: right; color: var(--slate); }
+
 .mute {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  height: 44px;
-  padding: 0 16px 0 13px;
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  padding: 0;
   background: var(--ink-raised);
   border: 2px solid var(--card-edge);
   border-bottom-width: 4px;
   border-radius: 999px;
   color: var(--deep);
-  font-family: var(--body);
-  font-size: 15px;
-  font-weight: 600;
   cursor: pointer;
 }
 .mute[aria-pressed="true"] { color: var(--slate); }
@@ -395,7 +364,82 @@
 .mute:focus-visible { outline: 3px solid var(--deep-raised); outline-offset: 2px; }
 .mute svg { display: block; }
 
+/* ---------- Steps ----------
+   Each step is one screen, as each of the game's is: it fills the height above the dock, and
+   scrolls only where its content is longer than a small phone. */
+
+.step { display: flex; flex-direction: column; }
+.step-top { display: flex; justify-content: space-between; align-items: center; padding-top: 16px; }
+.step-top .brand { text-decoration: none; }
+.step-top .brand:focus-visible { outline: 3px solid var(--deep-raised); outline-offset: 3px; border-radius: 6px; }
+.step-ticks { display: flex; gap: 4px; margin: 0; padding: 0; list-style: none; }
+.step-tick { width: 18px; height: 6px; border-radius: 3px; background: #EDE3CF; }
+.step-tick.is-on { background: var(--marigold); }
+.step-label { margin: 18px 0 0; }
+.step .section-lede { margin-top: 8px; }
+
+/* Choose a moment: three ways in, one row of tabs */
+.seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 16px; padding: 4px; background: #EDE3CF; border-radius: 14px; }
+.seg-tab {
+  min-height: 44px;
+  padding: 6px 4px;
+  background: none;
+  border: 0;
+  border-radius: 10px;
+  color: var(--bone-dim);
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.15;
+  cursor: pointer;
+}
+.seg-tab[aria-selected="true"] { background: var(--ink-raised); color: var(--bone); box-shadow: 0 2px 0 var(--card-lip); }
+.seg-tab:focus-visible { outline: 3px solid var(--deep-raised); outline-offset: 1px; }
+.choose-body { margin-top: 14px; }
+.choose-body .months { margin-top: 0; }
+
+/* The split: the two choices side by side when there is room, so the chart keeps the screen */
+.step .pair { margin-top: 6px; }
+.step .pair-label { margin: 12px 0 6px; }
+.step .pair .chosen, .step .ghost-card { min-height: 0; padding-top: 12px; padding-bottom: 12px; font-size: 15px; }
+
+/* Where it ended: which bar is whose */
+.gbar-key { display: flex; gap: 18px; margin-top: 18px; font-size: 13px; font-weight: 600; color: var(--bone-dim); }
+.gbar-key span { display: inline-flex; align-items: center; gap: 7px; }
+.gbar-key i { display: inline-block; width: 22px; height: 10px; border-radius: 999px; }
+.key-real { background: var(--bone); }
+.key-ghost { background: repeating-linear-gradient(135deg, var(--ghost), var(--ghost) 3px, var(--ghost-fill) 3px, var(--ghost-fill) 6px); box-shadow: inset 0 0 0 1.5px var(--ghost); }
+.step .compare-worth { margin-top: 18px; }
+.step .compare-figure { font-size: 30px; }
+
+/* What happened */
+.step .narration { margin-top: 16px; }
+
+/* Narrow phones: the dock's labels at a size that fits */
+@media (max-width: 340px) {
+  .dock .action.dock-next { font-size: 16px; padding: 0 10px; }
+  .dock-back { font-size: 15px; }
+  .dock-inner { gap: 8px; }
+}
+
+/* Short phones: the same content, tighter */
+@media (max-height: 700px) {
+  .ghost-title { font-size: 26px; }
+  .step-label { margin-top: 12px; }
+  .step .home-net-worth { font-size: 40px; }
+  .ghost-worth { margin-top: 8px; }
+  .ghost-worth .chip { margin-top: 6px; }
+  .ticks { margin-top: 10px; }
+  .step-top { padding-top: 10px; }
+  .chart-card { margin-top: 12px; padding: 8px 8px 8px; }
+  .gbars { gap: 10px; margin-top: 14px; }
+  .gbar-track { height: 12px; }
+  .step .pair-label { margin: 8px 0 4px; }
+  .step .pair .chosen, .step .ghost-card { padding-top: 9px; padding-bottom: 9px; }
+  .notice { padding: 10px 12px; font-size: 14px; }
+  .notices { margin-top: 10px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .month-num { transition: none; }
   .list-wait .ghost-mark, .narration-wait .ghost-mark { animation: none; }
 }

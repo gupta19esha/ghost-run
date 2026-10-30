@@ -95,5 +95,10 @@ export const sound = Object.fromEntries(Object.entries(voices).map(([name, play]
 // A short buzz where the device has one, on choosing: feature-detected, never assumed. Not
 // tied to the mute control, which is about sound
 export function buzz(pattern = 12) {
-  try { if (typeof navigator !== "undefined" && typeof navigator.vibrate === "function") navigator.vibrate(pattern); } catch {}
+  // Only once the player has touched the page: before that the browser refuses, and says so
+  try {
+    if (typeof navigator === "undefined" || typeof navigator.vibrate !== "function") return;
+    if (navigator.userActivation && !navigator.userActivation.hasBeenActive) return;
+    navigator.vibrate(pattern);
+  } catch {}
 }
