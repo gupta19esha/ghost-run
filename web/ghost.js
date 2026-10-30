@@ -8,6 +8,8 @@
 import { readRun, forkView, checkAttempts, costList, surpriseList, surpriseWords, reasons, markedDraft, BAR_KEYS, BAR_NAMES, optionLabel } from "./ghost-model.js";
 import { formatMoney, formatRupees } from "../vendor/dry-run-engine/text/render.js";
 import { FORMATS } from "../verify/render.js";
+import { animate, count, later, tween, reduced, stopAll, EASE, CSS_EASE } from "./motion.js";
+import { sound, buzz, isMuted, setMuted } from "./sound.js";
 
 const app = document.getElementById("app");
 const SVG = "http://www.w3.org/2000/svg";
@@ -45,7 +47,9 @@ const short = (n) => `${n < 0 ? "−" : ""}₹${formatRupees(Math.abs(n))}`;
 // ---------- The chart ----------
 
 // Net worth by month. real: [{month, netWorth}]. ghost: the same, or null. split: the month the
-// ghost's choice was made. marks: months where the ghost could not take the real choice
+// ghost's choice was made. marks: months where the ghost could not take the real choice.
+// A chart with a ghost carries svg.ghost, what drawGhost() needs to draw it in
+let chartCount = 0;
 function chart({ real, ghost = null, split = null, marks = [] }) {
   const W = 342, H = 214, L = 6, R = 6, T = 30, B = 26;
   const all = [...real, ...(ghost ?? [])].map((b) => b.netWorth);
@@ -69,36 +73,122 @@ function chart({ real, ghost = null, split = null, marks = [] }) {
   }
 
   // The split: where the two lives part
+  let pill = null;
   if (split !== null) {
-    svg.append(s("line", { x1: x(split), x2: x(split), y1: T - 4, y2: H - B, class: "chart-split" }));
+    pill = s("g", { class: "chart-split-g" });
+    pill.append(s("line", { x1: x(split), x2: x(split), y1: T - 4, y2: H - B, class: "chart-split" }));
     const label = `Split · month ${split}`;
     const w = label.length * 6.2 + 16;
     const lx = Math.min(Math.max(x(split) - w / 2, 0), W - w);
-    svg.append(s("rect", { x: lx, y: 2, width: w, height: 20, rx: 10, class: "chart-split-pill" }));
+    pill.append(s("rect", { x: lx, y: 2, width: w, height: 20, rx: 10, class: "chart-split-pill" }));
     const t = s("text", { x: lx + w / 2, y: 16, class: "chart-split-text", "text-anchor": "middle" });
     t.textContent = label;
-    svg.append(t);
+    pill.append(t);
+    svg.append(pill);
   }
 
   svg.append(s("path", { d: `${path(real)} L${x(real.at(-1).month)} ${H - B} L${x(real[0].month)} ${H - B} Z`, class: "chart-real-area" }));
-  // The ghost from the month before it split, so it leaves the real line rather than starting in the air
-  if (ghost) {
-    const from = ghost.filter((b) => b.month >= Math.max(1, split - 1));
-    svg.append(s("path", { d: path(from), class: "chart-ghost-halo" }));
+  if (!ghost) {
     svg.append(s("path", { d: path(real), class: "chart-real" }));
-    svg.append(s("path", { d: path(from), class: "chart-ghost" }));
-    for (const m of marks) {
-      const b = ghost.find((g) => g.month === m);
-      if (b) svg.append(s("circle", { cx: x(m), cy: y(b.netWorth), r: 7, class: "chart-mark" }));
-    }
-    const g = ghost.at(-1);
-    svg.append(s("circle", { cx: x(g.month), cy: y(g.netWorth), r: 4.5, class: "chart-ghost-end" }));
   } else {
-    svg.append(s("path", { d: path(real), class: "chart-real" }));
+    // The ghost from the month before it split, so it leaves the real line rather than starting
+    // in the air. Line and halo sit under a mask whose one stroke is drawn in with
+    // stroke-dasharray: the ghost's own dashes stay dashes while the line draws itself
+    const from = ghost.filter((b) => b.month >= Math.max(1, split - 1));
+    const points = from.map((b) => [x(b.month), y(b.netWorth)]);
+    const lengths = [0];
+    for (let i = 1; i < points.length; i++) lengths.push(lengths[i - 1] + Math.hypot(points[i][0] - points[i - 1][0], points[i][1] - points[i - 1][1]));
+    const total = lengths.at(-1) || 1;
+    const id = `ghost-reveal-${++chartCount}`;
+    const reveal = s("path", { d: path(from), class: "chart-reveal", "stroke-dasharray": `${total} ${total}`, "stroke-dashoffset": 0 });
+    const mask = s("mask", { id, maskUnits: "userSpaceOnUse", x: 0, y: 0, width: W, height: H });
+    mask.append(reveal);
+    svg.append(s("defs", {}, mask));
+
+    const drawn = s("g", { mask: `url(#${id})` },
+      s("path", { d: path(from), class: "chart-ghost-halo" }),
+      s("path", { d: path(from), class: "chart-ghost" }));
+    svg.append(s("path", { d: path(real), class: "chart-real" }), drawn);
+
+    const rings = marks.map((m) => {
+      const i = from.findIndex((b) => b.month === m);
+      if (i < 0) return null;
+      const ring = s("circle", { cx: points[i][0], cy: points[i][1], r: 7, class: "chart-mark" });
+      svg.append(ring);
+      return { month: m, at: lengths[i] / total, el: ring };
+    }).filter(Boolean);
+    const [ex, ey] = points.at(-1);
+    const endDot = s("circle", { cx: ex, cy: ey, r: 4.5, class: "chart-ghost-end" });
+    const head = s("circle", { cx: points[0][0], cy: points[0][1], r: 4, class: "chart-ghost-head" });
+    svg.append(endDot, head);
+    svg.ghost = { reveal, total, points, lengths, rings, endDot, head, pill };
   }
   const r = real.at(-1);
   svg.append(s("circle", { cx: x(r.month), cy: y(r.netWorth), r: 4.5, class: "chart-real-end" }));
   return svg;
+}
+
+// Before the draw: the ghost undrawn, nothing of it showing, so the screen opens on your run
+// alone. Not under reduced motion, where the line is simply there
+function hideGhost(svg) {
+  if (reduced()) return;
+  const { reveal, total, rings, endDot, pill } = svg.ghost;
+  reveal.setAttribute("stroke-dashoffset", String(total));
+  for (const ring of rings) ring.el.style.opacity = "0";
+  endDot.style.opacity = "0";
+  if (pill) pill.style.opacity = "0";
+}
+
+// The hero: the ghost line draws itself from the split, left to right, over 900ms. The split
+// pill lands as it starts, each substitution ring as the line passes its month, the end mark
+// when it arrives. progress(p) is told how far the line is, for anything keeping pace with it.
+// A tap lands on the finished line, every ring in place
+const DRAW_MS = 900;
+function drawGhost(svg, { onRing = () => {}, progress = () => {}, done = () => {} } = {}) {
+  const g = svg.ghost;
+  const { reveal, total, points, lengths, rings, endDot, head, pill } = g;
+  const landed = new Set();
+  const land = (ring) => {
+    if (landed.has(ring)) return;
+    landed.add(ring);
+    animate(ring.el, [{ opacity: 0, transform: "scale(0.35)" }, { opacity: 1, transform: "scale(1)" }],
+      { duration: 340, easing: CSS_EASE.land });
+    onRing(ring);
+  };
+  // Where the head is at a fraction of the line's length: on the segment that contains it
+  const at = (p) => {
+    const want = p * total;
+    let i = 1;
+    while (i < lengths.length - 1 && lengths[i] < want) i++;
+    const span = lengths[i] - lengths[i - 1] || 1;
+    const f = Math.min(Math.max((want - lengths[i - 1]) / span, 0), 1);
+    return [points[i - 1][0] + (points[i][0] - points[i - 1][0]) * f, points[i - 1][1] + (points[i][1] - points[i - 1][1]) * f];
+  };
+
+  if (pill) {
+    pill.style.opacity = "";
+    animate(pill, [{ opacity: 0, transform: "translateY(-9px)" }, { opacity: 1, transform: "translateY(0)" }],
+      { duration: 360, easing: CSS_EASE.land });
+  }
+  tween({
+    duration: DRAW_MS,
+    ease: EASE.draw,
+    update: (p) => {
+      reveal.setAttribute("stroke-dashoffset", String(total * (1 - p)));
+      const [hx, hy] = at(p);
+      head.setAttribute("cx", hx.toFixed(1));
+      head.setAttribute("cy", hy.toFixed(1));
+      head.style.opacity = p > 0 && p < 1 ? "1" : "0";
+      for (const ring of rings) if (p >= ring.at) land(ring);
+      progress(p);
+    },
+    done: () => {
+      endDot.style.opacity = "";
+      animate(endDot, [{ transform: "scale(0.2)" }, { transform: "scale(1)" }], { duration: 300, easing: CSS_EASE.land });
+      sound.ghost();
+      done();
+    },
+  });
 }
 
 function legend(realEnd, ghostEnd = null) {
@@ -108,9 +198,31 @@ function legend(realEnd, ghostEnd = null) {
 }
 
 // A bar from 0 to 100: the real run's solid, the ghost's hatched
+const pct = (value) => `${Math.max(0, Math.min(100, value)).toFixed(1)}%`;
 function track(value, ghost = false) {
   return h("div", { class: `gbar-track${ghost ? " is-ghost" : ""}` },
-    h("div", { class: "gbar-fill", style: `width: ${Math.max(0, Math.min(100, value)).toFixed(1)}%` }));
+    h("div", { class: "gbar-fill", style: `width: ${pct(value)}` }));
+}
+
+// A bar filling from its old value to its new one. A rise overshoots a little and settles over
+// 500ms; a fall is flatter and quicker. Only the fill's width moves, inside a fixed track
+function moveBar(trackEl, from, to, { delay = 0, voice = false } = {}) {
+  const fill = trackEl.firstChild;
+  const rise = to >= from;
+  fill.style.width = pct(from);
+  later(delay, () => {
+    if (voice && Math.abs(to - from) >= 0.5) (rise ? sound.rise : sound.fall)();
+    animate(fill, [{ width: pct(from) }, { width: pct(to) }], { duration: rise ? 500 : 360, easing: rise ? CSS_EASE.rise : CSS_EASE.fall });
+  });
+}
+
+// Content arriving: a short rise into place
+function arrive(el, { delay = 0, distance = 14 } = {}) {
+  el.style.opacity = reduced() ? "" : "0";
+  later(delay, () => {
+    el.style.opacity = "";
+    animate(el, [{ opacity: 0, transform: `translateY(${distance}px)` }, { opacity: 1, transform: "translateY(0)" }], { duration: 320, easing: CSS_EASE.out });
+  });
 }
 
 // ---------- The run ----------
@@ -132,27 +244,55 @@ function startRanking() {
   worker.postMessage(save);
 }
 
-const goFork = (index, option) => { location.hash = `#fork/${index}/${option}`; };
+// The card the player tapped to fork, so the fork screen can move it into place: the choice is
+// the hinge between the two screens
+let hinge = null;
+const goFork = (index, option, event = null) => {
+  hinge = event?.currentTarget ? { rect: event.currentTarget.getBoundingClientRect(), option } : null;
+  location.hash = `#fork/${index}/${option}`;
+};
 
+let runShown = false;
 function runView() {
   const end = run.end;
+  const first = !runShown;
+  runShown = true;
   const screen = h("section", { class: "screen ghost-screen", "data-screen": "run" });
+
+  // The chapter at a glance: a tick for each month, every one closed
+  const ticks = h("ol", { class: "ticks", "aria-label": `${run.months.length} of 24 months closed` },
+    Array.from({ length: 24 }, (_, i) => h("li", { class: `tick${i < run.months.length ? " is-closed" : ""}` })));
+  const worth = h("p", { class: "home-net-worth money tabular" }, money(end.netWorth));
+  const gain = end.netWorth - run.startNetWorth;
+  const gainText = h("span", { class: "tabular" }, money(Math.abs(gain)));
+  const bars = BAR_KEYS.map((k) => h("div", { class: "gbar" }, h("span", { class: "gbar-name" }, BAR_NAMES[k]), track(end[k])));
 
   screen.append(
     h("header", { class: "ghost-head" },
       h("div", { class: "brand" }, ghostMark(22), "Ghost Run"),
       h("p", { class: "month-label" }, "Chapter one · finished"),
       h("h1", { class: "ghost-title" }, "Two years. You are 24."),
+      ticks,
       h("p", { class: "ghost-lede" }, "A whole life, already played. Pick any choice in it and watch the ghost live the same two years the other way.")),
     h("div", { class: "ghost-worth" },
       h("p", { class: "month-label" }, "Net worth"),
-      h("p", { class: "home-net-worth money" }, money(end.netWorth)),
-      h("span", { class: `chip chip-large move-${end.netWorth >= run.startNetWorth ? "up" : "down"}` },
-        `${end.netWorth >= run.startNetWorth ? "▲" : "▼"} ${money(Math.abs(end.netWorth - run.startNetWorth))} over two years`)),
+      worth,
+      h("span", { class: `chip chip-large move-${gain >= 0 ? "up" : "down"}` }, `${gain >= 0 ? "▲" : "▼"} `, gainText, " over two years")),
     h("div", { class: "card chart-card" }, chart({ real: run.bars }), legend(end.netWorth)),
-    h("div", { class: "gbars" }, BAR_KEYS.map((k) => h("div", { class: "gbar" },
-      h("span", { class: "gbar-name" }, BAR_NAMES[k]), track(end[k])))),
+    h("div", { class: "gbars" }, bars),
   );
+
+  // The first time the run is shown, it plays in: the ticks light month by month, the figures
+  // count up from where the life began, the bars fill. Coming back to it, it is simply there
+  const play = () => {
+    if (!first) return;
+    [...ticks.children].forEach((tick, i) => later(120 + i * 28, () => lightTick(tick)));
+    // The chapter closing: one chord as the last tick lights, not one for every month
+    later(120 + 23 * 28, () => sound.close());
+    count(worth, run.startNetWorth, end.netWorth, money, { duration: 700 });
+    count(gainText, 0, Math.abs(gain), money, { duration: 700 });
+    bars.forEach((bar, i) => moveBar(bar.querySelector(".gbar-track"), 0, end[BAR_KEYS[i]], { delay: 200 + i * 90 }));
+  };
 
   // The two lists
   const lists = h("div", { class: "lists" });
@@ -185,7 +325,7 @@ function runView() {
     }
     const items = which.open === "cost" ? costList(ranked) : surpriseList(ranked);
     listBody.append(h("ol", { class: "list" }, items.map((f) => h("li", {},
-      h("button", { type: "button", class: "option list-item", onclick: () => goFork(f.monthIndex, f.option) },
+      h("button", { type: "button", class: "option list-item", "data-choose": "", onclick: (e) => goFork(f.monthIndex, f.option, e) },
         h("span", { class: "list-month" }, `Month ${f.month}`),
         h("span", { class: "list-what" }, `${optionLabel(f.option)}`),
         h("span", { class: "list-instead" }, `instead of “${optionLabel(f.real)}”`),
@@ -209,14 +349,14 @@ function runView() {
       h("div", { class: "chosen" }, c.chosen.label),
       h("p", { class: "or-label" }, "Fork it:"),
       h("div", { class: "options" }, c.alternatives.map((a) =>
-        h("button", { type: "button", class: "option", onclick: () => goFork(c.index, a.option) }, a.label))))));
-    const row = h("button", { type: "button", class: "month-row", "aria-expanded": "false",
+        h("button", { type: "button", class: "option", "data-choose": "", onclick: (e) => goFork(c.index, a.option, e) }, a.label))))));
+    const row = h("button", { type: "button", class: "month-row", "aria-expanded": "false", "data-month": String(m.month),
       onclick: () => {
         const open = detail.hidden;
         detail.hidden = !open;
         row.setAttribute("aria-expanded", String(open));
       } },
-      h("span", { class: "month-num" }, String(m.month)),
+      h("span", { class: `month-num${first ? "" : " is-closed"}` }, String(m.month)),
       h("span", { class: "month-text" },
         h("span", { class: "month-summary" }, m.summary ?? `Month ${m.month}`),
         h("span", { class: "month-chose" }, m.choices.map((c) => c.chosen.label).join(" · "))),
@@ -229,7 +369,29 @@ function runView() {
     months),
   h("p", { class: "ghost-foot" }, "Educational simulation. Not investment advice."));
 
-  return { screen, cleanup: () => listeners.delete(redraw) };
+  // Each month's tick lights, with its pulse, as the list brings it into view
+  let observer = null;
+  if (first && typeof IntersectionObserver === "function") {
+    observer = new IntersectionObserver((entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        observer.unobserve(entry.target);
+        const delay = Number(entry.target.closest(".month-row").dataset.month) % 6 * 40;
+        later(delay, () => lightTick(entry.target));
+      }
+    }, { threshold: 0.6 });
+    for (const num of months.querySelectorAll(".month-num")) observer.observe(num);
+  } else if (first) {
+    for (const num of months.querySelectorAll(".month-num")) num.classList.add("is-closed");
+  }
+
+  return { screen, play, cleanup: () => { listeners.delete(redraw); observer?.disconnect(); } };
+}
+
+// A month's tick lighting as the month closes: it takes the closed colour with a short pulse
+function lightTick(tick) {
+  tick.classList.add("is-closed");
+  animate(tick, [{ transform: "scale(1)" }, { transform: "scale(1.35)", offset: 0.35 }, { transform: "scale(1)" }], { duration: 360, easing: "ease-out", fill: "none" });
 }
 
 // ---------- A fork ----------
@@ -246,36 +408,92 @@ function forkScreen(index, option) {
   const { result } = view;
   const screen = h("section", { class: "screen ghost-screen", "data-screen": "fork" });
 
+  // The top right corner is the mute control's, on every view
   screen.append(
     h("div", { class: "fork-top" },
-      h("button", { type: "button", class: "back", onclick: () => { location.hash = ""; } }, "‹ Your run"),
-      h("div", { class: "brand" }, ghostMark(20), "Ghost Run")),
-    h("p", { class: "month-label" }, `What if · Month ${view.month}`),
+      h("button", { type: "button", class: "back", onclick: () => { location.hash = ""; } }, "‹ Your run")),
+    h("p", { class: "month-label" }, `What if · Month ${view.month}`));
+  const ghostCard = h("div", { class: "ghost-card" }, view.ghost.label);
+  const forkChart = chart({ real: result.real.bars, ghost: result.ghost.bars, split: view.month, marks: view.notices.map((n) => n.month) });
+  const chartLegend = legend(view.compare[0].real, view.compare[0].ghost);
+  const legendGhost = chartLegend.querySelectorAll("b")[1];
+  screen.append(
     h("div", { class: "pair" },
       h("p", { class: "pair-label" }, "You chose"),
       h("div", { class: "chosen" }, view.real.label),
       h("p", { class: "pair-label is-ghost" }, ghostMark(16), "The ghost chose"),
-      h("div", { class: "ghost-card" }, view.ghost.label)),
-    h("div", { class: "card chart-card" },
-      chart({ real: result.real.bars, ghost: result.ghost.bars, split: view.month, marks: view.notices.map((n) => n.month) }),
-      legend(view.compare[0].real, view.compare[0].ghost)),
+      ghostCard),
+    h("div", { class: "card chart-card" }, forkChart, chartLegend),
   );
 
+  const notices = new Map();
   if (view.notices.length) {
-    screen.append(h("div", { class: "notices" }, view.notices.map((n) =>
-      h("p", { class: "notice" }, h("i", { class: "notice-mark", "aria-hidden": "true" }), n.text))));
+    screen.append(h("div", { class: "notices" }, view.notices.map((n) => {
+      const el = h("p", { class: "notice" }, h("i", { class: "notice-mark", "aria-hidden": "true" }), n.text);
+      notices.set(n.month, el);
+      return el;
+    })));
   }
 
   const nw = view.compare[0];
-  screen.append(h("section", { class: "ghost-section" },
+  const ghostFigure = h("p", { class: "compare-figure ghost-figure tabular" }, money(nw.ghost));
+  const gapLine = h("span", { class: "tabular" }, nw.gap);
+  const rows = view.compare.slice(1).map((c) => {
+    const label = h("span", { class: "gbar-gap tabular" }, c.gap === "level" ? "Level" : `Ghost ${c.gap}`);
+    const realTrack = track(c.real);
+    const ghostTrack = track(c.ghost, true);
+    return { c, label, realTrack, ghostTrack, el: h("div", { class: "gbar" }, h("div", { class: "gbar-head" }, h("span", { class: "gbar-name" }, c.name), label), realTrack, ghostTrack) };
+  });
+  const compare = h("section", { class: "ghost-section" },
     h("h2", { class: "section-title" }, `Month ${view.endMonth}`),
     h("div", { class: "compare-worth" },
       h("div", {}, h("p", { class: "month-label" }, "You"), h("p", { class: "compare-figure money tabular" }, money(nw.real))),
-      h("div", { class: "is-ghost" }, h("p", { class: "month-label" }, "Ghost"), h("p", { class: "compare-figure ghost-figure tabular" }, money(nw.ghost)))),
-    h("p", { class: "compare-gap" }, `The ghost has ${nw.gap}.`),
-    h("div", { class: "gbars" }, view.compare.slice(1).map((c) => h("div", { class: "gbar" },
-      h("div", { class: "gbar-head" }, h("span", { class: "gbar-name" }, c.name), h("span", { class: "gbar-gap" }, c.gap === "level" ? "Level" : `Ghost ${c.gap}`)),
-      track(c.real), track(c.ghost, true))))));
+      h("div", { class: "is-ghost" }, h("p", { class: "month-label" }, "Ghost"), ghostFigure)),
+    h("p", { class: "compare-gap" }, "The ghost has ", gapLine, "."),
+    h("div", { class: "gbars" }, rows.map((r) => r.el)));
+  screen.append(compare);
+
+  // The sequence: the ghost card moves into place from where it was tapped, the ghost line draws
+  // itself, and when it is done the month 24 comparison comes in, real bars, then the ghost's.
+  // A tap at any point lands on the end of it
+  const gapOf = (c) => c.ghost - c.real;
+  const play = (from) => {
+    hideGhost(forkChart);
+    legendGhost.textContent = money(nw.real);
+    if (from) flyFrom(ghostCard, from);
+    for (const el of notices.values()) el.style.opacity = reduced() ? "" : "0";
+    for (const child of compare.children) child.style.opacity = reduced() ? "" : "0";
+    for (const r of rows) {
+      r.ghostTrack.style.opacity = reduced() ? "" : "0";
+      if (!reduced()) r.label.textContent = "Level";
+    }
+    later(260, () => drawGhost(forkChart, {
+      progress: (p) => { legendGhost.textContent = money(nw.real + (nw.ghost - nw.real) * p); },
+      onRing: (ring) => { const el = notices.get(ring.month); if (el) arrive(el, { distance: 8 }); },
+      done: () => {
+        // A notice whose month the line never passed still arrives, with the comparison
+        for (const el of notices.values()) if (el.style.opacity === "0") arrive(el, { distance: 8 });
+        buzz([8, 60, 8]);
+        [...compare.children].forEach((child, i) => arrive(child, { delay: i * 70 }));
+        count(ghostFigure, nw.real, nw.ghost, money, { duration: 600 });
+        tween({ duration: 600, update: (p) => { gapLine.textContent = FORMATS.net_worth_gap((nw.ghost - nw.real) * p); } });
+        rows.forEach((r, i) => {
+          moveBar(r.realTrack, 0, r.c.real, { delay: 120 + i * 80 });
+          // The ghost's hatched bar draws in after the real ones, from the real value to its own
+          later(520 + i * 120, () => {
+            r.ghostTrack.style.opacity = "";
+            animate(r.ghostTrack, [{ opacity: 0 }, { opacity: 1 }], { duration: 160 });
+            moveBar(r.ghostTrack, r.c.real, r.c.ghost, { voice: true });
+            const gap = gapOf(r.c);
+            tween({ duration: gap >= 0 ? 500 : 360, update: (p) => {
+              const v = gap * p;
+              r.label.textContent = Math.round(Math.abs(v)) === 0 ? "Level" : `Ghost ${FORMATS[`${r.c.key}_gap`](v)}`;
+            } });
+          });
+        });
+      },
+    }));
+  };
 
   // The narration: asked of api/narrate.js, then every attempt it made checked here by verify()
   const card = h("div", { class: "card narration" },
@@ -293,7 +511,19 @@ function forkScreen(index, option) {
         h("p", { class: "month-label" }, "Narration"),
         h("p", { class: "narration-text is-missing" }, error.message));
     });
-  return { screen, cleanup: () => { gone = true; } };
+  return { screen, play, cleanup: () => { gone = true; } };
+}
+
+// FLIP: the element starts where the tapped card was and moves to where it is now
+function flyFrom(el, rect) {
+  const now = el.getBoundingClientRect();
+  if (!now.width || !rect.width) return;
+  const dx = rect.left - now.left, dy = rect.top - now.top;
+  const sx = rect.width / now.width, sy = rect.height / now.height;
+  animate(el, [
+    { transform: `translate(${dx}px, ${dy}px) scale(${sx}, ${sy})`, borderStyle: "solid" },
+    { transform: "translate(0, 0) scale(1, 1)" },
+  ], { duration: 460, easing: CSS_EASE.out });
 }
 
 // Asks the server to narrate a fork of the demo life: every attempt it made, in order
@@ -398,11 +628,57 @@ function route() {
   const match = location.hash.match(/^#fork\/(\d+)\/([A-Z0-9]+-[A-Z])$/);
   if (current?.name === "run") runScroll = window.scrollY;
   current?.cleanup?.();
+  stopAll();
   const next = match ? { name: "fork", ...forkScreen(Number(match[1]), match[2]) } : { name: "run", ...runView() };
+  const forward = next.name === "fork";
+  const from = forward && hinge && hinge.option === match[2] ? hinge.rect : null;
+  hinge = null;
   app.replaceChildren(next.screen);
-  current = next;
   window.scrollTo(0, next.name === "run" ? runScroll : 0);
+  // Into a fork moves forward, back to the run moves back. The card that was tapped is not part
+  // of the move: it travels on its own, from where it was
+  if (current) {
+    for (const child of next.screen.children) {
+      if (from && child.classList.contains("pair")) continue;
+      animate(child, [{ opacity: 0, transform: `translateX(${forward ? 28 : -28}px)` }, { opacity: 1, transform: "translateX(0)" }],
+        { duration: 300, easing: CSS_EASE.out });
+    }
+  }
+  current = next;
+  next.play?.(from);
 }
+
+// The mute control: always on screen, top right, sound on until the player turns it off
+function muteControl() {
+  const button = h("button", { type: "button", class: "mute", "data-silent": "" });
+  const draw = () => {
+    const off = isMuted();
+    button.setAttribute("aria-pressed", String(off));
+    button.setAttribute("aria-label", off ? "Sound is off. Turn sound on" : "Sound is on. Turn sound off");
+    button.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" fill="currentColor"/>${off
+      ? '<path d="M16 9.5l5 5M21 9.5l-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>'
+      : '<path d="M15.5 9a4.5 4.5 0 0 1 0 6M18 6.5a8 8 0 0 1 0 11" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/>'}</svg><span>${off ? "Off" : "On"}</span>`;
+  };
+  button.addEventListener("click", () => {
+    setMuted(!isMuted());
+    draw();
+    sound.tap();
+  });
+  draw();
+  return button;
+}
+
+// Every button taps; choosing a fork confirms, with a short buzz where the device can
+document.addEventListener("click", (event) => {
+  const button = event.target.closest?.("button");
+  if (!button || button.hasAttribute("data-silent")) return;
+  if (button.hasAttribute("data-choose")) {
+    sound.confirm();
+    buzz(12);
+  } else {
+    sound.tap();
+  }
+});
 
 async function main() {
   try {
@@ -412,6 +688,7 @@ async function main() {
     app.replaceChildren(h("p", { class: "ghost-error" }, `The demo life could not load: ${error.message}`));
     return;
   }
+  document.body.append(muteControl());
   window.addEventListener("hashchange", route);
   route();
   startRanking();

@@ -329,3 +329,52 @@
 .narration-wait { display: flex; align-items: center; gap: 10px; margin: 10px 0 0; font-size: 15px; color: var(--slate); }
 .narration-wait .ghost-mark { animation: float 1.6s ease-in-out infinite; }
 .verdict-warning { margin: 10px 0 0; font-size: 13px; font-weight: 600; color: color-mix(in srgb, var(--vermilion), var(--bone) var(--toward-ink)); }
+
+/* ---------- Motion (web/motion.js) ----------
+   Motion moves transforms, opacity, stroke offsets and widths inside fixed tracks, never layout,
+   so nothing here changes whether a screen fits. Under prefers-reduced-motion web/motion.js
+   lands everything at once; the CSS keeps the still states. */
+
+.chart-reveal { fill: none; stroke: #fff; stroke-width: 18; stroke-linecap: round; stroke-linejoin: round; }
+.chart-ghost-head { fill: var(--ghost); stroke: var(--ink-raised); stroke-width: 2; opacity: 0; filter: drop-shadow(0 0 4px var(--ghost-halo)); }
+.chart-split-g, .chart-mark, .chart-ghost-end { transform-box: fill-box; transform-origin: center; }
+.chart-split-g { transform-origin: center top; }
+
+/* The chapter's progress at a glance: a tick per month, closed months in marigold */
+.ticks { display: grid; grid-template-columns: repeat(24, 1fr); gap: 3px; margin: 16px 0 0; padding: 0; list-style: none; }
+.tick { height: 10px; border-radius: 3px; background: #EDE3CF; box-shadow: inset 0 1px 1px rgba(33, 28, 22, 0.1); }
+.tick.is-closed { background: var(--marigold); box-shadow: none; }
+
+.month-num { transition: background-color 200ms ease-out, box-shadow 200ms ease-out; }
+.month-num.is-closed { box-shadow: inset 0 0 0 2.5px var(--marigold); }
+
+/* The mute control: fixed, top right of the column, on every view */
+.mute {
+  position: fixed;
+  top: 14px;
+  right: max(14px, calc(50vw - 240px + 14px));
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 36px;
+  padding: 0 12px 0 10px;
+  background: var(--ink-raised);
+  border: 2px solid var(--card-edge);
+  border-bottom-width: 4px;
+  border-radius: 999px;
+  color: var(--deep);
+  font-family: var(--body);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.mute[aria-pressed="true"] { color: var(--slate); }
+.mute:active { transform: translateY(2px); border-bottom-width: 2px; }
+.mute:focus-visible { outline: 3px solid var(--deep-raised); outline-offset: 2px; }
+.mute svg { display: block; }
+
+@media (prefers-reduced-motion: reduce) {
+  .month-num { transition: none; }
+  .list-wait .ghost-mark, .narration-wait .ghost-mark { animation: none; }
+}
