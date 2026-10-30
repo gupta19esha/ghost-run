@@ -19,12 +19,14 @@
   <script type="module" src="/web/landing.js"></script>
 </head>
 <body>
+  <!-- How far through the page's four sections: one thin rule in four parts (web/landing.js) -->
+  <div class="lp-progress" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
   <!-- The page opens on a month of the game, playable, before a word about what a month is. Its
        words are the engine's (web/test/landing-model.test.js checks them against it), written in
        here so the first screen reads before any script runs. web/landing.js draws the pictures,
        plays the month, draws the ghost and adds the motion -->
   <main class="lp">
-    <section class="lp-hero" data-month>
+    <section class="lp-hero" data-month data-section>
       <div class="lp-band lp-band-deep">
         <header class="lp-top">
           <a class="brand" href="/">
@@ -35,7 +37,88 @@
         </header>
         <h1 class="lp-month-line">Month 7. You are 22.</h1>
         <p class="lp-salary">Salary credited. <span class="money">₹41,300</span> in.</p>
-        <div class="lp-illo" data-illo="D12" aria-hidden="true"></div>
+        <div class="lp-art-holder" aria-hidden="true">
+          <!-- The premise, drawn for this page (not a decision's drawing): the first salary rising
+               like a sun over the road of chapter one's 24 months, the first lit, and you at the
+               start of it. Composed on 1200 by 300 for a full-width band: a phone sees the middle,
+               the coin, the road and you; a wide screen also sees the offices and the homes either
+               side. Flat shapes in the Daylight palette, as the game's drawings are -->
+          <svg class="lp-art" viewBox="0 0 1200 300" preserveAspectRatio="xMidYMax slice" fill="none">
+            <circle cx="250" cy="312" r="176" fill="var(--deep-raised)" opacity="0.5"/>
+            <circle cx="985" cy="318" r="206" fill="var(--deep-raised)" opacity="0.5"/>
+            <g fill="var(--deep-raised)">
+              <rect x="388" y="104" width="98" height="22" rx="11"/><rect x="418" y="86" width="48" height="24" rx="12"/>
+              <rect x="728" y="128" width="80" height="18" rx="9"/>
+              <rect x="70" y="88" width="116" height="24" rx="12"/><rect x="104" y="70" width="56" height="24" rx="12"/>
+              <rect x="1010" y="96" width="104" height="22" rx="11"/>
+            </g>
+            <g class="lp-art-coin">
+              <circle cx="600" cy="186" r="66" fill="var(--marigold)"/>
+              <circle cx="600" cy="186" r="50" stroke="var(--marigold-hover)" stroke-width="6"/>
+              <text x="600" y="206" text-anchor="middle" font-family="'Baloo 2', sans-serif" font-weight="800" font-size="60" fill="var(--deep)">₹</text>
+            </g>
+            <g class="lp-art-city">
+              <rect x="122" y="104" width="72" height="108" fill="var(--paper-side)"/>
+              <rect x="202" y="140" width="56" height="72" fill="var(--paper-dim)"/>
+              <rect x="44" y="158" width="62" height="54" fill="var(--paper-dim)"/>
+              <rect x="268" y="170" width="40" height="42" fill="var(--paper-side)"/>
+              <g fill="var(--deep-raised)">
+                <rect x="134" y="118" width="14" height="10"/><rect x="156" y="118" width="14" height="10"/><rect x="178" y="118" width="8" height="10"/>
+                <rect x="134" y="138" width="14" height="10"/><rect x="156" y="138" width="14" height="10"/>
+                <rect x="134" y="158" width="14" height="10"/><rect x="156" y="158" width="14" height="10"/><rect x="178" y="158" width="8" height="10"/>
+                <rect x="134" y="178" width="14" height="10"/><rect x="156" y="178" width="14" height="10"/>
+                <rect x="212" y="152" width="12" height="9"/><rect x="232" y="152" width="12" height="9"/>
+                <rect x="212" y="170" width="12" height="9"/><rect x="232" y="170" width="12" height="9"/>
+                <rect x="54" y="170" width="12" height="9"/><rect x="74" y="170" width="12" height="9"/>
+              </g>
+            </g>
+            <g class="lp-art-homes">
+              <rect x="896" y="170" width="70" height="42" fill="var(--paper-dim)"/><path d="M888 172 931 140 974 172Z" fill="var(--paper-shadow)"/>
+              <rect x="986" y="160" width="86" height="52" fill="var(--paper-side)"/><path d="M978 162 1029 124 1080 162Z" fill="var(--paper-shadow)"/>
+              <rect x="1092" y="176" width="62" height="36" fill="var(--paper-dim)"/><path d="M1085 178 1123 150 1161 178Z" fill="var(--paper-shadow)"/>
+              <g fill="var(--marigold)">
+                <rect x="910" y="182" width="14" height="12"/><rect x="940" y="182" width="14" height="12"/>
+                <rect x="1002" y="176" width="16" height="14"/><rect x="1040" y="176" width="16" height="14"/>
+                <rect x="1106" y="186" width="12" height="10"/>
+              </g>
+            </g>
+            <rect x="0" y="212" width="1200" height="88" fill="var(--deep-raised)"/>
+            <path d="M590 212h20l114 88H476Z" fill="var(--paper-side)"/>
+            <rect class="lp-art-month is-lit" x="588" y="289.8" width="24.1" height="7.4" rx="3.7" fill="var(--marigold)"/>
+            <rect class="lp-art-month" x="591.3" y="268" width="17.3" height="5.3" rx="2.7" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="593.2" y="255.7" width="13.5" height="4.2" rx="2.1" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="594.4" y="247.9" width="11.1" height="3.4" rx="1.7" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="595.3" y="242.4" width="9.4" height="2.9" rx="1.4" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="595.9" y="238.4" width="8.2" height="2.5" rx="1.3" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="596.4" y="235.3" width="7.2" height="2.2" rx="1.1" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="596.8" y="232.9" width="6.5" height="2" rx="1" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="597.1" y="230.9" width="5.9" height="1.8" rx="0.9" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="597.3" y="229.3" width="5.3" height="1.6" rx="0.8" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="597.5" y="227.9" width="4.9" height="1.5" rx="0.8" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="597.7" y="226.7" width="4.6" height="1.4" rx="0.7" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="597.9" y="225.7" width="4.2" height="1.3" rx="0.7" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="598" y="224.8" width="4" height="1.2" rx="0.6" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="598.1" y="224.1" width="3.7" height="1.1" rx="0.6" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="598.2" y="223.4" width="3.5" height="1.1" rx="0.5" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="598.3" y="222.8" width="3.3" height="1" rx="0.5" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="598.4" y="222.2" width="3.2" height="1" rx="0.5" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="598.5" y="221.7" width="3" height="0.9" rx="0.5" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="598.6" y="221.3" width="2.9" height="0.9" rx="0.4" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="598.6" y="220.9" width="2.7" height="0.8" rx="0.4" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="598.7" y="220.5" width="2.6" height="0.8" rx="0.4" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="598.7" y="220.1" width="2.5" height="0.8" rx="0.4" fill="var(--deep-muted)"/>
+            <rect class="lp-art-month" x="598.8" y="219.8" width="2.4" height="0.7" rx="0.4" fill="var(--deep-muted)"/>
+            <g fill="var(--deep)">
+              <rect x="415" y="250" width="6" height="26"/><circle cx="418" cy="244" r="20"/>
+              <rect x="786" y="242" width="6" height="30"/><circle cx="789" cy="234" r="24"/>
+              <rect x="826" y="256" width="5" height="18"/><circle cx="828" cy="250" r="15"/>
+            </g>
+            <g class="lp-art-you">
+              <circle cx="548" cy="238" r="12" fill="var(--ink)"/>
+              <path d="M531 300v-30a17 17 0 0 1 34 0v30Z" fill="var(--ink)"/>
+            </g>
+          </svg>
+        </div>
       </div>
       <p class="lp-situation">Your sister wants a coaching class. It costs 8,000. She has not asked your parents. She asked you.</p>
       <div class="lp-choice">
@@ -48,7 +131,7 @@
       <div class="lp-after" aria-live="polite"></div>
     </section>
 
-    <section class="lp-section" data-reveal>
+    <section class="lp-section" data-reveal data-section>
       <h2 class="lp-h2">One month a day.</h2>
       <p class="lp-body">About four minutes. Then it waits for tomorrow.</p>
       <ul class="lp-tiles">
@@ -66,14 +149,14 @@
       <p class="lp-caption"><span>Month 1. You are 22.</span><span>Month 24</span></p>
     </section>
 
-    <section class="lp-section lp-band lp-band-ghost" id="ghost" data-reveal>
+    <section class="lp-section lp-band lp-band-ghost" id="ghost" data-reveal data-section>
       <h2 class="lp-h2">Then meet your ghost.</h2>
       <p class="lp-body">Pick any choice you made. Your ghost takes the other one and lives the same two years.</p>
       <div class="lp-ghost" data-ghost></div>
       <a class="close-button lp-see" href="/ghost/">Meet your ghost</a>
     </section>
 
-    <section class="lp-section lp-band lp-band-warm" data-reveal>
+    <section class="lp-section lp-band lp-band-warm" data-reveal data-section>
       <h2 class="lp-h2">Chapter two is coming.</h2>
       <p class="lp-body">Chapter one ends at 24. Hear when the next one is ready.</p>
       <form class="lp-form" data-signup novalidate>
@@ -91,6 +174,18 @@
       <p><a href="/game/">Play</a> · <a href="/ghost/">Meet a ghost</a></p>
     </footer>
   </main>
+
+  <!-- Desktop only: the field either side of the column. The game's mark, its months lighting as
+       the page is read, and Play, which a wide screen keeps beside the column instead of the dock -->
+  <aside class="lp-rail lp-rail-mark" aria-hidden="true">
+    <div class="lp-rail-mark-art"></div>
+    <p class="lp-rail-caption">24 months.<br>One a day.</p>
+  </aside>
+  <aside class="lp-rail lp-rail-play" aria-label="Play">
+    <p class="lp-rail-line">Your first two years of salary, one month a day.</p>
+    <a class="action lp-rail-button" href="/game/">Play</a>
+    <p class="lp-rail-note">Free. No account.</p>
+  </aside>
 
   <!-- Always on screen, at thumb height: Play goes straight into the game -->
   <nav class="lp-dock" aria-label="Play">

@@ -17,7 +17,7 @@ import { formatMoney } from "../vendor/dry-run-engine/text/render.js";
 import { illustration } from "../vendor/dry-run-engine/game/screens/illustrations.js";
 import { direction, arrow } from "../vendor/dry-run-engine/game/screens/moves.js";
 import { animate, count, later, reduced, CSS_EASE } from "./motion.js";
-import { h, ghostMark, chart, hideGhost, drawGhost, legend, arrive } from "./ui.js";
+import { h, s, ghostMark, chart, hideGhost, drawGhost, legend, arrive } from "./ui.js";
 
 const money = (n) => formatMoney(n);
 const rise = (el, delay, distance = 12) =>
@@ -28,13 +28,7 @@ const rise = (el, delay, distance = 12) =>
 // Every [data-illo] placeholder gets the game's own drawing for that decision, in full colour
 function drawings() {
   for (const holder of document.querySelectorAll("[data-illo]")) {
-    const block = illustration(holder.dataset.illo, "full");
-    // The hero's band is shorter than the drawing's shape on most phones. The game fits the whole
-    // drawing and lets the block's colour fill the sides, which leaves the edges of a shape that
-    // runs off the drawing floating in the band; here the drawing fills the band and gives up a
-    // little of its top and foot instead, where there is only ground
-    if (holder.classList.contains("lp-illo")) block.querySelector("svg")?.setAttribute("preserveAspectRatio", "xMidYMid slice");
-    holder.append(block);
+    holder.append(illustration(holder.dataset.illo, "full"));
   }
 }
 
@@ -80,23 +74,26 @@ function monthDemo(save) {
   const preview = monthPreview(save);
   const byId = new Map(preview.options.map((option) => [option.id, option]));
 
-  // The options, as the decision screen has them: the same neutral cards, no colour on any
-  const bind = () => {
-    for (const button of choice.querySelectorAll("[data-option]")) button.addEventListener("click", () => answer(byId.get(button.dataset.option)));
-  };
-  function ask() {
-    after.replaceChildren();
-    choice.replaceChildren(h("div", { class: "options" }, preview.options.map((option) =>
-      h("button", { type: "button", class: "option", "data-option": option.id }, option.label))));
-    bind();
-    choice.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
+  // The options, as the decision screen has them: the same neutral cards, no colour on any. They
+  // all stay where they are once one is chosen: the chosen one takes the game's chosen colours and tick, and
+  // tapping another shows what it would have done. Nothing above the player's thumb changes
+  // height, so the page never moves under it
+  const buttons = [...choice.querySelectorAll("[data-option]")];
+  for (const button of buttons) {
+    button.addEventListener("click", () => {
+      if (button.classList.contains("is-chosen")) return;
+      for (const other of buttons) {
+        other.classList.toggle("is-chosen", other === button);
+        other.setAttribute("aria-pressed", String(other === button));
+      }
+      answer(byId.get(button.dataset.option));
+    });
   }
 
   // The chosen card stays, the result line lands, and the month runs: net worth counts from where
   // the month found it, and each bar moves, teal up, vermilion down, as the game's month close
   function answer(option) {
     const outcome = monthOutcome(save, preview.index, option.id);
-    choice.replaceChildren(h("div", { class: "chosen" }, option.label));
     const result = option.line ? h("p", { class: "lp-result" }, option.line) : null;
 
     const change = outcome.after.netWorth - outcome.before.netWorth;
@@ -118,7 +115,7 @@ function monthDemo(save) {
       bars);
     after.replaceChildren(...[result, close,
       h("p", { class: "lp-next-month" }, `Month ${outcome.month + 1} comes tomorrow.`),
-      h("button", { type: "button", class: "close-button lp-again", onclick: ask }, "Try another option")].filter(Boolean));
+      h("p", { class: "lp-try" }, "Tap another card to see what it would have done.")].filter(Boolean));
 
     if (result) arrive(result, { distance: 8 });
     arrive(close, { delay: 300 });
@@ -130,18 +127,17 @@ function monthDemo(save) {
         animate(fill, [{ width: `${from}%` }, { width: `${to}%` }], { duration: 900, delay: 200, easing: CSS_EASE.out });
       }
     });
-    close.scrollIntoView({ block: "nearest", behavior: reduced() ? "auto" : "smooth" });
   }
-  bind();
 }
 
-// The month arriving, about 1.2s, once: the band's lines rise one after another, the drawing
-// comes up, then the situation and the cards
+// The month arriving, about 1.4s, once: the band's lines rise one after another, the first salary
+// comes up over the horizon, the road's first month lights, then the situation and the cards
 function opening() {
   const band = document.querySelector(".lp-band-deep");
   const lines = [band.querySelector(".lp-month-line"), band.querySelector(".lp-salary")];
   lines.forEach((line, i) => rise(line, 80 + i * 110));
-  animate(band.querySelector(".lp-illo"), [{ opacity: 0, transform: "scale(0.96)" }, { opacity: 1, transform: "scale(1)" }], { duration: 520, delay: 260, easing: CSS_EASE.out });
+  animate(band.querySelector(".lp-art-coin"), [{ transform: "translateY(60px)" }, { transform: "translateY(0)" }], { duration: 900, delay: 200, easing: CSS_EASE.out });
+  animate(band.querySelector(".lp-art-month.is-lit"), [{ fill: "var(--deep-muted)" }, { fill: "var(--marigold)" }], { duration: 300, delay: 950, easing: "ease-out" });
   rise(document.querySelector(".lp-situation"), 520);
   document.querySelectorAll(".lp-choice .option").forEach((card, i) => rise(card, 680 + i * 90, 16));
 }
@@ -197,12 +193,68 @@ function signup(form) {
   });
 }
 
+// ---------- How far through ----------
+
+// The game's mark, as the desktop field shows it: 24 ticks round a circle, one for each month of
+// chapter one (vendor/dry-run-engine/design/dry-run-mark.svg). Its months light as the page is read
+function railMark() {
+  const svg = s("svg", { viewBox: "0 0 118 118", fill: "none", width: 132, height: 132 });
+  svg.append(s("circle", { cx: 59, cy: 59, r: 59, fill: "var(--deep)" }));
+  const ticks = [];
+  for (let i = 0; i < 24; i++) {
+    const angle = ((i * 15 - 90) * Math.PI) / 180;
+    const [c, n] = [Math.cos(angle), Math.sin(angle)];
+    const tick = s("line", { x1: 59 + c * 30, y1: 59 + n * 30, x2: 59 + c * 49, y2: 59 + n * 49, "stroke-width": 5, "stroke-linecap": "round", class: "lp-rail-tick" });
+    ticks.push(tick);
+    svg.append(tick);
+  }
+  svg.append(s("circle", { cx: 59, cy: 59, r: 17, fill: "var(--ink)" }));
+  document.querySelector(".lp-rail-mark-art").append(svg);
+  return ticks;
+}
+
+// The rule at the top: one part for each of the page's four sections, each filling as the middle
+// of the screen passes through its section. It follows the scroll directly, with no motion of
+// its own, and under reduced motion it is not shown (landing.css)
+function progress() {
+  const parts = [...document.querySelectorAll(".lp-progress i")];
+  const sections = [...document.querySelectorAll("[data-section]")];
+  const ticks = railMark();
+  let queued = false;
+  const draw = () => {
+    queued = false;
+    const de = document.documentElement;
+    de.style.setProperty("--scrollbar", `${innerWidth - de.clientWidth}px`);
+    const middle = innerHeight / 2;
+    sections.forEach((section, i) => {
+      const box = section.getBoundingClientRect();
+      const filled = Math.min(1, Math.max(0, (middle - box.top) / box.height));
+      parts[i].style.setProperty("--fill", filled.toFixed(3));
+    });
+    const read = Math.min(1, Math.max(0, scrollY / Math.max(1, de.scrollHeight - innerHeight)));
+    const lit = Math.max(1, Math.round(read * 24));
+    ticks.forEach((tick, i) => tick.classList.toggle("is-lit", i < lit));
+  };
+  const queue = () => { if (!queued) { queued = true; requestAnimationFrame(draw); } };
+  addEventListener("scroll", queue, { passive: true });
+  addEventListener("resize", queue);
+  draw();
+
+  // On a wide screen the rails come in once the hero band has gone by, and Play moves from the
+  // dock into the field beside the column
+  const band = document.querySelector(".lp-band-deep");
+  if (typeof IntersectionObserver === "function") {
+    new IntersectionObserver(([entry]) => document.body.classList.toggle("lp-past-hero", !entry.isIntersecting), { rootMargin: "-120px 0px 0px 0px" }).observe(band);
+  }
+}
+
 // ---------- Start ----------
 
 async function main() {
   drawings();
   if (!reduced()) opening();
   sections();
+  progress();
   signup(document.querySelector("[data-signup]"));
 
   const ghostHolder = document.querySelector("[data-ghost]");

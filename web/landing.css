@@ -5,6 +5,12 @@
 
 :root { --lp-dock-height: 84px; }
 
+/* Taps land at once: no double-tap zoom waiting on a second tap, and no text resizing when the
+   phone turns. Pinch zoom stays: manipulation keeps it. Every field is 16px or more, so focusing
+   one never zooms the page on iOS */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation; }
+input, select, textarea { font-size: max(16px, 1em); }
+
 body { background: var(--ink); }
 
 .lp {
@@ -38,19 +44,53 @@ body { background: var(--ink); }
 .lp-month-line { margin: 22px 0 0; font-family: var(--display); font-size: 32px; font-weight: 800; line-height: 1.1; }
 .lp-salary { margin: 6px 0 0; font-size: 17px; color: color-mix(in srgb, var(--ink) 82%, var(--deep)); }
 .lp-salary .money { color: var(--marigold); font-weight: 700; }
-.lp-illo { position: relative; z-index: 0; margin: 10px calc(-1 * var(--gutter)) 0; }
-/* The drawing's shapes run off its edges, as they run off the top of the game's screen: here they
-   carry on behind the month's lines, which stay above them, and the band clips them at its edge */
-.lp-band-deep { overflow: hidden; }
-.lp-band-deep > :not(.lp-illo) { position: relative; z-index: 1; }
-.lp-illo .illo, .lp-illo svg { overflow: visible; }
-.lp-illo .illo { width: 100%; height: min(30dvh, calc((100vw) * 286 / 390)); max-height: none; aspect-ratio: auto; border-radius: 0; }
+/* The hero's own drawing (in index.html), the band's full width. It is composed wider than any
+   phone and anchored at its foot and middle, so a phone sees the coin, the road and you, and a
+   wide screen more of the world either side */
+.lp-art-holder { margin: 10px calc(-1 * var(--gutter)) 0; }
+.lp-art { display: block; width: 100%; height: 210px; }
+.lp-art-coin { transform-box: view-box; }
 
 .lp-situation { margin: 22px 0 0; font-family: var(--display); font-size: 24px; font-weight: 700; line-height: 1.25; }
 .lp-choice { margin-top: 18px; }
 .lp-choice .options { padding: 0; }
 .lp-after { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
 .lp-after:empty { display: none; }
+/* The chosen card stays an option card, the same box and the same lip, and takes the chosen
+   card's colours and tick (daylight.css .chosen), so changing the choice moves nothing on the page */
+.lp-choice .option.is-chosen {
+  position: relative;
+  padding-right: 56px;
+  border-color: var(--marigold);
+  border-bottom-color: color-mix(in srgb, var(--marigold), #000 18%);
+  background: #FFF6E3;
+  cursor: default;
+}
+.lp-choice .option.is-chosen::after {
+  content: "";
+  position: absolute;
+  right: 16px;
+  top: 50%;
+  width: 26px;
+  height: 26px;
+  margin-top: -13px;
+  border-radius: 999px;
+  background: var(--marigold);
+}
+.lp-choice .option.is-chosen::before {
+  content: "";
+  position: absolute;
+  right: 26px;
+  top: 50%;
+  width: 6px;
+  height: 11px;
+  margin-top: -8px;
+  border: solid var(--ink-deepest);
+  border-width: 0 3px 3px 0;
+  transform: rotate(45deg);
+  z-index: 1;
+}
+.lp-try { margin: -6px 0 0; font-size: 14px; font-weight: 600; color: var(--slate); text-align: center; }
 .lp-result { margin: 4px 0 0; font-family: var(--display); font-size: 22px; font-weight: 600; line-height: 1.3; }
 .lp-close {
   padding: 18px 16px 20px;
@@ -185,3 +225,105 @@ body { background: var(--ink); }
 }
 .lp-dock-note { flex-shrink: 0; margin: 0; font-size: 13px; font-weight: 600; line-height: 1.35; color: var(--bone-dim); }
 .lp-dock .action.lp-play { flex: 1; width: auto; height: 58px; text-decoration: none; font-size: 22px; }
+
+/* ---------- How far through: the rule at the top ---------- */
+
+.lp-progress {
+  position: fixed;
+  top: env(safe-area-inset-top);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3px;
+  height: 4px;
+  pointer-events: none;
+}
+.lp-progress i {
+  display: block;
+  background: linear-gradient(var(--marigold), var(--marigold)) left / calc(var(--fill, 0) * 100%) 100% no-repeat,
+    color-mix(in srgb, var(--paper-shadow) 70%, transparent);
+}
+/* Under reduced motion the page carries no moving rule at all */
+@media (prefers-reduced-motion: reduce) {
+  .lp-progress { display: none; }
+}
+
+/* ---------- Wide screens ----------
+   The game column keeps its phone width, centred. Around it, a field: graph-paper dots on the
+   paper ground, as a ledger has, with the column laid on it as a clean sheet. The hero band runs
+   the screen's full width and shows the whole of its drawing, the offices and the homes. The other
+   bands become cards on the sheet rather than stretching. On the widest screens the field also
+   holds the game's mark, its months lighting as the page is read, and Play, beside the column.
+   Nothing here applies below 900px: a phone's page is unchanged. */
+
+.lp-rail { display: none; }
+
+@media (min-width: 900px) {
+  html { overflow-x: clip; }
+  body {
+    background-color: var(--ink);
+    background-image: radial-gradient(color-mix(in srgb, var(--paper-shadow) 75%, transparent) 1.3px, transparent 1.6px);
+    background-size: 26px 26px;
+  }
+  .lp { background: var(--ink); box-shadow: 0 0 0 1px var(--rule), 0 24px 60px -30px rgba(33, 28, 22, 0.18); min-height: 100vh; }
+
+  .lp-band-deep { overflow: visible; }
+  /* The screen's width less its scrollbar, which 100vw counts (--scrollbar, from landing.js) */
+  .lp { --field: calc(100vw - var(--scrollbar, 0px)); }
+  .lp-art-holder { margin-left: calc(50% - var(--field) / 2); margin-right: calc(50% - var(--field) / 2); }
+  /* Toward the drawing's own shape, 4 to 1, so a wide screen loses as little of its sky as it can */
+  .lp-art { height: clamp(260px, calc(var(--field, 100vw) / 4), 440px); }
+  .lp-month-line { font-size: 38px; }
+
+  .lp-section.lp-band {
+    margin-left: calc(-1 * var(--gutter));
+    margin-right: calc(-1 * var(--gutter));
+    padding: 32px var(--gutter) 34px;
+    box-shadow: none;
+    clip-path: none;
+    border-radius: 28px;
+  }
+}
+
+@media (min-width: 1100px) {
+  .lp-rail {
+    position: fixed;
+    top: 50%;
+    z-index: 5;
+    display: flex;
+    flex-direction: column;
+    width: 220px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-50%);
+    transition: opacity 260ms ease-out, visibility 0s linear 260ms;
+  }
+  .lp-past-hero .lp-rail { opacity: 1; visibility: visible; transition: opacity 260ms ease-out; }
+  .lp-rail-mark { left: calc(50% - 240px - 56px - 220px); align-items: center; text-align: center; }
+  .lp-rail-play { left: calc(50% + 240px + 56px); }
+
+  .lp-rail-tick { stroke: #6F8DB8; transition: stroke 200ms ease-out; }
+  .lp-rail-tick.is-lit { stroke: var(--marigold); }
+  .lp-rail-caption { margin: 14px 0 0; font-family: var(--display); font-size: 19px; font-weight: 700; line-height: 1.25; color: var(--bone-dim); }
+
+  .lp-rail-play {
+    padding: 20px;
+    background: var(--ink-raised);
+    border: 2px solid var(--card-edge);
+    border-bottom: var(--lip) solid var(--card-lip);
+    border-radius: 20px;
+  }
+  .lp-rail-line { margin: 0; font-family: var(--display); font-size: 21px; font-weight: 800; line-height: 1.15; }
+  .lp-rail-button { margin-top: 16px; text-decoration: none; }
+  .lp-rail-note { margin: 10px 0 0; font-size: 14px; font-weight: 600; color: var(--bone-dim); text-align: center; }
+
+  /* Play is beside the column once the hero has gone by, so the dock steps aside */
+  .lp-dock { transition: transform 260ms ease-out; }
+  .lp-past-hero .lp-dock { transform: translateY(110%); }
+}
+
+@media (min-width: 1100px) and (prefers-reduced-motion: reduce) {
+  .lp-rail, .lp-past-hero .lp-rail, .lp-dock, .lp-rail-tick { transition: none; }
+}

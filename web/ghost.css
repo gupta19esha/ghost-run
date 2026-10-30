@@ -8,6 +8,11 @@
      dashed edge, a dashed card, a small ghost mark. It is the life drawn but never built.
    Neither uses teal or vermilion, which the game keeps for a bar going up or down. */
 
+/* Taps land at once: no double-tap zoom waiting on a second tap, and no text resizing when the
+   phone turns. Pinch zoom stays: manipulation keeps it */
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; touch-action: manipulation; }
+input, select, textarea { font-size: max(16px, 1em); }
+
 :root {
   --ghost: var(--deep-raised);
   --ghost-fill: #E6EEF9;

@@ -58,7 +58,6 @@ test("the landing's written month and tiles are the engine's, word for word", ()
   has(preview.salary);
   has(preview.situation);
   for (const option of preview.options) has(`data-option="${option.id}">${option.label}</button>`);
-  has(`data-illo="${SHOWN_DECISION}"`);
   for (const tile of tiles()) {
     assert.ok(tile.summary, `${tile.id} has a month summary`);
     has(`data-illo="${tile.id}"`);
