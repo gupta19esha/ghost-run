@@ -1,0 +1,40 @@
+import { test } from "node:test";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import { monthPreview, monthOutcome, landingFork, SHOWN_DECISION, SHOWN_FORK } from "../landing-model.js";
+import { readRun } from "../ghost-model.js";
+import { getDecision } from "../../vendor/dry-run-engine/engine/index.js";
+
+const save = JSON.parse(readFileSync(new URL("../demo/save.json", import.meta.url), "utf8"));
+
+test("the month shown is the demo life's own, worded as the game words it", () => {
+  const preview = monthPreview(save);
+  const decision = getDecision(SHOWN_DECISION);
+  assert.equal(preview.month, decision.month);
+  assert.equal(save.choices[preview.index], preview.demoChoice);
+  assert.deepEqual(preview.options.map((o) => o.label), Object.values(decision.options).map((o) => o.option_label));
+  for (const option of preview.options) assert.ok(option.line && !option.line.includes("{"), `${option.id} has a rendered result line`);
+  // The same situation the ghost screen reads for that choice
+  const choice = readRun(save).months.flatMap((m) => m.choices).find((c) => c.decisionId === SHOWN_DECISION);
+  assert.equal(preview.situation, choice.situation);
+});
+
+test("each option's month close comes from the engine, and the demo's own option is the demo's month", () => {
+  const preview = monthPreview(save);
+  const run = readRun(save);
+  const real = run.bars.find((b) => b.month === preview.month);
+  const outcomes = preview.options.map((o) => monthOutcome(save, preview.index, o.id));
+  for (const o of outcomes) assert.deepEqual(o.before, run.bars.find((b) => b.month === preview.month - 1));
+  assert.deepEqual(outcomes.find((_, i) => preview.options[i].id === preview.demoChoice).after, real);
+  // Every option leaves the month differently
+  assert.equal(new Set(outcomes.map((o) => o.after.netWorth)).size, outcomes.length);
+});
+
+test("the landing's ghost forks at its decision and parts from the real run there", () => {
+  const view = landingFork(save);
+  assert.equal(view.month, getDecision(SHOWN_FORK.decisionId).month);
+  assert.notEqual(view.real.option, view.ghost.option);
+  const before = (bars) => bars.filter((b) => b.month < view.month);
+  assert.deepEqual(before(view.ghost.bars), before(view.real.bars));
+  assert.notEqual(view.ghost.bars.at(-1).netWorth, view.real.bars.at(-1).netWorth);
+});
