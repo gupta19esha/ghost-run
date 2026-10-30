@@ -140,6 +140,14 @@ STATED_TERMS = [
     ("Options", "D39-C", "option_label", r"States: ([\d,]+) for", ("column", "money_once"), -1),
     ("Options", "D39-C", "option_label", r"for (a year)", ("term", "term_months"), 1),
     ("Options", "D39-D", "option_label", r"States: ([\d,]+)\]", ("column", "money_once"), -1),
+    # D40, term insurance (sheet v36): the two covers, as crore and lakh, and each option's premium
+    ("Decisions", "D40", "situation_text", r"States: ([\d.]+) crore", ("option_column", ("D40-A", "term_cover_delta")), 1 / 10000000),
+    ("Decisions", "D40", "situation_text", r"crore, ([\d.]+) lakh", ("option_column", ("D40-B", "term_cover_delta")), 1 / 100000),
+    ("Options", "D40-A", "option_label", r"States: ([\d.]+) crore", ("column", "term_cover_delta"), 1 / 10000000),
+    ("Options", "D40-A", "option_label", r"crore for ([\d,]+) a month", ("column", "money_monthly"), -1),
+    ("Options", "D40-B", "option_label", r"States: ([\d.]+) lakh", ("column", "term_cover_delta"), 1 / 100000),
+    ("Options", "D40-B", "option_label", r"lakh for ([\d,]+) a month", ("column", "money_monthly"), -1),
+    ("Options", "D40-C", "option_label", r"States: ([\d,]+) a month", ("column", "money_monthly"), -1),
 ]
 # An "lpa_offer" source is a job offer quoted as a yearly CTC in lakhs. The option's monthly
 # salary change (money_monthly, or def_money_monthly when the offer arrives by callback) on

@@ -6,8 +6,8 @@
 // shapes with every colour swapped for its muted one (MUTED below). Colours are tokens from
 // game/tokens.css, never hex (UI.md build rule 5).
 //
-// All thirty Chapter 1 decisions have one, and the nine of chapter 2's opening, D31 to D39, drawn for
-// sheet v35. A decision with no entry here gets an empty colour
+// All thirty Chapter 1 decisions have one, and the ten of chapter 2's opening, D31 to D40, drawn for
+// sheets v35 and v36. A decision with no entry here gets an empty colour
 // block, never filler (UI.md rule 4).
 
 const VIEWBOX = "0 0 390 286";
@@ -648,10 +648,28 @@ const D39 = derived(`
     <rect x="180" y="204" width="30" height="24" fill="var(--paper-shadow)"/>
     <rect x="148" y="226" width="94" height="10" rx="3" fill="var(--paper-dim)"/>`);
 
+// D40: your parents in a frame, and a policy beside it (sheet v36)
+const D40 = derived(`
+    <circle cx="324" cy="62" r="74" fill="var(--deep-raised)"/>
+    <rect x="70" y="80" width="150" height="146" rx="6" fill="var(--paper-shadow)"/>
+    <rect x="82" y="92" width="126" height="122" rx="3" fill="var(--bone)"/>
+    <circle cx="124" cy="136" r="15" fill="var(--paper-dim)"/>
+    <path d="M102 214v-26a22 22 0 0 1 44 0v26Z" fill="var(--paper-dim)"/>
+    <circle cx="168" cy="140" r="13" fill="var(--paper-side)"/>
+    <path d="M149 214v-22a19 19 0 0 1 38 0v22Z" fill="var(--paper-side)"/>
+    <rect x="244" y="112" width="96" height="124" rx="4" fill="var(--bone)"/>
+    <rect x="258" y="128" width="58" height="8" rx="2" fill="var(--paper-shadow)"/>
+    <rect x="258" y="148" width="68" height="5" rx="2" fill="var(--paper-line)"/>
+    <rect x="258" y="162" width="68" height="5" rx="2" fill="var(--paper-line)"/>
+    <rect x="258" y="176" width="44" height="5" rx="2" fill="var(--paper-line)"/>
+    <rect x="258" y="208" width="34" height="4" rx="2" fill="var(--paper-shadow)"/>
+    <circle cx="318" cy="210" r="11" fill="var(--marigold)"/>
+    <rect x="56" y="244" width="300" height="5" rx="2" fill="var(--paper-shadow)"/>`);
+
 const ILLUSTRATIONS = {
   D01, D02, D03, D04, D05, D06, D07, D08, D09, D10, D11, D12, D13, D14, D15,
   D16, D17, D18, D19, D20, D21, D22, D23, D24, D25, D26, D27, D28, D29, D30,
-  D31, D32, D33, D34, D35, D36, D37, D38, D39,
+  D31, D32, D33, D34, D35, D36, D37, D38, D39, D40,
 };
 
 // The colour block, with the drawing in it when the decision has one

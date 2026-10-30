@@ -140,12 +140,12 @@ test("every option in the sheet applies at its month, in a state that offers it"
       for (const e of effects) counts[e.type] = (counts[e.type] || 0) + 1;
     }
   }
-  show("Effect types across all 123 options", counts);
-  // Chapter 1's 95, and the 28 of chapter 2's opening, months 25 to 30 (sheet v35)
+  show("Effect types across all 126 options", counts);
+  // Chapter 1's 95, and the 31 of chapter 2's opening, months 25 to 30 (sheets v35 and v36)
   const optionsIn = (chapter) => Object.values(DECISIONS).filter((d) => d.chapter === chapter).reduce((n, d) => n + Object.keys(d.options).length, 0);
   assert.equal(optionsIn(1), 95);
-  assert.equal(optionsIn(2), 28);
-  assert.equal(Object.values(DECISIONS).reduce((n, d) => n + Object.keys(d.options).length, 0), 123);
+  assert.equal(optionsIn(2), 31);
+  assert.equal(Object.values(DECISIONS).reduce((n, d) => n + Object.keys(d.options).length, 0), 126);
 });
 
 test("rule 29: an option whose precondition fails is not offered, and cannot be chosen", () => {
