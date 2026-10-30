@@ -132,15 +132,16 @@ function monthDemo(save) {
 
 // ---------- The chapters ----------
 
-// Each chapter's days as the game's month ticks; chapter one's, the live one, light in turn when
-// the row comes on screen
+// Each chapter's days as the game's month ticks; the written days of a playable chapter light in
+// turn when the row comes on screen: all of chapter one's, and the opening of chapter two
 function chapterDays() {
   for (const card of document.querySelectorAll(".lp-chapter")) {
     const days = Number(card.dataset.days);
     card.append(h("ol", { class: "lp-chapter-ticks", "aria-hidden": "true" },
       Array.from({ length: days }, () => h("li", { class: "lp-chapter-tick" }))));
   }
-  const live = [...document.querySelectorAll(".lp-chapter.is-live .lp-chapter-tick")];
+  const live = [...document.querySelectorAll(".lp-chapter.is-live")].flatMap((card) =>
+    [...card.querySelectorAll(".lp-chapter-tick")].slice(0, Number(card.dataset.written || card.dataset.days)));
   const row = document.querySelector(".lp-chapters");
   whenSeen(row, () => live.forEach((tick, i) => later(250 + i * 35, () => {
     tick.classList.add("is-lit");

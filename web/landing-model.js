@@ -65,11 +65,14 @@ export function monthOutcome(save, index, option) {
 
 // The six chapters, from the plan: the days-per-chapter table (vendor/dry-run-engine/HANDOFF.md
 // section 4, SIMULATION-MATHS.md section 13), 24, 36, 48, 48, 48 and 36 days, one month each, from
-// 22 to 42. Only chapter one is built, and only it has a title (the sheet's chapter_title).
-// Nothing has decided when the others come out: a date goes in DATES, by chapter number, once
-// one is decided, and until then the page says Coming.
+// 22 to 42, and each chapter's title from the same table. Chapter one is built, and chapter two's
+// opening, months 25 to 30 (sheets v35 and v36): both can be played. The rest are locked. Nothing
+// has decided when they come out: a date goes in DATES, by chapter number, once one is decided.
 export const CHAPTER_DAYS = [24, 36, 48, 48, 48, 36];
+export const CHAPTER_TITLES = ["First Salary", "Building", "Pressure", "The Big Ones", "Weight", "The Count"];
 export const DATES = {};
+// The chapters a player can play, and how many of each one's months are written
+export const PLAYABLE = { 1: 24, 2: 6 };
 export function chapters() {
   let end = 0;
   return CHAPTER_DAYS.map((days, i) => {
@@ -81,8 +84,9 @@ export function chapters() {
       days,
       fromAge: 22 + Math.floor((start - 1) / 12),
       toAge: 22 + end / 12,
-      title: number === 1 ? getDecision("D01").chapter_title : null,
-      live: number === 1,
+      title: CHAPTER_TITLES[i],
+      live: number in PLAYABLE,
+      written: PLAYABLE[number] ?? 0,
       date: DATES[number] ?? null,
     };
   });

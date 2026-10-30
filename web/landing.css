@@ -488,3 +488,4 @@ body { background: var(--ink); }
   /* The rule at the top sits over the header's top edge */
   .lp-progress { height: 4px; }
 }
+
