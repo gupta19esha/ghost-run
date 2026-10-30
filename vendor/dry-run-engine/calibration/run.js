@@ -8,10 +8,11 @@
 // September 2026). Random play follows as a secondary measure of the spread of outcomes.
 
 import CONSTANTS from "../engine/constants.js";
+import { createState } from "../engine/index.js";
 import {
   readTargets, randomPlaythrough, checkpoints, noDominantStrategy, noFreeLunch, shocksSurvivable,
   compoundingVisible, saverThroughShocks, typePlaythrough, PLAYER_TYPES, firstInvestmentUp, leagueScore, measuredMonths, percentile, CHAPTER_END, LAST_CALLBACK_MONTH,
-  MEASURES, targetVerdict, medianVerdict, OPENING_END, openingTargets, noDominantStrategyAt,
+  MEASURES, targetVerdict, medianVerdict, OPENING_END, openingTargets, noDominantStrategyAt, play,
 } from "./harness.js";
 
 const args = process.argv.slice(2);
@@ -229,6 +230,28 @@ table(["Shock", "Prepared players", "Reached step 4 or 5", "Result"],
   v3.map((s) => [s.shock, s.prepared, s.failures.length, s.prepared === 0 ? "NOT TESTED, no prepared player" : s.pass ? "PASS" : "FAIL"]));
 for (const s of v3.filter((x) => x.failures.length)) {
   console.log(`${s.shock}, first failures: ${s.failures.slice(0, 5).map((f) => `seed ${f.seed} step ${f.step} at month ${f.month} (runway ${one(f.runway)})`).join("; ")}\n`);
+}
+// The exact path behind each failure (recorded 30 October 2026, window and content left as they
+// are): every choice the random player made, month by month to the failing month, what it could
+// reach as that month began, and how deep the cascade went in each month of the shock's window
+const reachable = (state) => ({
+  cash: state.cash,
+  liquid: state.liquid_fund,
+  fds: state.fds.reduce((a, d) => a + d.value, 0),
+  equity: [...state.equity, ...state.small_cap].reduce((a, h) => a + h.value, 0),
+});
+for (const s of v3.filter((x) => x.failures.length)) {
+  for (const f of s.failures) {
+    const run = runs.find((r) => r.seed === f.seed);
+    const chosen = Object.assign({}, ...run.months.map((m) => m.chosen));
+    const start = play(createState(f.seed, constants), (d) => chosen[d.decision_id] ?? null, f.month - 1, constants).state;
+    const r = reachable(start);
+    console.log(`### ${s.shock}: the path behind seed ${f.seed}\n`);
+    console.log(`Prepared: ${one(f.runway)} months of runway the month before the shock. Reaches step ${f.step} at month ${f.month}.\n`);
+    table(["Month", "Choices", "Deepest step", "Employed", "Net worth"],
+      run.months.filter((m) => m.month <= f.month).map((m) => [m.month, Object.values(m.chosen).join(" ") || ".", m.deepestStep, m.employed ? "yes" : "no", rupees(m.bars.netWorth)]));
+    console.log(`Reachable as month ${f.month} began: cash ${rupees(r.cash)}, liquid fund ${rupees(r.liquid)}, deposits ${rupees(r.fds)}, equity and small caps ${rupees(r.equity)}. Month ${f.month}'s choices: ${Object.values(run.months.find((m) => m.month === f.month).chosen).join(", ")}.\n`);
+  }
 }
 
 const saverShocks = saverThroughShocks(1, constants);

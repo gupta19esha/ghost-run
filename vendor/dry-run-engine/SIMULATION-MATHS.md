@@ -1697,11 +1697,16 @@ negative, so it uses the league `ref`. There is no Safety target after month 24 
   is above zero (§4), and nothing in the sheet can set `dependents` without an engine change. Open.
 - **Validation 3, after D36-A went from 70,000 to 50,000 (v36), with chapter 1's shock windows
   unchanged:** D28's window passes, 0 of 7 prepared players at step 4 or 5. D30's still fails, 1
-  of 5: seed 811 reaches family money in month 28. It began month 28 with nothing reachable, no
-  cash, liquid fund or equity: salary had only restarted at month 27, after D32-A's trip, D35-A's
-  80,000 and a liquid fund drawn down. With nothing reachable, any cash purchase goes to family
-  money, so the laptop's price no longer decides it. D30's window runs to its month 30 callback,
-  so it counts chapter 2's choices. Reported, not adjusted.
+  of 5: seed 811 reaches family money in month 28. **Recorded 30 October 2026, window and content
+  left as they are.** Its exact path, every choice month by month with its cascade step and net
+  worth, is in `REPORT-2026-10-30b.md` under validation 3, and `calibration/run.js` prints one for
+  any validation 3 failure. In short: prepared at 7.6 months before D30, it takes D30-B, then D31-A
+  (40,000 into a liquid fund) and D32-A (the 22,000 trip) while still unemployed, D33-C, then
+  D34-C and D35-A (the full 80,000) as salary restarts at month 27. It begins month 28 with no
+  cash, liquid fund or deposits, only 19,297 in equity and small caps, which Safety haircuts, and
+  takes D36-A (the 50,000 laptop) and D40-A (1,000 a month of cover). The cascade reaches family
+  money. The laptop's price no longer decides it. D30's window runs to its month 30 callback, so
+  it counts chapter 2's choices.
 - **Validation 2: no new free lunch.** D38-B was flagged on v35's first run, a raise with weekends
   kept and no cost, and carries Life -1 for longer weekdays since; a content fix, not a target. The
   eight flags left are chapter 1's own.
