@@ -63,6 +63,17 @@ export function monthOutcome(save, index, option) {
   return { month, before, after, danger: safetyInDanger(state) };
 }
 
+// Some of what is coming in chapter one, as the game draws and names each month: the illustration
+// and the month's own summary line. None from before month 7, and none whose drawing colours an
+// answer (UI.md rule 7). Month 17 is left for the ghost
+export const TILES = ["D10", "D22", "D26", "D28"];
+export function tiles(ids = TILES) {
+  return ids.map((id) => {
+    const decision = getDecision(id);
+    return { id, month: decision.month, summary: decision.month_summary };
+  });
+}
+
 // The ghost the landing draws. Month 17, your father's business loan: the demo life said it could
 // not manage; the ghost takes over the full EMI. Picked because money and the bars disagree on it
 // (the ghost ends poorer and less free, with more Life), so the page shows a trade-off rather

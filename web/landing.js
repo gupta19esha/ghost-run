@@ -1,64 +1,45 @@
-// The landing page at the site root. Its copy is in web/index.html; this adds what needs the
-// simulation and the motion:
-// - the opening: the mark's ticks draw round and the first nine light, as the game's landing
-//   does, and the title's lines rise in (vendor/dry-run-engine/LANDING-MOTION.md, A and E)
-// - each section rises into place as it comes on screen; chapter one's 24 ticks light in turn
-// - month 7 of the demo life, playable: the month card, the decision, the result line and the
-//   month close for whichever option is tapped, every figure from the engine (web/landing-model.js)
+// The landing page at the site root. Its words are in web/index.html; this adds the rest:
+// - the opening: the month arrives the way the game's landing opens, its lines rising one after
+//   another (vendor/dry-run-engine/LANDING-MOTION.md, direction E), the drawing, the situation,
+//   then the option cards
+// - month 7 of the demo life, playable: the result line and the month close for whichever option
+//   is tapped, every figure from the engine (web/landing-model.js), at the game's own timing
+// - the game's drawings, in the hero and on the tiles, popping in as they come on screen, and
+//   chapter one's 24 ticks lighting in turn
 // - a ghost, drawing itself from the split month when it comes on screen
 // - the chapter two sign-up, which is connected to nothing (see signup below)
 //
 // Motion is web/motion.js's: a tap finishes it, and with reduced motion on everything is simply
 // there. The page makes no sound.
 
-import { monthPreview, monthOutcome, landingFork, SHOWN_DECISION, BAR_KEYS, BAR_NAMES } from "./landing-model.js";
+import { monthPreview, monthOutcome, landingFork, BAR_KEYS, BAR_NAMES } from "./landing-model.js";
 import { formatMoney } from "../vendor/dry-run-engine/text/render.js";
 import { illustration } from "../vendor/dry-run-engine/game/screens/illustrations.js";
 import { direction, arrow } from "../vendor/dry-run-engine/game/screens/moves.js";
 import { animate, count, later, reduced, CSS_EASE } from "./motion.js";
-import { h, s, ghostMark, chart, hideGhost, drawGhost, legend, arrive } from "./ui.js";
+import { h, ghostMark, chart, hideGhost, drawGhost, legend, arrive } from "./ui.js";
 
-// ---------- The opening ----------
+const money = (n) => formatMoney(n);
+const rise = (el, delay, distance = 12) =>
+  animate(el, [{ opacity: 0, transform: `translateY(${distance}px)` }, { opacity: 1, transform: "translateY(0)" }], { duration: 420, delay, easing: CSS_EASE.out });
 
-// The game's mark: 24 ticks round a circle, one for each month of chapter one, the first nine in
-// marigold. The same drawing as vendor/dry-run-engine/design/dry-run-mark.svg
-function mark() {
-  const svg = s("svg", { width: 88, height: 88, viewBox: "0 0 118 118", fill: "none" });
-  svg.append(s("circle", { cx: 59, cy: 59, r: 59, fill: "var(--deep)" }));
-  const ticks = s("g", { "stroke-width": 5, "stroke-linecap": "round" });
-  for (let i = 0; i < 24; i++) {
-    const angle = ((i * 15 - 90) * Math.PI) / 180;
-    const [c, n] = [Math.cos(angle), Math.sin(angle)];
-    ticks.append(s("line", { pathLength: 1, x1: 59 + c * 30, y1: 59 + n * 30, x2: 59 + c * 49, y2: 59 + n * 49,
-      stroke: i < 9 ? "var(--marigold)" : "var(--slate-dim)", "stroke-dasharray": 1, class: i < 9 ? "lp-tick lit" : "lp-tick" }));
+// ---------- The game's drawings ----------
+
+// Every [data-illo] placeholder gets the game's own drawing for that decision, in full colour
+function drawings() {
+  for (const holder of document.querySelectorAll("[data-illo]")) {
+    const block = illustration(holder.dataset.illo, "full");
+    // The hero's band is shorter than the drawing's shape on most phones. The game fits the whole
+    // drawing and lets the block's colour fill the sides, which leaves the edges of a shape that
+    // runs off the drawing floating in the band; here the drawing fills the band and gives up a
+    // little of its top and foot instead, where there is only ground
+    if (holder.classList.contains("lp-illo")) block.querySelector("svg")?.setAttribute("preserveAspectRatio", "xMidYMid slice");
+    holder.append(block);
   }
-  svg.append(ticks, s("circle", { cx: 59, cy: 59, r: 17, fill: "var(--bone)" }));
-  return svg;
 }
 
-function opening() {
-  const holder = document.querySelector(".lp-mark");
-  const svg = mark();
-  holder.append(svg);
-  // The title's lines rise one after another, the lede and the facts follow, then the ticks draw
-  // round and the first nine turn marigold: about 1.8s, once
-  document.querySelectorAll(".lp-title-line").forEach((line, i) =>
-    animate(line, [{ opacity: 0, transform: "translateY(10px)" }, { opacity: 1, transform: "translateY(0)" }], { duration: 420, delay: i * 110, easing: CSS_EASE.out }));
-  for (const [i, el] of [document.querySelector(".lp-lede"), document.querySelector(".lp-facts")].entries()) {
-    animate(el, [{ opacity: 0 }, { opacity: 1 }], { duration: 420, delay: 380 + i * 100, easing: "ease-out" });
-  }
-  svg.querySelectorAll(".lp-tick").forEach((tick, i) => {
-    animate(tick, [{ strokeDashoffset: 1 }, { strokeDashoffset: 0 }], { duration: 240, delay: 600 + i * 30, easing: "ease-out" });
-    if (tick.classList.contains("lit")) {
-      animate(tick, [{ stroke: "var(--slate-dim)" }, { stroke: "var(--marigold)" }], { duration: 260, delay: 1340 + i * 50, easing: "ease-out" });
-    }
-  });
-}
+// ---------- Coming on screen ----------
 
-// ---------- Sections arriving ----------
-
-// Each section's parts rise into place, one after another, the first time it comes on screen.
-// then() runs at the same moment, for anything in the section with its own motion
 function whenSeen(el, then, threshold = 0.2) {
   if (typeof IntersectionObserver !== "function") return then();
   const observer = new IntersectionObserver((entries) => {
@@ -69,47 +50,50 @@ function whenSeen(el, then, threshold = 0.2) {
   observer.observe(el);
 }
 
+// Each section's parts rise into place one after another the first time it comes on screen;
+// the tiles pop in, and chapter one's months light in turn
 function sections() {
   for (const section of document.querySelectorAll("[data-reveal]")) {
     const parts = [...section.children];
     if (!reduced()) for (const part of parts) part.style.opacity = "0";
-    whenSeen(section, () => parts.forEach((part, i) => arrive(part, { delay: i * 70 })), 0.12);
+    whenSeen(section, () => parts.forEach((part, i) => arrive(part, { delay: i * 80 })), 0.12);
   }
-  // Chapter one's months, lighting one after another
+  const tiles = [...document.querySelectorAll(".lp-tile")];
+  if (!reduced()) for (const tile of tiles) tile.style.opacity = "0";
+  whenSeen(document.querySelector(".lp-tiles"), () => tiles.forEach((tile, i) => later(150 + i * 110, () => {
+    tile.style.opacity = "";
+    animate(tile, [{ opacity: 0, transform: "translateY(14px) scale(0.94)" }, { opacity: 1, transform: "translateY(0) scale(1)" }], { duration: 380, easing: CSS_EASE.land });
+  })), 0.25);
   const ticks = document.querySelector(".lp-ticks");
-  whenSeen(ticks, () => [...ticks.children].forEach((tick, i) => later(250 + i * 45, () => {
+  whenSeen(ticks, () => [...ticks.children].forEach((tick, i) => later(150 + i * 45, () => {
     tick.classList.add("is-closed");
     animate(tick, [{ transform: "scale(1)" }, { transform: "scale(1.35)", offset: 0.35 }, { transform: "scale(1)" }], { duration: 360, easing: "ease-out", fill: "none" });
-  })), 0.6);
+  })), 0.8);
 }
 
-// ---------- A month, playable ----------
+// ---------- The month, playable ----------
 
-const money = (n) => formatMoney(n);
-
-function monthDemo(holder, save) {
+function monthDemo(save) {
+  const hero = document.querySelector("[data-month]");
+  const choice = hero.querySelector(".lp-choice");
+  const after = hero.querySelector(".lp-after");
   const preview = monthPreview(save);
-  const card = h("div", { class: "lp-month-card" },
-    h("p", { class: "month-line" }, `Month ${preview.month}. You are ${preview.age}.`),
-    preview.salary && h("p", { class: "salary-line" }, "Salary credited. ", h("span", { class: "money" }, preview.salary), " in."));
-  const decision = h("div", { class: "lp-decision" },
-    illustration(SHOWN_DECISION, "full"),
-    h("div", { class: "lp-decision-body" },
-      h("p", { class: "month-label" }, `Month ${preview.month}`),
-      h("p", { class: "lp-situation" }, preview.situation)));
-  const choice = h("div", { class: "lp-choice" });
-  const after = h("div", { class: "lp-after" });
-  holder.replaceChildren(card, decision, choice, after);
+  const byId = new Map(preview.options.map((option) => [option.id, option]));
 
   // The options, as the decision screen has them: the same neutral cards, no colour on any
+  const bind = () => {
+    for (const button of choice.querySelectorAll("[data-option]")) button.addEventListener("click", () => answer(byId.get(button.dataset.option)));
+  };
   function ask() {
     after.replaceChildren();
     choice.replaceChildren(h("div", { class: "options" }, preview.options.map((option) =>
-      h("button", { type: "button", class: "option", onclick: () => answer(option) }, option.label))));
+      h("button", { type: "button", class: "option", "data-option": option.id }, option.label))));
+    bind();
+    choice.scrollIntoView({ block: "center", behavior: reduced() ? "auto" : "smooth" });
   }
 
-  // The chosen card stays, the result line lands, and the month runs: net worth counts from
-  // where the month found it, and each bar moves, teal up, vermilion down, as the game's close
+  // The chosen card stays, the result line lands, and the month runs: net worth counts from where
+  // the month found it, and each bar moves, teal up, vermilion down, as the game's month close
   function answer(option) {
     const outcome = monthOutcome(save, preview.index, option.id);
     choice.replaceChildren(h("div", { class: "chosen" }, option.label));
@@ -132,23 +116,34 @@ function monthDemo(holder, save) {
       worth,
       dir !== "flat" && h("div", { class: `chip chip-large move-${dir}` }, arrow(dir), h("span", { class: "tabular" }, money(Math.abs(change)))),
       bars);
-    const again = h("button", { type: "button", class: "close-button lp-again", onclick: ask }, "Try another option");
     after.replaceChildren(...[result, close,
-      h("p", { class: "lp-note" }, "In the game you live with it, and every month after builds on it. Here you can try the others."),
-      again].filter(Boolean));
+      h("p", { class: "lp-next-month" }, `Month ${outcome.month + 1} comes tomorrow.`),
+      h("button", { type: "button", class: "close-button lp-again", onclick: ask }, "Try another option")].filter(Boolean));
 
     if (result) arrive(result, { distance: 8 });
-    arrive(close, { delay: 350 });
+    arrive(close, { delay: 300 });
     // The month close's own timing: the count 1.2s easing out, the bars waiting 0.2s then moving
-    later(350, () => {
+    later(300, () => {
       count(worth, outcome.before.netWorth, outcome.after.netWorth, money, { duration: 1200 });
       for (const [fill, from, to] of fills) {
         fill.style.width = `${to}%`;
         animate(fill, [{ width: `${from}%` }, { width: `${to}%` }], { duration: 900, delay: 200, easing: CSS_EASE.out });
       }
     });
+    close.scrollIntoView({ block: "nearest", behavior: reduced() ? "auto" : "smooth" });
   }
-  ask();
+  bind();
+}
+
+// The month arriving, about 1.2s, once: the band's lines rise one after another, the drawing
+// comes up, then the situation and the cards
+function opening() {
+  const band = document.querySelector(".lp-band-deep");
+  const lines = [band.querySelector(".lp-month-line"), band.querySelector(".lp-salary")];
+  lines.forEach((line, i) => rise(line, 80 + i * 110));
+  animate(band.querySelector(".lp-illo"), [{ opacity: 0, transform: "scale(0.96)" }, { opacity: 1, transform: "scale(1)" }], { duration: 520, delay: 260, easing: CSS_EASE.out });
+  rise(document.querySelector(".lp-situation"), 520);
+  document.querySelectorAll(".lp-choice .option").forEach((card, i) => rise(card, 680 + i * 90, 16));
 }
 
 // ---------- A ghost ----------
@@ -159,22 +154,23 @@ function ghostDemo(holder, save) {
   const drawing = chart({ real: view.result.real.bars, ghost: view.result.ghost.bars, split: view.month, marks: view.notices.map((n) => n.month) });
   const chartLegend = legend(nw.real, nw.ghost);
   const legendGhost = chartLegend.querySelectorAll("b")[1];
-  const bars = view.compare.slice(1).map((c) => `${c.name} ${c.gap === "level" ? "level" : c.gap}`).join(" · ");
   holder.append(
     h("p", { class: "month-label" }, `Month ${view.month}`),
-    h("p", { class: "lp-situation" }, view.situation),
+    h("p", { class: "lp-ghost-situation" }, view.situation),
     h("div", { class: "pair" },
       h("p", { class: "pair-label" }, "You chose"),
       h("div", { class: "chosen" }, view.real.label),
-      h("p", { class: "pair-label is-ghost" }, ghostMark(16), "The ghost chose"),
+      h("p", { class: "pair-label is-ghost" }, ghostMark(16), "Your ghost chose"),
       h("div", { class: "ghost-card" }, view.ghost.label)),
     h("div", { class: "card chart-card" }, drawing, chartLegend),
-    h("p", { class: "lp-gap" }, `By month ${view.endMonth}, the ghost has ${nw.gap}.`),
-    h("p", { class: "lp-gap-bars" }, bars),
-    h("p", { class: "lp-note" }, "Neither life is the right one. Both are what the same two years could have been."));
+    // The proof, where it is shown rather than argued
+    h("p", { class: "lp-proof" }, "Both lines come from the game's simulator, not a language model."),
+    h("p", { class: "lp-gap" }, `At 24, your ghost has ${nw.gap}.`),
+    h("ul", { class: "lp-gap-chips" }, view.compare.slice(1).map((c) =>
+      h("li", { class: "lp-gap-chip" }, h("b", {}, c.name), ` ${c.gap === "level" ? "level" : c.gap}`))));
 
-  // Undrawn until it is on screen, then the line draws itself from the split month, the
-  // legend's figure keeping pace
+  // Undrawn until it is on screen, then the line draws itself from the split month, the legend's
+  // figure keeping pace
   hideGhost(drawing);
   if (!reduced()) legendGhost.textContent = money(nw.real);
   whenSeen(drawing, () => later(250, () => drawGhost(drawing, {
@@ -204,25 +200,24 @@ function signup(form) {
 // ---------- Start ----------
 
 async function main() {
+  drawings();
   if (!reduced()) opening();
-  else document.querySelector(".lp-mark").append(mark());
   sections();
   signup(document.querySelector("[data-signup]"));
 
-  const monthHolder = document.querySelector("[data-month]");
   const ghostHolder = document.querySelector("[data-ghost]");
   let save;
   try {
     save = await (await fetch(new URL("./demo/save.json", import.meta.url))).json();
   } catch (error) {
-    monthHolder.replaceChildren(h("p", { class: "lp-month-wait" }, `The month could not load: ${error.message}`));
+    document.querySelector(".lp-after").replaceChildren(h("p", { class: "lp-wait" }, `The month could not load: ${error.message}`));
     return;
   }
-  try { monthDemo(monthHolder, save); } catch (error) {
-    monthHolder.replaceChildren(h("p", { class: "lp-month-wait" }, `The month could not load: ${error.message}`));
+  try { monthDemo(save); } catch (error) {
+    document.querySelector(".lp-after").replaceChildren(h("p", { class: "lp-wait" }, `The month could not load: ${error.message}`));
   }
   try { ghostDemo(ghostHolder, save); } catch (error) {
-    ghostHolder.replaceChildren(h("p", { class: "lp-month-wait" }, `The ghost could not load: ${error.message}`));
+    ghostHolder.replaceChildren(h("p", { class: "lp-wait" }, `The ghost could not load: ${error.message}`));
   }
 }
 

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { monthPreview, monthOutcome, landingFork, SHOWN_DECISION, SHOWN_FORK } from "../landing-model.js";
+import { monthPreview, monthOutcome, landingFork, tiles, SHOWN_DECISION, SHOWN_FORK } from "../landing-model.js";
 import { readRun } from "../ghost-model.js";
 import { getDecision } from "../../vendor/dry-run-engine/engine/index.js";
 
@@ -46,4 +46,23 @@ test("the landing's ghost forks at its decision and parts from the real run ther
 test("the month close says when Safety is in danger, as the game's does", () => {
   const preview = monthPreview(save);
   for (const option of preview.options) assert.equal(typeof monthOutcome(save, preview.index, option.id).danger, "boolean");
+});
+
+// The page's first screen is written into web/index.html, so it reads before any script runs.
+// It must say exactly what the engine says
+test("the landing's written month and tiles are the engine's, word for word", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const preview = monthPreview(save);
+  const has = (text) => assert.ok(html.includes(text), `index.html has: ${text}`);
+  has(`Month ${preview.month}. You are ${preview.age}.`);
+  has(preview.salary);
+  has(preview.situation);
+  for (const option of preview.options) has(`data-option="${option.id}">${option.label}</button>`);
+  has(`data-illo="${SHOWN_DECISION}"`);
+  for (const tile of tiles()) {
+    assert.ok(tile.summary, `${tile.id} has a month summary`);
+    has(`data-illo="${tile.id}"`);
+    has(`Month ${tile.month}`);
+    has(tile.summary);
+  }
 });

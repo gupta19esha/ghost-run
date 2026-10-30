@@ -17,9 +17,12 @@ any choice to see the ghost, the life you would have had with the other option.
   `reports/` holds the measurements.
 - `web/daylight.css` is the game's visual direction, Daylight, laid over the vendored game.
 - `web/index.html` is the landing page, served at the site root (`web/landing.js`,
-  `web/landing.css`): what the game is, a real month of the demo life you can play, a ghost drawn
-  from the simulation, and Play, which goes straight into the game. Its figures come from
-  `web/landing-model.js`. The chapter two sign-up is connected to nothing yet, and says so.
+  `web/landing.css`). It opens on a month of the demo life, playable, before any word about what
+  a month is; then the game's drawings from across the chapter, a ghost drawn from the
+  simulation, and Play, which goes straight into the game. Its figures come from
+  `web/landing-model.js`, and its written words are checked against the engine by
+  `web/test/landing-model.test.js`. The chapter two sign-up is connected to nothing yet, and
+  says so.
 - `web/ghost.html` is the ghost flow, served at `/ghost/`: the finished demo life, and any choice
   in it forked in the browser and drawn against the real run, with its narration and every attempt
   at it checked by `verify()`. Five steps, one screen each (`web/ghost.js`): your run, choose a

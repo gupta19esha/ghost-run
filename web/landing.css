@@ -1,7 +1,7 @@
 /* The landing page at the site root. Mobile first, portrait: one column at phone width, kept at
    that measure on anything wider. Built on the game's stylesheets, Daylight and the ghost
    screen's (web/ghost.css): the same tokens, Baloo 2 and Mukta, the same cards, chips, month
-   close bars and chart. Only what the game has no screen for is styled here. */
+   close bars, drawings and chart. Colour and the drawings carry the page; type stays short. */
 
 :root { --lp-dock-height: 84px; }
 
@@ -14,79 +14,43 @@ body { background: var(--ink); }
   padding: 0 var(--gutter) calc(var(--lp-dock-height) + env(safe-area-inset-bottom) + 24px);
   color: var(--bone);
 }
-
-.lp-top { display: flex; justify-content: space-between; align-items: center; padding-top: 16px; }
-.lp-top .brand { text-decoration: none; }
-.lp-top-link { font-size: 15px; font-weight: 600; color: var(--deep); text-decoration: none; padding: 10px 0; }
 .lp a:focus-visible { outline: 3px solid var(--deep-raised); outline-offset: 3px; border-radius: 6px; }
 
-/* ---------- The hero ---------- */
-
-.lp-hero { padding-top: 28px; }
-.lp-mark svg { display: block; }
-.lp-title {
-  margin: 22px 0 0;
-  font-family: var(--display);
-  /* Three lines at every width: the widest, "Your first two years", is 8.83em in Baloo 2 800,
-     so the size follows the column's width over 8.95, and stops at 46px */
-  font-size: min(calc((100vw - 2 * var(--gutter)) / 8.95), 46px);
-  font-weight: 800;
-  line-height: 1.04;
-  letter-spacing: -0.01em;
+/* A band of colour the full width of the screen, whatever the column: the colour runs past the
+   column's edges by a shadow, clipped to the band's own height, so nothing scrolls sideways */
+.lp-band {
+  position: relative;
+  background: var(--band);
+  box-shadow: 0 0 0 100vmax var(--band);
+  clip-path: inset(0 -100vmax);
 }
-.lp-title-line { display: block; white-space: nowrap; }
-.lp-lede { margin: 16px 0 0; font-size: 17px; line-height: 1.5; color: var(--bone-dim); }
-.lp-facts { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 0; padding: 0; list-style: none; }
-.lp-facts li {
-  padding: 6px 12px;
-  background: var(--ink-raised);
-  border: 2px solid var(--card-edge);
-  border-radius: 999px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--bone-dim);
-}
+.lp-band-deep { --band: var(--deep); }
+.lp-band-ghost { --band: var(--ghost-fill); }
+.lp-band-warm { --band: #FFF1D6; }
 
-/* ---------- Sections ---------- */
+/* ---------- The hero: a month of the game ---------- */
 
-.lp-section { margin-top: 64px; }
-.lp-section > .month-label { margin: 0; }
-.lp-h2 { margin: 6px 0 0; font-family: var(--display); font-size: 30px; font-weight: 800; line-height: 1.08; }
-.lp-body { margin: 12px 0 0; font-size: 17px; line-height: 1.5; color: var(--bone-dim); }
-.lp-caption { display: flex; justify-content: space-between; margin: 8px 0 0; font-size: 13px; font-weight: 600; color: var(--slate); }
-.lp-ticks { margin-top: 20px; }
-.lp-ticks .tick { height: 14px; }
-.lp-points { margin: 16px 0 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
-.lp-points li { padding-left: 22px; position: relative; font-size: 15px; font-weight: 600; color: var(--bone-dim); }
-.lp-points li::before { content: ""; position: absolute; left: 2px; top: 0.45em; width: 10px; height: 10px; border-radius: 3px; background: var(--marigold); }
-.lp-note { margin: 12px 0 0; font-size: 14px; line-height: 1.45; color: var(--slate); }
+/* Its box runs to the screen's edges on a phone, so the drawing can too */
+.lp-band-deep { margin: 0 calc(-1 * var(--gutter)); padding: 14px var(--gutter) 0; color: var(--ink); }
+.lp-top { display: flex; justify-content: space-between; align-items: center; }
+.lp-top .brand { color: var(--ink); text-decoration: none; }
+.lp-top-link { padding: 10px 0; font-size: 15px; font-weight: 600; color: var(--ghost-fill); text-decoration: none; }
+.lp-month-line { margin: 22px 0 0; font-family: var(--display); font-size: 32px; font-weight: 800; line-height: 1.1; }
+.lp-salary { margin: 6px 0 0; font-size: 17px; color: color-mix(in srgb, var(--ink) 82%, var(--deep)); }
+.lp-salary .money { color: var(--marigold); font-weight: 700; }
+.lp-illo { position: relative; z-index: 0; margin: 10px calc(-1 * var(--gutter)) 0; }
+/* The drawing's shapes run off its edges, as they run off the top of the game's screen: here they
+   carry on behind the month's lines, which stay above them, and the band clips them at its edge */
+.lp-band-deep { overflow: hidden; }
+.lp-band-deep > :not(.lp-illo) { position: relative; z-index: 1; }
+.lp-illo .illo, .lp-illo svg { overflow: visible; }
+.lp-illo .illo { width: 100%; height: min(30dvh, calc((100vw) * 286 / 390)); max-height: none; aspect-ratio: auto; border-radius: 0; }
 
-/* ---------- A month, playable ---------- */
-
-.lp-month { margin-top: 20px; display: flex; flex-direction: column; gap: 14px; }
-.lp-month-wait { margin: 0; font-size: 15px; color: var(--slate); }
-.lp-month-card {
-  padding: 20px 18px;
-  background: var(--ink-raised);
-  border: 2px solid var(--card-edge);
-  border-bottom: var(--lip) solid var(--card-lip);
-  border-radius: 18px;
-}
-.lp-month-card .month-line { font-size: 26px; }
-.lp-month-card .salary-line { margin-top: 6px; font-size: 16px; }
-
-.lp-decision {
-  overflow: hidden;
-  background: var(--ink-raised);
-  border: 2px solid var(--card-edge);
-  border-bottom: var(--lip) solid var(--card-lip);
-  border-radius: 18px;
-}
-.lp-decision .illo { max-height: none; }
-.lp-decision-body { padding: 14px 18px 18px; }
-.lp-decision-body .month-label { margin: 0; }
-.lp-situation { margin: 6px 0 0; font-family: var(--display); font-size: 20px; font-weight: 600; line-height: 1.3; color: var(--bone); }
+.lp-situation { margin: 22px 0 0; font-family: var(--display); font-size: 24px; font-weight: 700; line-height: 1.25; }
+.lp-choice { margin-top: 18px; }
 .lp-choice .options { padding: 0; }
+.lp-after { display: flex; flex-direction: column; gap: 14px; margin-top: 14px; }
+.lp-after:empty { display: none; }
 .lp-result { margin: 4px 0 0; font-family: var(--display); font-size: 22px; font-weight: 600; line-height: 1.3; }
 .lp-close {
   padding: 18px 16px 20px;
@@ -100,32 +64,65 @@ body { background: var(--ink); }
 .lp-close .net-worth { margin: 10px 0 0; font-size: 46px; }
 .lp-close .chip { margin-top: 10px; }
 .lp-close .close-bars { margin-top: 22px; text-align: left; }
-.lp-again { margin-top: 4px; }
+.lp-next-month { margin: 2px 0 0; font-family: var(--display); font-size: 20px; font-weight: 700; color: var(--deep); text-align: center; }
+.lp-wait { margin: 0; font-size: 15px; color: var(--slate); }
 
-/* ---------- A ghost ---------- */
+/* ---------- Sections ---------- */
 
-.lp-ghost-label { color: var(--deep); }
+.lp-section { margin-top: 56px; }
+.lp-section.lp-band { padding: 36px 0 40px; }
+.lp-h2 { margin: 0; font-family: var(--display); font-size: 32px; font-weight: 800; line-height: 1.08; }
+.lp-body { margin: 8px 0 0; font-size: 17px; line-height: 1.45; color: var(--bone-dim); }
+
+/* One month a day: the game's drawings from across the chapter, named as the game names them */
+.lp-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 20px 0 0; padding: 0; list-style: none; }
+.lp-tile {
+  overflow: hidden;
+  background: var(--ink-raised);
+  border: 2px solid var(--card-edge);
+  border-bottom: var(--lip) solid var(--card-lip);
+  border-radius: 16px;
+}
+.lp-tile-illo .illo { max-height: none; border-radius: 0; }
+.lp-tile-month { margin: 10px 12px 0; font-size: 12px; font-weight: 600; letter-spacing: 0.06em; color: var(--slate); }
+.lp-tile-name { margin: 2px 12px 12px; font-family: var(--display); font-size: 17px; font-weight: 700; line-height: 1.2; }
+.lp-ticks { margin-top: 22px; }
+.lp-ticks .tick { height: 14px; }
+.lp-caption { display: flex; justify-content: space-between; margin: 8px 0 0; font-size: 13px; font-weight: 600; color: var(--slate); }
+
+/* Then meet your ghost: the ghost's own blue, the demo on a card */
+.lp-band-ghost .lp-h2 { color: var(--deep); }
 .lp-ghost {
   margin-top: 20px;
   padding: 16px 16px 18px;
   background: var(--ink-raised);
-  border: 2px solid var(--card-edge);
-  border-bottom: var(--lip) solid var(--card-lip);
+  border: 2px solid color-mix(in srgb, var(--ghost) 30%, var(--ink-raised));
+  border-bottom: var(--lip) solid color-mix(in srgb, var(--ghost) 45%, var(--ink-raised));
   border-radius: 18px;
 }
 .lp-ghost:empty { display: none; }
 .lp-ghost > .month-label { margin: 0; }
-.lp-ghost .lp-situation { font-size: 18px; }
+.lp-ghost-situation { margin: 6px 0 0; font-family: var(--display); font-size: 18px; font-weight: 600; line-height: 1.3; }
 .lp-ghost .pair { margin-top: 4px; }
 .lp-ghost .pair-label { margin: 14px 0 6px; }
 .lp-ghost .chosen, .lp-ghost .ghost-card { min-height: 0; padding-top: 12px; padding-bottom: 12px; font-size: 15px; }
-.lp-ghost .chart-card { margin-top: 16px; border-width: 2px; border-bottom-width: 2px; padding: 10px 6px 8px; }
-.lp-gap { margin: 14px 0 0; font-family: var(--display); font-size: 21px; font-weight: 700; line-height: 1.25; color: var(--deep); }
-.lp-gap-bars { margin: 4px 0 0; font-size: 15px; font-weight: 600; color: var(--bone-dim); }
+.lp-ghost .chart-card { margin-top: 16px; border-bottom-width: 2px; padding: 10px 6px 8px; }
+.lp-proof { display: flex; gap: 8px; align-items: baseline; margin: 10px 2px 0; font-size: 14px; font-weight: 600; line-height: 1.4; color: var(--bone-dim); }
+.lp-proof::before { content: ""; flex-shrink: 0; width: 8px; height: 8px; border-radius: 2px; background: var(--ghost); transform: translateY(-1px); }
+.lp-gap { margin: 16px 0 0; font-family: var(--display); font-size: 24px; font-weight: 800; line-height: 1.2; color: var(--deep); }
+.lp-gap-chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 10px 0 0; padding: 0; list-style: none; }
+.lp-gap-chip {
+  padding: 6px 12px;
+  background: var(--ghost-fill);
+  border: 1.5px dashed var(--ghost);
+  border-radius: 999px;
+  font-size: 14px;
+  color: var(--deep);
+}
+.lp-gap-chip b { font-weight: 700; }
 .lp-see { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 56px; margin-top: 16px; text-decoration: none; color: var(--deep); }
 
-/* ---------- Chapter two ---------- */
-
+/* Chapter two */
 .lp-form { margin-top: 18px; }
 .lp-form-label { display: block; font-size: 14px; font-weight: 600; color: var(--bone-dim); }
 .lp-form-row { display: flex; gap: 8px; margin-top: 6px; }
@@ -147,11 +144,11 @@ body { background: var(--ink); }
   flex-shrink: 0;
   height: 52px;
   padding: 0 18px;
-  background: var(--ink-raised);
-  border: 2px solid var(--card-edge);
-  border-bottom-width: 4px;
+  background: var(--marigold);
+  border: 0;
+  border-bottom: 4px solid color-mix(in srgb, var(--marigold), #000 22%);
   border-radius: 12px;
-  color: var(--deep);
+  color: var(--ink-deepest);
   font-family: var(--display);
   font-size: 17px;
   font-weight: 700;
@@ -161,7 +158,7 @@ body { background: var(--ink); }
 .lp-submit:focus-visible { outline: 3px solid var(--deep-raised); outline-offset: 2px; }
 .lp-form-status { margin: 10px 0 0; min-height: 1.4em; font-size: 14px; line-height: 1.45; color: var(--bone-dim); }
 
-.lp-foot { margin-top: 56px; padding-top: 20px; border-top: 1px solid var(--rule); font-size: 13px; color: var(--slate); text-align: center; }
+.lp-foot { margin-top: 40px; font-size: 13px; color: var(--slate); text-align: center; }
 .lp-foot p { margin: 0 0 6px; }
 .lp-foot a { color: var(--deep); font-weight: 600; }
 
