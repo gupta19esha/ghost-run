@@ -89,8 +89,8 @@ exists. The mute control is about sound only, so it doesn't turn vibration off.
 ## vendor/
 
 `vendor/dry-run-engine/` is the prior work Ghost Run is built on: the engine, the sheet's
-content, the copy and the game. The folder keeps its original name. Two changes have been made
-to it, and only these:
+content, the copy and the game. The folder keeps its original name. For Ghost Run itself, two
+changes were made to it, and only these:
 
 - The displayed product name, now "Ghost Run" in the game's page title, its favicon title and
   `PRODUCT_NAME` in `game/config.js`.
@@ -103,4 +103,26 @@ to it, and only these:
   `#FBF4E6`, so a phone's browser bar matches the page. Together with the link above, these are
   the only two lines of `vendor/` changed for Daylight.
 
-No engine logic, content, copy or numbers were changed, and nothing in `engine/` or `text/`.
+Those changed no engine logic, content, copy or numbers.
+
+Separately, on the `chapter-2` branch only, the game's own content has grown by the opening of
+chapter two (sheets v35 and v36), done in
+`vendor/` because that is where the game's content, pipeline and checks live. The engine's logic
+is unchanged, and so is `text/`. What changed:
+
+- `chapter1_decisions_v34.xlsx` (the name is kept, since four scripts read it): ten decisions,
+  D31 to D40, months 25 to 30, exported by `scripts/xlsx_to_json.py` to `data/chapter1.json` and
+  `engine/decisions.js`. Every text field is a placeholder, `[PLACEHOLDER <id> <field>. Brief:
+  ... States: ...]`, until the copy is written.
+- `scripts/check_stated_terms.py` holds the 62 new stated terms to the sheet (rule 16), with one
+  new check kind for a payment plan's total.
+- `game/screens/illustrations.js`: D31 to D40, in the batches' tokens and style.
+- The game: the chapter 1 report leads into chapter 2 (`game/main.js`, `game/screens/report.js`),
+  `game/screens/opening-end.js` stands after month 30, and `game/save.js` replays a save past
+  chapter 1 instead of dropping it.
+- `calibration/`: chapter 2's opening measured to month 30, `REPORT-2026-10-30.md` and
+  `REPORT-2026-10-30b.md`, and the findings in the maths doc, section 13. The opening has no ruled
+  target. Placeholder copy is listed in `CHAPTER-2-PLACEHOLDERS.md`. Main never carries any of it.
+- `scripts/decision_fit.html` renders every decision in the sheet, not only months 1 to 24.
+- Tests that took chapter 1 as the whole sheet (`engine/test/`, `calibration/test/`) now say so
+  per chapter.
