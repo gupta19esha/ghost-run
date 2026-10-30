@@ -83,6 +83,63 @@ STATED_TERMS = [
     # The opening cash, stated since v28 before D02 charges a deposit. It lives in the sheet
     # README, not section 12, because export_constants.py reads NET_WORTH_START from there
     ("Decisions", "D02", "situation_text", r"You have ([\d,]+) saved from before", ("readme", "Starting net worth"), 1),
+    # Chapter 2's opening, D31 to D39 (sheet v35). Its copy is placeholder text, and each placeholder
+    # carries the figures the final copy must quote after "States:". When the copy is written, these
+    # patterns move to its wording, as chapter 1's did
+    ("Options", "D31-A", "option_label", r"States: ([\d,]+) once", ("column", "money_once"), -1),
+    ("Options", "D31-B", "option_label", r"States: ([\d,]+) a month", ("column", "money_monthly"), -1),
+    ("Options", "D31-C", "option_label", r"States: ([\d,]+) spent", ("column", "money_once"), -1),
+    ("Options", "D31-C", "option_label", r", ([\d,]+) kept", ("column", "money_once_2"), -1),
+    ("Decisions", "D32", "situation_text", r"States: ([\d,]+)\]", ("option_column", ("D32-A", "money_once")), -1),
+    ("Options", "D32-A", "option_label", r"States: ([\d,]+)\]", ("column", "money_once"), -1),
+    ("Options", "D32-B", "option_label", r"States: ([\d,]+)\]", ("column", "money_once"), -1),
+    ("Decisions", "D33", "situation_text", r"States: ([\d,]+) a month", ("option_column", ("D33-A", "money_monthly")), -1),
+    ("Options", "D33-A", "option_label", r"States: ([\d,]+) a month", ("column", "money_monthly"), -1),
+    ("Options", "D33-B", "option_label", r"States: ([\d,]+) a month", ("column", "money_monthly"), -1),
+    ("Options", "D33-B", "option_label", r"a month for (24 months)", ("term", "commitment_months"), 1),
+    ("Options", "D33-B", "option_label", r"a month for (24 months)", ("term", "term_months"), 1),
+    ("Options", "D33-C", "option_label", r"States: ([\d,]+) a month", ("column", "money_monthly"), -1),
+    ("Decisions", "D34", "situation_text", r"States: ([\d,]+)\]", ("option_column", ("D34-A", "money_once")), -1),
+    ("Options", "D34-A", "option_label", r"States: ([\d,]+)\]", ("column", "money_once"), -1),
+    ("Options", "D34-A", "deferred_text", r"States: ([\d,]+) a month more", ("column", "def_money_monthly"), 1),
+    ("Options", "D34-B", "deferred_text", r"States: ([\d,]+) a month more", ("column", "def_money_monthly"), 1),
+    ("Options", "D34-C", "deferred_text", r"States: ([\d,]+) a month more", ("column", "def_money_monthly"), 1),
+    ("Decisions", "D35", "situation_text", r"States: ([\d,]+)\]", ("option_column", ("D35-A", "money_once")), -1),
+    ("Options", "D35-A", "option_label", r"States: ([\d,]+)\]", ("column", "money_once"), -1),
+    ("Options", "D35-B", "option_label", r"States: ([\d,]+)\]", ("column", "money_once"), -1),
+    ("Options", "D35-C", "option_label", r"States: ([\d,]+) a month", ("column", "money_monthly"), -1),
+    ("Options", "D35-C", "option_label", r"a month for (twelve months)", ("term", "commitment_months"), 1),
+    ("Options", "D35-C", "immediate_text", r"States: ([\d,]+) in all", ("monthly_total", "money_monthly"), -1),
+    ("Decisions", "D36", "situation_text", r"States: ([\d,]+), ", ("option_column", ("D36-A", "asset_acquired_value")), 1),
+    ("Decisions", "D36", "situation_text", r", ([\d,]+) a month", ("option_column", ("D36-A", "money_monthly")), 1),
+    ("Options", "D36-A", "option_label", r"States: ([\d,]+), ", ("column", "asset_acquired_value"), 1),
+    ("Options", "D36-A", "option_label", r"States: ([\d,]+), ", ("column", "money_once"), -1),
+    ("Options", "D36-A", "option_label", r", ([\d,]+) a month", ("column", "money_monthly"), 1),
+    ("Options", "D36-A", "option_label", r"a month for (twelve months)", ("term", "commitment_months"), 1),
+    ("Options", "D36-B", "option_label", r"States: ([\d,]+), ", ("column", "asset_acquired_value"), 1),
+    ("Options", "D36-B", "option_label", r"States: ([\d,]+), ", ("column", "money_once"), -1),
+    ("Options", "D36-B", "option_label", r", ([\d,]+) a month", ("column", "money_monthly"), 1),
+    ("Options", "D36-B", "option_label", r"a month for (twelve months)", ("term", "commitment_months"), 1),
+    ("Options", "D36-C", "option_label", r"States: ([\d,]+) a month rent", ("column", "money_monthly"), -1),
+    ("Options", "D36-C", "option_label", r"rent, ([\d,]+) a month in", ("column", "money_monthly_2"), 1),
+    ("Options", "D36-C", "option_label", r"for (six months)", ("term", "commitment_months"), 1),
+    ("Decisions", "D37", "situation_text", r"States: ([\d,]+)\]", ("column", "income_event"), 1),
+    ("Options", "D37-A", "option_label", r"States: ([\d,]+)\]", ("column", "money_once"), -1),
+    ("Options", "D37-B", "option_label", r"States: ([\d,]+) in gold", ("column", "money_once"), -1),
+    ("Options", "D37-B", "option_label", r"gold, ([\d,]+) for", ("column", "money_once_2"), -1),
+    ("Options", "D37-B", "option_label", r"for (a year)", ("term", "term_months"), 1),
+    ("Options", "D37-C", "option_label", r"States: ([\d,]+) on the trip", ("column", "money_once"), -1),
+    ("Options", "D37-C", "option_label", r"trip, ([\d,]+) kept", ("column", "money_once_2"), -1),
+    ("Decisions", "D38", "situation_text", r"States: ([\d,]+) a month more", ("option_column", ("D38-A", "money_monthly")), 1),
+    ("Options", "D38-A", "option_label", r"States: ([\d,]+) a month more", ("column", "money_monthly"), 1),
+    ("Options", "D38-B", "option_label", r"States: ([\d,]+) a month more", ("column", "money_monthly"), 1),
+    ("Options", "D38-C", "option_label", r"States: ([\d,]+)\]", ("column", "money_once"), -1),
+    ("Decisions", "D39", "situation_text", r"States: ([\d,]+)\]", ("option_column", ("D39-C", "money_once")), -1),
+    ("Options", "D39-A", "option_label", r"States: (six months)", ("term", "commitment_months"), 1),
+    ("Options", "D39-B", "option_label", r"States: ([\d,]+)\]", ("column", "money_once"), -1),
+    ("Options", "D39-C", "option_label", r"States: ([\d,]+) for", ("column", "money_once"), -1),
+    ("Options", "D39-C", "option_label", r"for (a year)", ("term", "term_months"), 1),
+    ("Options", "D39-D", "option_label", r"States: ([\d,]+)\]", ("column", "money_once"), -1),
 ]
 # An "lpa_offer" source is a job offer quoted as a yearly CTC in lakhs. The option's monthly
 # salary change (money_monthly, or def_money_monthly when the offer arrives by callback) on
@@ -93,6 +150,8 @@ STATED_TERMS = [
 # (option, other) for the part of one option's raise above another's.
 # A "readme" source is a labelled row of the sheet README, read the way export_constants.py
 # reads it: the number at the start of the value.
+# A "monthly_total" source is a monthly column over the option's whole commitment_months: what
+# a payment plan costs in all (D35-C).
 # A "term" source is a sheet column in months. The copy states a term in words, such as
 # "One year" or "twelve months", which term_in_months turns into a number of months.
 NUMBER_WORDS = {
@@ -253,6 +312,10 @@ def main():
             value = readme.get(source)
             actual = None if value is None else value * scale
             source = f"the README's {source!r} row"
+        elif kind == "monthly_total":
+            value, months = row.get(source), row.get("commitment_months")
+            actual = None if value is None or not months else value * months * scale
+            source = f"{source} over {months} months"
         elif kind == "option_column":
             option_id, option_column = source
             value = sheets["Options"].get(option_id, {}).get(option_column)
