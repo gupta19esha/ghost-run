@@ -58,7 +58,9 @@ test("conceptForMonth: one card a month from the sheet, four months without, wha
   assert.equal(conceptForMonth(1).title, "EPF");
   assert.equal(conceptForMonth(2).decision_id, "D04", "the decision that earned it, not the month's first");
   assert.equal(conceptForMonth(16).title, "Depreciation");
-  assert.equal(conceptForMonth(25), null);
+  // Chapter 2's opening carries a card each month, 25 to 30 (sheet v35); nothing is written after it
+  for (let m = 25; m <= 30; m++) assert.ok(conceptForMonth(m), `month ${m} has a card`);
+  assert.equal(conceptForMonth(31), null);
   for (const m of months) {
     const card = conceptForMonth(m);
     if (card) assert.ok(card.body.split(/\s+/).length < 45, `month ${m}'s card is under 45 words`);
@@ -73,5 +75,7 @@ test("monthSummary: a line for every month of the chapter, from its first decisi
   }
   assert.equal(monthSummary(9), "The bonus landed.");
   assert.equal(monthSummary(22), "The job went.");
-  assert.equal(monthSummary(25), null);
+  // Chapter 2's opening has a line on each month's first decision; nothing is written after it
+  for (let m = 25; m <= 30; m++) assert.ok(monthSummary(m), `month ${m} has a line`);
+  assert.equal(monthSummary(31), null);
 });
