@@ -6,9 +6,10 @@
 // a fork of that life for each option the player can try on the page. Nothing here writes a
 // number or formats one; text/render.js and verify/render.js do.
 
-import { play } from "../runner/replay.js";
+import { play, replay } from "../runner/replay.js";
 import { fork } from "../runner/fork.js";
-import { applyDecision, getDecision, salaryThisMonth, tokenValues } from "../vendor/dry-run-engine/engine/index.js";
+import { forkView } from "./ghost-model.js";
+import { applyDecision, getDecision, salaryThisMonth, safetyInDanger, tokenValues } from "../vendor/dry-run-engine/engine/index.js";
 import { renderText, formatMoney } from "../vendor/dry-run-engine/text/render.js";
 
 export const BAR_KEYS = ["safety", "freedom", "life"];
@@ -47,7 +48,9 @@ export function monthPreview(save, decisionId = SHOWN_DECISION) {
 
 // The month close for one option: the bars as the month found them and as it left them, from a
 // fork of the demo life at that choice. The demo's own option forks to an identical run.
-// -> { month, before: {netWorth, safety, freedom, life}, after: {...} }
+// danger: Safety is below the engine's danger line once the month has run, which the game shows
+// in vermilion whatever the bar did (UI.md rule 4's one exception).
+// -> { month, before: {netWorth, safety, freedom, life}, after: {...}, danger }
 export function monthOutcome(save, index, option) {
   const result = fork(save, index, option);
   const month = getDecision(option.split("-")[0]).month;
@@ -55,21 +58,24 @@ export function monthOutcome(save, index, option) {
   const after = bars.find((b) => b.month === month);
   const before = bars.find((b) => b.month === month - 1);
   if (!after || !before) throw new Error(`The fork has no month ${month} close`);
-  return { month, before, after };
+  // The run to the end of that month: every earlier choice, then this one
+  const { state } = replay(save.seed, [...save.choices.slice(0, index), option]);
+  return { month, before, after, danger: safetyInDanger(state) };
 }
 
-// The ghost the landing draws: a fork of the demo life, both lines by month. Month 17, your
-// father's business loan: the demo life said it could not manage; the ghost takes over the full
-// EMI. Picked because money and the bars disagree on it (the ghost ends poorer and less free,
-// with more Life), so the page shows a trade-off rather than a right answer
+// The ghost the landing draws. Month 17, your father's business loan: the demo life said it could
+// not manage; the ghost takes over the full EMI. Picked because money and the bars disagree on it
+// (the ghost ends poorer and less free, with more Life), so the page shows a trade-off rather
+// than a right answer. The same view the ghost screen draws (forkView), with the situation as
+// the player read it.
 export const SHOWN_FORK = { decisionId: "D23", option: "D23-A" };
 export function landingFork(save, { decisionId, option } = SHOWN_FORK) {
-  const index = play(save.seed, (decision, state, i) => (decision.decision_id === decisionId ? null : save.choices[i] ?? null)).choices.length;
-  const result = fork(save, index, option);
-  const month = getDecision(decisionId).month;
-  return {
-    month,
-    real: { option: save.choices[index], label: getDecision(decisionId).options[save.choices[index]].option_label, bars: result.real.bars },
-    ghost: { option, label: getDecision(decisionId).options[option].option_label, bars: result.ghost.bars },
-  };
+  let situation = null;
+  const { choices } = play(save.seed, (decision, state, i) => {
+    if (decision.decision_id !== decisionId) return save.choices[i] ?? null;
+    situation = renderText(decision.situation_text, tokenValues(state, { decisionId, field: "situation_text" }));
+    return null;
+  });
+  if (!situation) throw new Error(`${decisionId} is not in the demo life`);
+  return { ...forkView(save, choices.length, option), situation };
 }

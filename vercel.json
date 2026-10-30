@@ -1,16 +1,47 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "functions": {
-    "api/narrate.js": { "maxDuration": 60, "includeFiles": "{cache/narrations/**,web/demo/save.json}" }
+    "api/narrate.js": {
+      "maxDuration": 60,
+      "includeFiles": "{cache/narrations/**,web/demo/save.json}"
+    }
   },
   "redirects": [
-    { "source": "/game", "destination": "/game/", "permanent": false }
+    {
+      "source": "/game",
+      "destination": "/game/",
+      "permanent": false
+    },
+    {
+      "source": "/ghost",
+      "destination": "/ghost/",
+      "permanent": false
+    }
   ],
   "rewrites": [
-    { "source": "/", "destination": "/web/index.html" },
-    { "source": "/game/", "destination": "/vendor/dry-run-engine/game/index.html" },
-    { "source": "/game/:path*", "destination": "/vendor/dry-run-engine/game/:path*" },
-    { "source": "/engine/:path*", "destination": "/vendor/dry-run-engine/engine/:path*" },
-    { "source": "/text/:path*", "destination": "/vendor/dry-run-engine/text/:path*" }
+    {
+      "source": "/",
+      "destination": "/web/index.html"
+    },
+    {
+      "source": "/ghost/",
+      "destination": "/web/ghost.html"
+    },
+    {
+      "source": "/game/",
+      "destination": "/vendor/dry-run-engine/game/index.html"
+    },
+    {
+      "source": "/game/:path*",
+      "destination": "/vendor/dry-run-engine/game/:path*"
+    },
+    {
+      "source": "/engine/:path*",
+      "destination": "/vendor/dry-run-engine/engine/:path*"
+    },
+    {
+      "source": "/text/:path*",
+      "destination": "/vendor/dry-run-engine/text/:path*"
+    }
   ]
 }

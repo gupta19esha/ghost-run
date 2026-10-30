@@ -33,8 +33,17 @@ test("each option's month close comes from the engine, and the demo's own option
 test("the landing's ghost forks at its decision and parts from the real run there", () => {
   const view = landingFork(save);
   assert.equal(view.month, getDecision(SHOWN_FORK.decisionId).month);
+  assert.equal(view.ghost.option, SHOWN_FORK.option);
   assert.notEqual(view.real.option, view.ghost.option);
   const before = (bars) => bars.filter((b) => b.month < view.month);
-  assert.deepEqual(before(view.ghost.bars), before(view.real.bars));
-  assert.notEqual(view.ghost.bars.at(-1).netWorth, view.real.bars.at(-1).netWorth);
+  assert.deepEqual(before(view.result.ghost.bars), before(view.result.real.bars));
+  assert.ok(view.situation && !view.situation.includes("{"));
+  // What the page says of it: poorer and less free, with more Life
+  const [netWorth, , freedom, life] = view.compare;
+  assert.ok(netWorth.ghost < netWorth.real && freedom.ghost < freedom.real && life.ghost > life.real);
+});
+
+test("the month close says when Safety is in danger, as the game's does", () => {
+  const preview = monthPreview(save);
+  for (const option of preview.options) assert.equal(typeof monthOutcome(save, preview.index, option.id).danger, "boolean");
 });
