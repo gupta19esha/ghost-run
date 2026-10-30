@@ -26,3 +26,12 @@ export const CONSEQUENCE_EXPLAINED_MS = 5000;
 // UI.md screens table: the month card leaves after 2 seconds, a callback after 3.5, sooner on a tap
 export const MONTH_CARD_MS = 2000;
 export const CALLBACK_MS = 3500;
+
+// The turn of a chapter (game/screens/chapter-turn.js) moves for about 2.6 seconds, then holds
+// still until 4.2, sooner on a tap
+export const CHAPTER_TURN_MS = 4200;
+
+// How many months each chapter has, from the product spec's structure table (HANDOFF.md section
+// 4): 22 to 42, one month a day. The sheet holds only what is written, so the turn of a chapter
+// takes the length of a chapter it opens from here
+export const CHAPTER_MONTHS = [24, 36, 48, 48, 48, 36];

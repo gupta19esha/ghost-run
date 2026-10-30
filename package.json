@@ -4,7 +4,7 @@
   "type": "module",
   "description": "Ghost Run: replays a finished life and forks it at any choice. Runs on the Chapter 1 engine in vendor/. One dependency, the Anthropic SDK, used only by the narration function.",
   "scripts": {
-    "test": "node --test runner/test/ verify/test/ agent/test/ web/test/",
+    "test": "node --test runner/test/ verify/test/ agent/test/ web/test/ vendor/dry-run-engine/game/test/",
     "measure": "node scripts/measure-forks.mjs",
     "dev": "node scripts/dev.mjs"
   },

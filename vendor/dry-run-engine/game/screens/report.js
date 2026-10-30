@@ -8,6 +8,9 @@
 // Under each month it names, what happened in it: the sheet's month_summary (v25). Under
 // "Chapter two", a plain line that it is being written, and the button at the end opens the
 // timeline. All three are the product owner's copy (REPORT-COPY.md).
+//
+// Under the bars, a link back to the chapter card (game/screens/certificate.js). Its words are
+// Ghost Run's, not REPORT-COPY.md's.
 
 import { direction, arrow } from "./moves.js";
 
@@ -19,6 +22,8 @@ const LIFE_SO_FAR = "See your life so far";
 // written. Placeholders until the product owner writes them (CHAPTER-REPORT.md)
 const CHAPTER_TWO = "[PLACEHOLDER report chapter two line. Brief: chapter two, Building, opens now; you are 24. States: none]";
 const BEGIN_NEXT = "[PLACEHOLDER report button. Brief: begin chapter two. States: none]";
+// The way back to the chapter card, under the bars
+const YOUR_CARD = "Your chapter card";
 
 const BARS = [
   ["safety", "Safety"],
@@ -40,10 +45,10 @@ const capitalise = (text) => text.charAt(0).toUpperCase() + text.slice(1);
 // bars: getBars now. labels: the lines beside Safety and Freedom. compared: compareBars over
 // the chapter. safetyDanger: safetyInDanger now. best, worst: chapterMonths rows. concepts:
 // the titles unlocked, in month order, with their count and the rest in words.
-// money: text/'s formatMoney. onTimeline: the button at the end. onNext: begins the next chapter,
-// when it can be played.
+// money: text/'s formatMoney. onTimeline: the button at the end. onCard: opens the chapter card.
+// onNext: begins the next chapter, when it can be played.
 export function reportScreen({
-  chapter, years, age, bars, labels, compared, safetyDanger, best, worst, concepts, money, onTimeline, onNext = null,
+  chapter, years, age, bars, labels, compared, safetyDanger, best, worst, concepts, money, onTimeline, onCard, onNext = null,
 }) {
   const screen = document.createElement("section");
   screen.className = "screen report";
@@ -98,6 +103,12 @@ export function reportScreen({
     bar.append(headRow, track);
     list.append(bar);
   }
+
+  const card = document.createElement("button");
+  card.type = "button";
+  card.className = "report-card-link";
+  card.textContent = YOUR_CARD;
+  card.addEventListener("click", onCard, { once: true });
 
   const moved = document.createElement("div");
   moved.className = "report-section";
@@ -168,7 +179,7 @@ export function reportScreen({
 
   const grow = document.createElement("div");
   grow.className = "grow";
-  screen.append(head, worth, list, moved);
+  screen.append(head, worth, list, card, moved);
   if (concepts.total > 0) screen.append(learned);
   screen.append(next, grow, foot);
 

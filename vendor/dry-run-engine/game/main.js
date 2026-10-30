@@ -8,11 +8,13 @@
 
 import {
   createState, applyDecision, advanceMonth, decisionsForMonth, getDecision, conceptForMonth, chapterMonths, chapterComplete,
-  monthSummary, getBars, explainBars, compareBars, barMarks,
+  monthSummary, getBars, compareBars, barMarks,
   safetyInDanger, salaryThisMonth, tokenValues,
 } from "../engine/index.js";
-import { renderText, formatMoney, formatCount, formatMonths, formatCommitted } from "../text/render.js";
-import { PRODUCT_NAME, SEED, TEST_TOOLS, CONSEQUENCE_MS, CONSEQUENCE_EXPLAINED_MS, MONTH_CARD_MS, CALLBACK_MS } from "./config.js";
+import { renderText, formatMoney, formatCount } from "../text/render.js";
+import {
+  PRODUCT_NAME, SEED, TEST_TOOLS, CONSEQUENCE_MS, CONSEQUENCE_EXPLAINED_MS, MONTH_CARD_MS, CALLBACK_MS, CHAPTER_TURN_MS, CHAPTER_MONTHS,
+} from "./config.js";
 import { landingScreen } from "./screens/landing.js";
 import { monthCardScreen } from "./screens/month-card.js";
 import { decisionScreen } from "./screens/decision.js";
@@ -25,6 +27,10 @@ import { timelineScreen } from "./screens/timeline.js";
 import { howItWorksScreen } from "./screens/how-it-works.js";
 import { reportScreen } from "./screens/report.js";
 import { openingEndScreen } from "./screens/opening-end.js";
+import { chapterTurnScreen } from "./screens/chapter-turn.js";
+import { certificateScreen } from "./screens/certificate.js";
+import { chapterCard } from "./certificate.js";
+import { barLabels } from "./labels.js";
 import { lifeSoFar } from "./timeline.js";
 import {
   newSave, readSave, writeSave, dropSave, replay, playedToday, recordClose, currentStreak, explainedAlready, recordExplained,
@@ -48,7 +54,7 @@ let homeContinuing = false;
 
 // Screenshots only (scripts/screenshot_ui.py): play= lists the choices to make, in order,
 // separated by commas, and stop= names the screen to hold once they are made: home, month,
-// decision, consequence, callback, close, timeline, how or report. With stop=timeline, month= opens that
+// decision, consequence, callback, close, timeline, how, turn, card or report. With stop=timeline, month= opens that
 // month. Everything in between is tapped through. Nothing
 // in play uses it; with no query string it does nothing. It always starts a new run from the
 // landing screen, and plays past the day's limit unless stop=home.
@@ -198,7 +204,9 @@ function closeMonth(closed, monthEnd) {
     onClose: () => {
       recordClose(save, closed);
       writeSave(save);
-      goHome(compareBars(monthStart, monthEnd));
+      // The chapter's last month: the turn of the chapter, then its card, then the report
+      if (chapterComplete(state)) closeChapter();
+      else goHome(compareBars(monthStart, monthEnd));
     },
   });
   show(screen);
@@ -212,21 +220,36 @@ function nextHook() {
   return first?.hook_line ?? null;
 }
 
-// The words around the figures beside Safety and Freedom, from design/Home.html
-const OF_RUNWAY = "of runway";
-
-// The line beside Safety and Freedom on Home and the report: the engine's runway and
-// committed share, worded by text/, which also names the last salary while there is none.
-// Life has none (maths doc section 14).
-function barLabels() {
-  const workings = explainBars(state);
-  const runway = formatMonths(workings.safety.runway_months);
-  const committed = formatCommitted(workings.freedom.committed_ratio, workings.freedom.against_last_salary);
-  return {
-    safety: runway && `${runway} ${OF_RUNWAY}`,
-    freedom: committed,
-    life: null,
+// The chapter closing, as it happens: the turn of the chapter, then the chapter card, then the
+// report. It plays once, as the last month closes; after that the report stands where Home
+// would, and opens the card again. A screenshot script passes straight through unless it stops
+// on one of them.
+function closeChapter() {
+  const card = chapterCard(state, save);
+  const toCard = () => {
+    if (script.active && !holding("card")) showReport();
+    else showCard(card, CARD_TO_REPORT, showReport);
   };
+  if (script.active && !holding("turn")) {
+    toCard();
+    return;
+  }
+  show(chapterTurnScreen({
+    way: "close",
+    chapter: { number: card.chapter.number, title: card.chapter.title, months: card.shape.length - 1 },
+    ages: card.ages,
+    holdMs: CHAPTER_TURN_MS,
+    hold: holding("turn"),
+    onDone: toCard,
+  }));
+}
+
+// The button under the card, after the turn and from the report
+const CARD_TO_REPORT = "See the chapter report";
+const CARD_BACK = "Back to the report";
+
+function showCard(card, back, onBack) {
+  show(certificateScreen({ card, back, onBack }));
 }
 
 // The chapter report (CHAPTER-REPORT.md): the whole chapter, from the engine. The months that
@@ -244,7 +267,7 @@ function showReport() {
     years: formatCount(months.length / 12),
     age: state.age,
     bars: getBars(state),
-    labels: barLabels(),
+    labels: barLabels(state),
     compared: compareBars(getBars(createState(save.seed)), getBars(state)),
     safetyDanger: safetyInDanger(state),
     best,
@@ -257,6 +280,7 @@ function showReport() {
     },
     money: formatMoney,
     onTimeline: () => openTimeline(showReport),
+    onCard: () => showCard(chapterCard(state, save), CARD_BACK, showReport),
     // Chapter 2's opening is in the sheet since v35: the report leads into it, once
     onNext: chapterTwoWritten() ? beginChapterTwo : null,
   }));
@@ -272,7 +296,26 @@ function chapterTwoWritten() {
 function beginChapterTwo() {
   save.chapter_two = true;
   writeSave(save);
-  goHome(homeLastMonth);
+  openChapter();
+}
+
+// The turn of the chapter again, opening this time: chapter two's ring drawing itself round, its
+// number, its title from the sheet and the player's age, then Home at its first month. Its ring
+// has a tick for each of the chapter's months in the product spec (CHAPTER_MONTHS)
+function openChapter() {
+  const [first] = decisionsForMonth({ ...state, decisions_taken: {} });
+  if (script.active && !holding("turn")) {
+    goHome(homeLastMonth);
+    return;
+  }
+  show(chapterTurnScreen({
+    way: "open",
+    chapter: { number: formatCount(first.chapter), title: first.chapter_title, months: CHAPTER_MONTHS[first.chapter - 1] },
+    age: state.age,
+    holdMs: CHAPTER_TURN_MS,
+    hold: holding("turn"),
+    onDone: () => goHome(homeLastMonth),
+  }));
 }
 
 // Past the last month the sheet has decisions in, the written chapter has run out for now
@@ -318,7 +361,7 @@ function goHome(lastMonth, continuing = false) {
   const screen = homeScreen({
     chapter,
     bars: getBars(state),
-    labels: barLabels(),
+    labels: barLabels(state),
     // Before any month is closed nothing has moved: every bar compared with itself
     compared: lastMonth ?? compareBars(getBars(state), getBars(state)),
     marks: barMarks(),

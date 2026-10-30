@@ -83,7 +83,8 @@
 .home-net-worth,
 .net-worth { color: color-mix(in srgb, var(--marigold), var(--bone) var(--toward-ink)); }
 .home-how,
-.home-where-link { color: var(--deep); }
+.home-where-link,
+.report-card-link { color: var(--deep); }
 .home-how:hover,
 .home-where:hover .home-where-link { color: var(--deep-raised); }
 .chip,
@@ -117,6 +118,7 @@
   --bone: #FFF9EF;
 }
 .landing-mark { --slate-dim: #6F8DB8; }   /* the unlit months, on the mark's deep blue */
+.turn-mark { --slate-dim: #6F8DB8; }      /* the same, on the chapter turn's mark */
 .illo { border-radius: 0 0 28px 28px; }
 .landing-band { border-radius: 22px; }
 

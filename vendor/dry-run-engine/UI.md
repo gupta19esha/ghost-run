@@ -216,6 +216,15 @@ animated element sampled every 100 ms in real time (`FIRST-SESSION.md` section 2
 | ~63 s | Month 1 close | Net worth counts up from ₹20,000. Safety, Freedom and Life move | Count 1.2 s, easing out. Bars wait 0.2 s, move 0.9 s |
 | After Close | Home | Nothing | |
 
+Added 30 October 2026, at the product owner's request, after the ninety seconds above: **the
+turn of a chapter.** When month 24 closes, a screen of its own stands between the close and the
+chapter card (`game/screens/chapter-turn.js`). The mark's 24 ticks are lit but the last; the last
+lights (0.3 s), the light runs once round the ring (about 1.2 s), the mark settles with a small
+overshoot (0.5 s), and the label, the title and the ages rise in as the landing's title does.
+About 2.6 s of movement; the screen leaves at 4.2 s. A tap while it moves finishes it, a tap once
+it is still leaves, and under reduced motion it stands still. The screens either side of it are
+still cuts.
+
 Every change of screen is a cut, with no transition. In total: at most two bar movements of
 0.7 s each and one 1.2 s count, and nothing at all on the landing screen, the month card, the
 decisions or Home, where the player spends almost all of the ninety seconds.
