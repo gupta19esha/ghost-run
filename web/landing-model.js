@@ -63,14 +63,28 @@ export function monthOutcome(save, index, option) {
   return { month, before, after, danger: safetyInDanger(state) };
 }
 
-// Some of what is coming in chapter one, as the game draws and names each month: the illustration
-// and the month's own summary line. None from before month 7, and none whose drawing colours an
-// answer (UI.md rule 7). Month 17 is left for the ghost
-export const TILES = ["D10", "D22", "D26", "D28"];
-export function tiles(ids = TILES) {
-  return ids.map((id) => {
-    const decision = getDecision(id);
-    return { id, month: decision.month, summary: decision.month_summary };
+// The six chapters, from the plan: the days-per-chapter table (vendor/dry-run-engine/HANDOFF.md
+// section 4, SIMULATION-MATHS.md section 13), 24, 36, 48, 48, 48 and 36 days, one month each, from
+// 22 to 42. Only chapter one is built, and only it has a title (the sheet's chapter_title).
+// Nothing has decided when the others come out: a date goes in DATES, by chapter number, once
+// one is decided, and until then the page says Coming.
+export const CHAPTER_DAYS = [24, 36, 48, 48, 48, 36];
+export const DATES = {};
+export function chapters() {
+  let end = 0;
+  return CHAPTER_DAYS.map((days, i) => {
+    const start = end + 1;
+    end += days;
+    const number = i + 1;
+    return {
+      number,
+      days,
+      fromAge: 22 + Math.floor((start - 1) / 12),
+      toAge: 22 + end / 12,
+      title: number === 1 ? getDecision("D01").chapter_title : null,
+      live: number === 1,
+      date: DATES[number] ?? null,
+    };
   });
 }
 

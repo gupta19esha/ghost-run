@@ -39,10 +39,11 @@ export function ghostMark(size = 18) {
 // Net worth by month. real: [{month, netWorth}]. ghost: the same, or null. split: the month the
 // ghost's choice was made. marks: months where the ghost could not take the real choice. height:
 // the drawing's height, at the same width, so a short phone can give the chart less of the screen.
+// width: the drawing's width, so a wide screen draws the months further apart, not bigger.
 // A chart with a ghost carries svg.ghost, what drawGhost() needs to draw it in
 let chartCount = 0;
-export function chart({ real, ghost = null, split = null, marks = [], height = 214 }) {
-  const W = 342, H = height, L = 6, R = 6, T = 30, B = 26;
+export function chart({ real, ghost = null, split = null, marks = [], height = 214, width = 342 }) {
+  const W = width, H = height, L = 6, R = 6, T = 30, B = 26;
   const all = [...real, ...(ghost ?? [])].map((b) => b.netWorth);
   let lo = Math.min(0, ...all), hi = Math.max(...all);
   const pad = (hi - lo) * 0.08 || 1;

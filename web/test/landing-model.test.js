@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { monthPreview, monthOutcome, landingFork, tiles, SHOWN_DECISION, SHOWN_FORK } from "../landing-model.js";
+import { monthPreview, monthOutcome, landingFork, chapters, CHAPTER_DAYS, SHOWN_DECISION, SHOWN_FORK } from "../landing-model.js";
 import { readRun } from "../ghost-model.js";
 import { getDecision } from "../../vendor/dry-run-engine/engine/index.js";
 
@@ -50,7 +50,7 @@ test("the month close says when Safety is in danger, as the game's does", () => 
 
 // The page's first screen is written into web/index.html, so it reads before any script runs.
 // It must say exactly what the engine says
-test("the landing's written month and tiles are the engine's, word for word", () => {
+test("the landing's written month and chapters are the engine's and the plan's, word for word", () => {
   const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
   const preview = monthPreview(save);
   const has = (text) => assert.ok(html.includes(text), `index.html has: ${text}`);
@@ -58,10 +58,24 @@ test("the landing's written month and tiles are the engine's, word for word", ()
   has(preview.salary);
   has(preview.situation);
   for (const option of preview.options) has(`data-option="${option.id}">${option.label}</button>`);
-  for (const tile of tiles()) {
-    assert.ok(tile.summary, `${tile.id} has a month summary`);
-    has(`data-illo="${tile.id}"`);
-    has(`Month ${tile.month}`);
-    has(tile.summary);
+  // The chapters, as the plan has them, chapter one live and the rest coming
+  for (const c of chapters()) {
+    has(`<p class="lp-chapter-num">Chapter ${c.number}</p>`);
+    has(`<p class="lp-chapter-ages">${c.fromAge} to ${c.toAge}</p>`);
+    has(`<p class="lp-chapter-days">${c.days} days</p>`);
+    if (c.title) has(`<p class="lp-chapter-name">${c.title}</p>`);
   }
+  assert.equal((html.match(/class="lp-chapter-state">Coming</g) || []).length, chapters().filter((c) => !c.live && !c.date).length);
+});
+
+test("the chapters run 22 to 42, 240 months, and chapter one is the game's own", () => {
+  const all = chapters();
+  assert.equal(all.length, 6);
+  assert.equal(CHAPTER_DAYS.reduce((a, b) => a + b, 0), 240);
+  assert.equal(all[0].fromAge, 22);
+  assert.equal(all.at(-1).toAge, 42);
+  for (let i = 1; i < all.length; i++) assert.equal(all[i].fromAge, all[i - 1].toAge);
+  assert.equal(all[0].days, readRun(save).months.length);
+  assert.equal(all[0].title, getDecision("D01").chapter_title);
+  assert.deepEqual(all.filter((c) => c.live).map((c) => c.number), [1]);
 });
