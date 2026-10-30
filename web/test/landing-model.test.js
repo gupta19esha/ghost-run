@@ -63,9 +63,10 @@ test("the landing's written month and chapters are the engine's and the plan's, 
     has(`<p class="lp-chapter-num">Chapter ${c.number}</p>`);
     has(`<p class="lp-chapter-ages">${c.fromAge} to ${c.toAge}</p>`);
     has(`<p class="lp-chapter-days">${c.days} days</p>`);
-    if (c.title) has(`<p class="lp-chapter-name">${c.title}</p>`);
+    has(`<p class="lp-chapter-name">${c.title}</p>`);
   }
-  assert.equal((html.match(/class="lp-chapter-state">Coming</g) || []).length, chapters().filter((c) => !c.live && !c.date).length);
+  // Chapter one open, two to six locked
+  assert.equal((html.match(/class="lp-chapter-state">Locked</g) || []).length, chapters().filter((c) => !c.live).length);
 });
 
 test("the chapters run 22 to 42, 240 months, and chapter one is the game's own", () => {
@@ -76,6 +77,14 @@ test("the chapters run 22 to 42, 240 months, and chapter one is the game's own",
   assert.equal(all.at(-1).toAge, 42);
   for (let i = 1; i < all.length; i++) assert.equal(all[i].fromAge, all[i - 1].toAge);
   assert.equal(all[0].days, readRun(save).months.length);
-  assert.equal(all[0].title, getDecision("D01").chapter_title);
+  // Titles, ages and lengths as the product spec's structure table has them (HANDOFF.md section 4)
+  const spec = readFileSync(new URL("../../vendor/dry-run-engine/HANDOFF.md", import.meta.url), "utf8");
+  const rows = [...spec.matchAll(/^\| (\d)\. ([^|]+?) \| (\d+) to (\d+) \| (\d+) \|/gm)];
+  assert.equal(rows.length, 6);
+  for (const [, number, title, from, to, days] of rows) {
+    const c = all[Number(number) - 1];
+    assert.deepEqual([c.title, c.fromAge, c.toAge, c.days], [title, Number(from), Number(to), Number(days)], `chapter ${number}`);
+  }
+  assert.equal(all[0].title.toLowerCase(), getDecision("D01").chapter_title.toLowerCase(), "the sheet's name for chapter one, in the spec's capitals");
   assert.deepEqual(all.filter((c) => c.live).map((c) => c.number), [1]);
 });
