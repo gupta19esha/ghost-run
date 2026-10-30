@@ -16,10 +16,15 @@ any choice to see the ghost, the life you would have had with the other option.
 - `scripts/measure-forks.mjs` measures how often a fork's ghost cannot take a later real choice.
   `reports/` holds the measurements.
 - `web/daylight.css` is the game's visual direction, Daylight, laid over the vendored game.
-- `web/index.html` is the ghost screen, served at the site root: the finished demo life, and any
-  choice in it forked in the browser and drawn against the real run, with its narration and every
-  attempt at it checked by `verify()`. `/game/` serves the playable game from `vendor/` (see
-  `vercel.json`).
+- `web/index.html` is the landing page, served at the site root (`web/landing.js`,
+  `web/landing.css`): what the game is, a real month of the demo life you can play, a ghost drawn
+  from the simulation, and Play, which goes straight into the game. Its figures come from
+  `web/landing-model.js`. The chapter two sign-up is connected to nothing yet, and says so.
+- `web/ghost.html` is the ghost flow, served at `/ghost/`: the finished demo life, and any choice
+  in it forked in the browser and drawn against the real run, with its narration and every attempt
+  at it checked by `verify()`. Five steps, one screen each (`web/ghost.js`): your run, choose a
+  moment, the split, where it ended, what happened. `web/ui.js` is the drawing both pages share.
+  `/game/` serves the playable game from `vendor/` (see `vercel.json`).
 - `agent/narrate.js` asks a model for one candidate narration of a fork, `agent/prompt.js` is what
   the model is told, and `agent/narration-loop.js` retries with the failures, up to four attempts.
   `api/narrate.js` is the Vercel function the browser calls. Responses are cached in
@@ -57,8 +62,11 @@ the forks a paid model can be asked about are finite.
 Animations API, no libraries. The fork screen's hero is the ghost line drawing itself from the
 split month, ringing each month where the ghost could not take the real choice as it passes.
 Figures count instead of cutting, and bars move from their old value to their new one: a rise
-overshoots and settles, a fall is flatter and quicker. Screens slide forward into a fork and back
-to the run, and the tapped choice travels into place. The run's 24 month ticks fill on first view.
+overshoots and settles, a fall is flatter and quicker. The run's 24 month ticks fill. Moving
+between steps is a cut, as every change of screen in the game is (`vendor/dry-run-engine/UI.md`,
+"Motion, as built"): the motion is inside a step, and plays the first time the step is reached.
+The landing page uses the game's landing motion, its title rising and its mark's ticks drawing,
+and each section rises in as it comes on screen. It makes no sound.
 
 - Under `prefers-reduced-motion`, everything lands on its finished state at once.
 - A tap or key press anywhere finishes every running animation and waiting step first.
@@ -68,7 +76,8 @@ to the run, and the tapped choice travels into place. The run's 24 month ticks f
 
 `web/sound.js` synthesizes every sound with Web Audio: a tap, a choice, the chapter closing, a bar
 rising or falling, and the ghost line landing. The audio context starts on the first tap. Sound is
-on by default; the mute control, in a dock at the foot of every view where a thumb reaches it, is remembered in `localStorage`.
+on by default; the mute control, in the dock at the foot of every step beside Back and Next, is
+remembered in `localStorage`.
 Choosing a fork and the ghost line landing give a short vibration where `navigator.vibrate`
 exists. The mute control is about sound only, so it doesn't turn vibration off.
 
