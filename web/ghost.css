@@ -440,6 +440,18 @@
   .notices { margin-top: 10px; }
 }
 
+/* The shortest phones, 568 tall: only space gives way, never type. Every size above is already
+   the game's own on its short-screen layouts (style.css: money 36 to 40px, body 14px), and none
+   goes lower here */
+@media (max-height: 600px) {
+  .step-top { padding-top: 8px; }
+  .step-label { margin-top: 8px; }
+  .ticks { margin-top: 8px; }
+  .ghost-worth { margin-top: 6px; }
+  .chart-card { margin-top: 10px; padding: 6px 8px; }
+  .gbars { gap: 8px; margin-top: 10px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .list-wait .ghost-mark, .narration-wait .ghost-mark { animation: none; }
 }

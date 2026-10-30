@@ -60,7 +60,7 @@ function narrationOf(index, option) {
 
 const go = (hash) => { location.hash = hash; };
 // The chart's height for this phone: a short screen gives it less, so the step still fits
-const chartHeight = () => (innerHeight < 600 ? 112 : innerHeight < 720 ? 146 : 214);
+const chartHeight = () => (innerHeight < 600 ? 104 : innerHeight < 720 ? 146 : 214);
 
 const forkHash = (index, option, part = "") => `#fork/${index}/${option}${part ? `/${part}` : ""}`;
 
