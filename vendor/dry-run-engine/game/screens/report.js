@@ -8,6 +8,9 @@
 // Under each month it names, what happened in it: the sheet's month_summary (v25). Under
 // "Chapter two", a plain line that it is being written, and the button at the end opens the
 // timeline. All three are the product owner's copy (REPORT-COPY.md).
+//
+// Under the bars, a link back to the chapter card (game/screens/certificate.js). Its words are
+// Ghost Run's, not REPORT-COPY.md's.
 
 import { direction, arrow } from "./moves.js";
 
@@ -15,6 +18,8 @@ const CLOSED = "closed";
 const NET_WORTH = "Net worth";
 const MOVED_MOST = "The months that moved most";
 const LIFE_SO_FAR = "See your life so far";
+// The way back to the chapter card, under the bars
+const YOUR_CARD = "Your chapter card";
 // Chapter 2 has no decisions yet. Replace with its real hook the moment it has
 const CHAPTER_TWO = "Building is being written. You are 24, and the money gets more complicated.";
 
@@ -38,9 +43,9 @@ const capitalise = (text) => text.charAt(0).toUpperCase() + text.slice(1);
 // bars: getBars now. labels: the lines beside Safety and Freedom. compared: compareBars over
 // the chapter. safetyDanger: safetyInDanger now. best, worst: chapterMonths rows. concepts:
 // the titles unlocked, in month order, with their count and the rest in words.
-// money: text/'s formatMoney. onTimeline: the button at the end.
+// money: text/'s formatMoney. onTimeline: the button at the end. onCard: opens the chapter card.
 export function reportScreen({
-  chapter, years, age, bars, labels, compared, safetyDanger, best, worst, concepts, money, onTimeline,
+  chapter, years, age, bars, labels, compared, safetyDanger, best, worst, concepts, money, onTimeline, onCard,
 }) {
   const screen = document.createElement("section");
   screen.className = "screen report";
@@ -95,6 +100,12 @@ export function reportScreen({
     bar.append(headRow, track);
     list.append(bar);
   }
+
+  const card = document.createElement("button");
+  card.type = "button";
+  card.className = "report-card-link";
+  card.textContent = YOUR_CARD;
+  card.addEventListener("click", onCard, { once: true });
 
   const moved = document.createElement("div");
   moved.className = "report-section";
@@ -155,7 +166,7 @@ export function reportScreen({
 
   const grow = document.createElement("div");
   grow.className = "grow";
-  screen.append(head, worth, list, moved);
+  screen.append(head, worth, list, card, moved);
   if (concepts.total > 0) screen.append(learned);
   screen.append(next, grow, foot);
 

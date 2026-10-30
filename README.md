@@ -23,8 +23,8 @@ any choice to see the ghost, the life you would have had with the other option.
   sticky Play bar, and from 900px a desktop layout of its own, with a header carrying Play, a
   two-column hero, the month inside a phone frame and the chapters across the width. Its figures
   come from `web/landing-model.js`, and its written words are checked against the engine and the
-  chapter plan by `web/test/landing-model.test.js`. Chapters two to six say Coming until a date
-  is decided (`DATES` there). The chapter two sign-up is connected to nothing yet, and says so.
+  chapter plan by `web/test/landing-model.test.js`. Chapter one is open; chapters two to six say
+  Locked. The chapter two sign-up is connected to nothing yet, and says so.
 - `web/ghost.html` is the ghost flow, served at `/ghost/`: the finished demo life, and any choice
   in it forked in the browser and drawn against the real run, with its narration and every attempt
   at it checked by `verify()`. Five steps, one screen each (`web/ghost.js`): your run, choose a
@@ -89,8 +89,8 @@ exists. The mute control is about sound only, so it doesn't turn vibration off.
 ## vendor/
 
 `vendor/dry-run-engine/` is the prior work Ghost Run is built on: the engine, the sheet's
-content, the copy and the game. The folder keeps its original name. Two changes have been made
-to it, and only these:
+content, the copy and the game. The folder keeps its original name. For Daylight, two changes
+were made to it, and only these:
 
 - The displayed product name, now "Ghost Run" in the game's page title, its favicon title and
   `PRODUCT_NAME` in `game/config.js`.
@@ -103,4 +103,26 @@ to it, and only these:
   `#FBF4E6`, so a phone's browser bar matches the page. Together with the link above, these are
   the only two lines of `vendor/` changed for Daylight.
 
-No engine logic, content, copy or numbers were changed, and nothing in `engine/` or `text/`.
+Those changed no engine logic, content, copy or numbers.
+
+Separately, the end of chapter one has been added to the game, in `game/` only. Nothing in
+`engine/`, `text/` or the sheet changed:
+
+- When month 24 closes, the turn of the chapter plays first (`game/screens/chapter-turn.js`): the
+  mark's 24 ticks, the last one lighting, the light running once round the ring, the mark
+  settling, and "Chapter one closed", the chapter's title and "22 to 24" rising in, in the
+  landing's motion language. It leaves by itself after 4.2 seconds (`CHAPTER_TURN_MS`). A tap
+  while it moves finishes the motion; a tap once it is still leaves. Under reduced motion it
+  stands still. The same screen opens a chapter (`way: "open"`), for when there is a next one to
+  open. Its keyframes are in `game/style.css`, and UI.md's "Motion, as built" records it.
+- Then the chapter card (`game/certificate.js` for the figures, `game/screens/certificate.js`
+  for the drawing): net worth and its move over the two years, Safety, Freedom and Life with
+  the line beside each, the shape of the two years as net worth month by month, and one line of
+  the run's own figures. It is drawn on a canvas in the browser from the save, with no server,
+  1200 by 627 px for a LinkedIn post, and "Save the card" downloads it as a PNG. Every figure
+  comes from the engine and every amount is formatted by `text/`; `game/test/certificate.test.js`
+  checks them against the demo life. The chapter report opens the card again ("Your chapter
+  card"). The words on the card, its screen and the link are Ghost Run's, not the product owner's
+  REPORT-COPY.md.
+- `game/labels.js` holds the line beside Safety and Freedom, which `game/main.js` had, so the
+  card and the report share it.

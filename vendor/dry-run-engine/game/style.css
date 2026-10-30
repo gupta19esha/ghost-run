@@ -1042,6 +1042,90 @@ html, body {
 .close-button:hover { background: var(--rule); }
 .close-button:focus-visible { outline: 2px solid var(--bone); outline-offset: 3px; }
 
+/* ---------- Chapter turn ---------- */
+
+.chapter-turn { padding: 0 var(--gutter); text-align: center; }
+.turn-stage {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding-top: 46px;
+}
+.turn-mark { width: 168px; height: 168px; margin-bottom: 30px; transform-origin: 50% 50%; }
+.turn-tick { stroke: var(--slate-dim); }
+.turn-tick.lit { stroke: var(--marigold); }
+.turn-line { margin: 0; }
+.turn-title {
+  margin-top: 8px;
+  font-family: var(--display);
+  font-size: 44px;
+  font-weight: 800;
+  line-height: 1.08;
+  color: var(--bone);
+}
+.turn-ages {
+  margin-top: 6px;
+  font-family: var(--display);
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--slate);
+}
+
+/* Closing: the last month lights, the light runs once round the ring, the mark settles with a
+   small overshoot, and the three lines rise in as the landing's title does */
+.turn-close.playing .turn-tick.last { animation: landing-tick-light 300ms ease-out 200ms both; }
+.turn-close.playing .turn-tick.lit:not(.last) {
+  animation: turn-sweep 360ms ease-out both;
+  animation-delay: calc(600ms + var(--i) * 35ms);
+}
+.turn-close.playing .turn-mark { animation: turn-settle 520ms cubic-bezier(0.2, 0.7, 0.2, 1) 1650ms both; }
+.turn-close.playing .turn-line {
+  animation: landing-rise 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(1900ms + var(--n) * 120ms);
+}
+/* Opening: the new chapter's ring draws itself round, unlit, then the lines rise in */
+.turn-open.playing .turn-tick {
+  stroke-dasharray: 1;
+  animation: landing-tick-draw 240ms ease-out both;
+  animation-delay: calc(200ms + var(--i) * 28ms);
+}
+.turn-open.playing .turn-line {
+  animation: landing-rise 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation-delay: calc(1100ms + var(--n) * 120ms);
+}
+@keyframes turn-sweep { 40% { stroke: var(--ink); } }
+@keyframes turn-settle { 45% { transform: scale(1.06); } }
+
+/* ---------- Chapter card ---------- */
+
+.certificate { padding: 0 var(--gutter); }
+.certificate-head { padding-top: 56px; }
+.certificate-card {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1200 / 627;
+  margin-top: 16px;
+  border-radius: 12px;
+  box-shadow: 0 1px 0 var(--rule), 0 10px 30px -12px rgba(33, 28, 22, 0.35);
+}
+.certificate-foot { display: flex; flex-direction: column; gap: 12px; padding: 24px 0 40px; }
+/* On the report, the way to the card: a link in the line's colour, as "your life so far" is */
+.report-card-link {
+  margin-top: 28px;
+  padding: 0;
+  background: none;
+  border: 0;
+  font-family: var(--body);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--marigold);
+  text-align: left;
+  cursor: pointer;
+}
+
 /* ---------- Narrow phones ---------- */
 
 @media (max-width: 380px) {
@@ -1062,6 +1146,7 @@ html, body {
   /* The bar still ends where the engine puts it, and the screen still leaves on time */
   .bar-solid, .bar-change, .close-bar-fill { transition: none; }
   .progress-fill { animation: none; }
+  .chapter-turn * { animation: none !important; }
 }
 
 /* Month close carries the most: net worth, bars, a concept card and the hook. Below the
