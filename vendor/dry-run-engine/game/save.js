@@ -166,7 +166,9 @@ export function replay(save, hooks = {}) {
         const started = decisionsForMonth(state).length < decisionsForMonth({ ...state, decisions_taken: {} }).length;
         return { state, monthStart, lastMonth, at: started ? "decision" : "home" };
       }
-      if (chapterComplete(state)) {
+      // The end of what is written: a month with nothing in the sheet. Until v35 this was the end
+      // of chapter 1, which with chapter 2 in the sheet would drop every save that had gone past it
+      if (decisionsForMonth({ ...state, decisions_taken: {} }).length === 0) {
         return queue.length > 0 ? null : { state, monthStart, lastMonth, at: "home" };
       }
       if (state.month > save.closed) {

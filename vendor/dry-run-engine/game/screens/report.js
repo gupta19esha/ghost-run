@@ -15,8 +15,10 @@ const CLOSED = "closed";
 const NET_WORTH = "Net worth";
 const MOVED_MOST = "The months that moved most";
 const LIFE_SO_FAR = "See your life so far";
-// Chapter 2 has no decisions yet. Replace with its real hook the moment it has
-const CHAPTER_TWO = "Building is being written. You are 24, and the money gets more complicated.";
+// Chapter 2's opening can be played since sheet v35, so the line no longer says it is being
+// written. Placeholders until the product owner writes them (CHAPTER-REPORT.md)
+const CHAPTER_TWO = "[PLACEHOLDER report chapter two line. Brief: chapter two, Building, opens now; you are 24. States: none]";
+const BEGIN_NEXT = "[PLACEHOLDER report button. Brief: begin chapter two. States: none]";
 
 const BARS = [
   ["safety", "Safety"],
@@ -38,9 +40,10 @@ const capitalise = (text) => text.charAt(0).toUpperCase() + text.slice(1);
 // bars: getBars now. labels: the lines beside Safety and Freedom. compared: compareBars over
 // the chapter. safetyDanger: safetyInDanger now. best, worst: chapterMonths rows. concepts:
 // the titles unlocked, in month order, with their count and the rest in words.
-// money: text/'s formatMoney. onTimeline: the button at the end.
+// money: text/'s formatMoney. onTimeline: the button at the end. onNext: begins the next chapter,
+// when it can be played.
 export function reportScreen({
-  chapter, years, age, bars, labels, compared, safetyDanger, best, worst, concepts, money, onTimeline,
+  chapter, years, age, bars, labels, compared, safetyDanger, best, worst, concepts, money, onTimeline, onNext = null,
 }) {
   const screen = document.createElement("section");
   screen.className = "screen report";
@@ -151,6 +154,16 @@ export function reportScreen({
   lifeSoFar.className = "action";
   lifeSoFar.textContent = LIFE_SO_FAR;
   lifeSoFar.addEventListener("click", onTimeline);
+  // The next chapter first, once it can be played; the life so far stays, as the quieter button
+  if (onNext) {
+    const begin = document.createElement("button");
+    begin.type = "button";
+    begin.className = "action";
+    begin.textContent = BEGIN_NEXT;
+    begin.addEventListener("click", onNext, { once: true });
+    lifeSoFar.className = "close-button";
+    foot.append(begin);
+  }
   foot.append(lifeSoFar);
 
   const grow = document.createElement("div");

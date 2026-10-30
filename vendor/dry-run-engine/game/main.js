@@ -24,6 +24,7 @@ import { homeScreen } from "./screens/home.js";
 import { timelineScreen } from "./screens/timeline.js";
 import { howItWorksScreen } from "./screens/how-it-works.js";
 import { reportScreen } from "./screens/report.js";
+import { openingEndScreen } from "./screens/opening-end.js";
 import { lifeSoFar } from "./timeline.js";
 import {
   newSave, readSave, writeSave, dropSave, replay, playedToday, recordClose, currentStreak, explainedAlready, recordExplained,
@@ -256,6 +257,35 @@ function showReport() {
     },
     money: formatMoney,
     onTimeline: () => openTimeline(showReport),
+    // Chapter 2's opening is in the sheet since v35: the report leads into it, once
+    onNext: chapterTwoWritten() ? beginChapterTwo : null,
+  }));
+}
+
+// Chapter 2 can be played when the sheet has a decision in the month after chapter 1 ends
+function chapterTwoWritten() {
+  return decisionsForMonth({ ...state, decisions_taken: {} }).some((d) => d.chapter === 2);
+}
+
+// From the report into chapter 2's first month, remembered in the save so the report does not
+// stand in the way again. The day's limit still holds: a month closed today waits for tomorrow
+function beginChapterTwo() {
+  save.chapter_two = true;
+  writeSave(save);
+  goHome(homeLastMonth);
+}
+
+// Past the last month the sheet has decisions in, the written chapter has run out for now
+function nothingWritten() {
+  return decisionsForMonth({ ...state, decisions_taken: {} }).length === 0;
+}
+
+function showOpeningEnd() {
+  show(openingEndScreen({
+    chapter: { number: formatCount(2) },
+    month: state.month,
+    age: state.age,
+    onTimeline: () => openTimeline(showOpeningEnd),
   }));
 }
 
@@ -266,9 +296,14 @@ const REPORT_CONCEPTS_LISTED = 8;
 // for tomorrow once a month has been closed today (UI.md step 5). A screenshot script plays
 // past it, unless the screen it is there to capture is Home itself.
 function goHome(lastMonth, continuing = false) {
-  // Once the chapter's last month has closed, the chapter report stands where Home would
-  if (chapterComplete(state)) {
+  // Once the chapter's last month has closed, the chapter report stands where Home would, until
+  // the player begins chapter 2 from it. Past the last written month, the end of what is written
+  if (chapterComplete(state) && !save.chapter_two) {
     showReport();
+    return;
+  }
+  if (nothingWritten()) {
+    showOpeningEnd();
     return;
   }
   homeLastMonth = lastMonth;
