@@ -1321,6 +1321,20 @@ html, body {
   .decision.compact > .illo { min-height: 64px; }
 }
 
+/* ---------- The result, on a phone ---------- */
+
+/* The same, on the result screen (ruled 31 October 2026): the screen is exactly the window and
+   its illustration, the same moment muted, takes what the chosen card, the line and the bar
+   leave, with the timer still at the bottom. Before, the illustration was capped at a share of
+   the window and an empty field filled the rest: at 390 by 664, 285px under a line with no bar
+   and 127px under one with a bar. The illustration gives way to 20dvh, and a result that still
+   runs over scrolls, its timer below. */
+@media (max-width: 899px) {
+  .consequence { height: 100dvh; }
+  .consequence > .grow { display: none; }
+  .consequence > .illo { flex: 1 1 auto; max-height: none; min-height: 20dvh; }
+}
+
 /* The iPhone's home indicator: with the toolbar tucked away the page runs under it, so every
    screen keeps its last button or line above it. 0 everywhere else */
 .screen { padding-bottom: env(safe-area-inset-bottom, 0px); }

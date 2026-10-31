@@ -91,9 +91,10 @@ Rules:
    subject composed to lean away from its disc, such as D01's payslip, sat left of centre
    with an empty field beside it. In iOS Safari the block also came in from both edges and
    cut the disc, because it was sized by an aspect-ratio under a max-height
-   (`game/screens/illustrations.js`). On a phone the decision's illustration takes whatever
-   the words and options leave, so there is no empty space above the options (style.css,
-   "The decision, on a phone").
+   (`game/screens/illustrations.js`). On a phone the illustration on the decision and on the
+   result takes whatever the rest of the screen leaves, so neither has an empty field: none
+   above the options, none under the result's line (style.css, "The decision, on a phone" and
+   "The result, on a phone").
 
 This scales to 30 decisions without hiring anyone, and stays consistent because the
 vocabulary is small.
