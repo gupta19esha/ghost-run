@@ -12,6 +12,10 @@ export const SEED = 1;
 // the day the last one closed (game/save.js).
 export const SAVE_KEY = "finance-sim";
 
+// The daily gate (UI.md, ruled 31 October 2026): a new run plays this many months in one sitting
+// before Home first waits for tomorrow
+export const FIRST_SITTING_MONTHS = 3;
+
 // Testing tools (ruled 30 September 2026): "Start again" on How it works. Off here, so no build
 // reaches a real player with them unless someone decides it should. The tester site turns them
 // on at build time: bash scripts/build_site.sh --test-tools (HOSTING.md section 6)

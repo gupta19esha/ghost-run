@@ -39,13 +39,21 @@ function label(text) {
 // The first letter only, for a sentence that starts with a number in words
 const capitalise = (text) => text.charAt(0).toUpperCase() + text.slice(1);
 
+// "Twenty-four months, played over nine days." One day is "in one day"; with no count of days,
+// the months alone
+function playedLine({ months, days }) {
+  if (days === null) return `${capitalise(months)} months.`;
+  return `${capitalise(months)} months, played ${days === "one" ? "in one day" : `over ${days} days`}.`;
+}
+
 // chapter: { number, next } in words. years: the chapter's length in words. age: the engine's.
 // bars: getBars now. labels: the lines beside Safety and Freedom. compared: compareBars over
 // the chapter. safetyDanger: safetyInDanger now. best, worst: chapterMonths rows. concepts:
 // the titles unlocked, in month order, with their count and the rest in words.
+// played: { months, days } in words, days null when the save does not know them.
 // money: text/'s formatMoney. onTimeline: the button at the end. onCard: opens the chapter card.
 export function reportScreen({
-  chapter, years, age, bars, labels, compared, safetyDanger, best, worst, concepts, money, onTimeline, onCard,
+  chapter, years, age, bars, labels, compared, safetyDanger, best, worst, concepts, played, money, onTimeline, onCard,
 }) {
   const screen = document.createElement("section");
   screen.className = "screen report";
@@ -57,6 +65,14 @@ export function reportScreen({
   title.className = "report-title";
   title.append(`${capitalise(years)} years.`, document.createElement("br"), `You are ${age}.`);
   head.append(label(`Chapter ${chapter.number} ${CLOSED}`), title);
+  // How long it took, plainly: the months, and the days they were played over. No verdict on
+  // either (ruled 31 October 2026)
+  if (played) {
+    const line = document.createElement("p");
+    line.className = "report-played";
+    line.textContent = playedLine(played);
+    head.append(line);
+  }
 
   const worth = document.createElement("div");
   worth.className = "report-worth";

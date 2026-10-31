@@ -1,8 +1,10 @@
-// The playable Chapter 1, UI.md version 2. Step 5: save and resume, one session per day.
-// The session loop is the month card, each of the month's decisions with its consequence, the
-// month run by the engine, any callbacks that land, then the month close. Close goes Home,
-// and Home plays the next month, once a day. The first month starts straight from the
-// landing screen. Reopening continues where the player was (game/save.js).
+// The playable Chapter 1, UI.md version 2. Step 5: save and resume, one month a day after the
+// first sitting. The session loop is the month card, each of the month's decisions with its
+// consequence, the month run by the engine, any callbacks that land, then the month close.
+// Close goes Home, and Home plays the next month: straight on for the first three months, then
+// once a day, with the next month offered now as well (ruled 31 October 2026). The first month
+// starts straight from the landing screen. Reopening continues where the player was
+// (game/save.js).
 //
 // Look, copy and illustration come from design/, which is the source of truth.
 
@@ -33,8 +35,8 @@ import { barLabels } from "./labels.js";
 import { createRail, ways } from "./rail.js";
 import { lifeSoFar } from "./timeline.js";
 import {
-  newSave, readSave, writeSave, dropSave, replay, playedToday, recordClose, currentStreak, explainedAlready, recordExplained,
-  jumpSave, introSeen, recordIntroSeen,
+  newSave, readSave, writeSave, dropSave, setAsideSave, replay, waitsForTomorrow, recordClose, currentStreak, chapterDays,
+  explainedAlready, recordExplained, jumpSave, introSeen, recordIntroSeen,
 } from "./save.js";
 import { installTestingTools } from "./testing.js";
 import { BALANCED_CHOICES } from "./balanced-path.js";
@@ -245,7 +247,8 @@ function closeMonth(closed, monthEnd) {
     explanations: closed === 1 ? BAR_LINES : null,
     money: formatMoney,
     onClose: () => {
-      recordClose(save, closed);
+      // The chapter's last month records the day it closed, for the report's count of days
+      recordClose(save, closed, chapterComplete(state) ? 1 : null);
       writeSave(save);
       // The chapter's last month: the turn of the chapter, then its card, then the report
       if (chapterComplete(state)) closeChapter();
@@ -331,6 +334,9 @@ function showReport() {
       rest: titles.length > listed.length ? formatCount(titles.length - listed.length) : null,
     },
     money: formatMoney,
+    // How long the chapter took, stated and not judged: its months, and the calendar days it was
+    // played over. A run begun before the save recorded its first day has no count of days
+    played: { months: formatCount(months.length), days: optionalCount(chapterDays(save, 1)) },
     onTimeline: () => openTimeline(showReport, null),
     onCard: () => showCard(chapterCard(state, save), CARD_BACK, showReport),
   }));
@@ -339,8 +345,11 @@ function showReport() {
 // The report names this many concepts, then counts the rest (design/ChapterReport.html)
 const REPORT_CONCEPTS_LISTED = 8;
 
-// Home: the engine's bars as they stand, coloured by the month just closed. Its button waits
-// for tomorrow once a month has been closed today (UI.md step 5). A screenshot script plays
+const optionalCount = (count) => (count === null ? null : formatCount(count));
+
+// Home: the engine's bars as they stand, coloured by the month just closed. After the first
+// sitting its button waits for tomorrow once a month has been closed today, and the line under
+// it plays the next month now (UI.md step 5, ruled 31 October 2026). A screenshot script plays
 // past it, unless the screen it is there to capture is Home itself.
 function goHome(lastMonth, continuing = false) {
   // Once the chapter's last month has closed, the chapter report stands where Home would
@@ -350,7 +359,7 @@ function goHome(lastMonth, continuing = false) {
   }
   homeLastMonth = lastMonth;
   homeContinuing = continuing;
-  const locked = playedToday(save) && !(script.active && script.stop !== "home");
+  const locked = waitsForTomorrow(save) && !(script.active && script.stop !== "home");
   // Partway through a month: the choices so far, with the result line each showed
   const thisMonth = continuing ? (lifeSoFar(save)?.find((m) => m.month === state.month)?.choices ?? []) : [];
   // The chapter and its title are the sheet's, on this month's decisions. Read as if none were
@@ -447,7 +456,8 @@ function jumpTo(month) {
 function resume(saved) {
   const where = replay(saved);
   if (!where) {
-    dropSave();
+    // Kept, not deleted (game/save.js)
+    setAsideSave();
     return false;
   }
   save = saved;

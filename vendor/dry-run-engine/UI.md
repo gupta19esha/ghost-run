@@ -95,7 +95,7 @@ Six exist as designed artboards. Build them to match.
 | Screen | Purpose | Leaves |
 |---|---|---|
 | Landing | Says what the game is and what it tracks, starts the run | Tap Begin |
-| Home | Four bars, net worth, month and age, streak, one button. Top right, "How it works" | Tap play |
+| Home | Four bars, net worth, month and age, streak, one button. Top right, "How it works". Waiting for tomorrow, a second, smaller action under the button: "Play the next month now" (rule 9) | Tap play |
 | How it works | The landing's lede and bullets, and what each of the four measures, read-only. Testers only: "Start again" | Close, top or foot |
 | Month card | "Month 14. You are 23." Salary line, when there is salary | Auto, 2s |
 | Decision | Illustration, situation, 2 to 4 option cards | Tap an option |
@@ -200,6 +200,32 @@ scenario packs, Phase 2, and a content job rather than a settings screen.
    about 104 px, and Close is reached by scrolling: once per player, on a screen with no timer
    (ruled 30 September 2026). It is the one exception to the button staying in reach. The hook
    stays on every close, month 1's included: it is the reason to come back tomorrow.
+9. **One month a day is the pace, not a wall.** Ruled 31 October 2026 by the product owner,
+   deliberately relaxing step 5's one session per day. Until then a closed month locked Home
+   until the next calendar day, from month 1 on, with no way past it.
+   - **The first sitting:** a new run plays its first three months in one go
+     (`FIRST_SITTING_MONTHS` in `game/config.js`). Home first waits for tomorrow once month 3
+     has closed.
+   - **Play the next month now:** every Home that waits for tomorrow keeps "Come back
+     tomorrow" as its button, the main thing on the screen, and under "One month a day. Month
+     {n} is waiting." offers "Play the next month now". It is a line of text, not a second
+     button the size of the first, so it reads as the exception. It costs nothing: the
+     streak counts days, so another month the same day leaves it where it was, and nothing
+     marks the month as played early.
+   - **The days it took:** the save records the day the run began and the day each chapter
+     closed. The chapter report says how long the chapter took, plainly and without a
+     verdict: "24 months, played over nine days." A run begun before the save recorded its
+     first day shows the months alone; its days are not known, and are not guessed.
+
+   Why: a gate that stops a player who wants to carry on teaches them that the game stops
+   them, and after one month a new player has seen too little to know what the game is: the
+   point of it is that choices pay out months later. One month a day stays the way the game
+   is meant to be played, and the default; playing on is offered, never pushed, and the
+   report shows which the player chose without judging it.
+
+   The save format did not change version: the new fields sit beside the old ones and an
+   older save is read with them filled in, so no existing run is lost (`game/save.js`). A save
+   that no longer reads or replays is set aside under its own key, not deleted.
 
 ---
 
@@ -256,7 +282,7 @@ Each step works and is shown before the next begins.
 | 2 | Decision and consequence, with illustration and a moving bar | D01-C plays and the Freedom bar visibly moves |
 | 3 | The full session loop, month card through hook | Month 1 plays end to end |
 | 4 | Home with four live bars and net worth | The bars match the engine |
-| 5 | Save and resume, one session per day | Closing and reopening continues where you were. Since 28 September 2026 reopening always lands on Home; partway through a month, Home lists the choices made so far with their result lines, and its button replays the month card and continues (`FIRST-SESSION.md` section 1) |
+| 5 | Save and resume, one session per day (relaxed 31 October 2026: rule 9) | Closing and reopening continues where you were. Since 28 September 2026 reopening always lands on Home; partway through a month, Home lists the choices made so far with their result lines, and its button replays the month card and continues (`FIRST-SESSION.md` section 1) |
 | 6 | Progress timeline | Tap any month, see what you chose |
 | 7 | Streak, concept unlocks, chapter report | Chapter 1 is playable start to finish |
 
@@ -291,7 +317,7 @@ Stop after each. Screenshot at all three widths.
   she wants you to sign" belongs on the screen a returning player sees most, because that
   is where the reason to come back should live. The locked Home (`design/HomeLocked.html`)
   has "Come back tomorrow" and "One month a day. Month {n} is waiting."; the hook sits
-  with them.
+  with them. Since 31 October 2026 "Play the next month now" sits under them (rule 9).
 
 - **The timeline's own artboard.** Step 6 built the progress timeline from other screens'
   parts: Home's heading and month line, the consequence's chosen card, month close's chip.

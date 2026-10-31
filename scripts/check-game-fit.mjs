@@ -8,9 +8,9 @@
 // and How it works scroll by design, so only their width is checked. On a desktop window the rail
 // must hold everything it carries without scrolling.
 //
-// Chrome runs on virtual time, so the timed screens take no real time. The day's limit is lifted
-// between months the way a new day would lift it: the save's last close moves to an earlier day,
-// and the page reloads.
+// Chrome runs on virtual time, so the timed screens take no real time. Once Home waits for
+// tomorrow, after the first three months, the check takes "Play the next month now", as a player
+// who plays on would.
 //
 // node --experimental-websocket scripts/check-game-fit.mjs [--phone] [--sizes=1440x900,900x600]
 // (Node 22 and later need no flag.) Chrome: CHROME, or the usual install path.
@@ -101,7 +101,7 @@ try {
     // The thing each screen is for, which must be on screen without scrolling
     const key = {
       landing: ".action", month: ".month-line", decision: ".option:last-of-type", consequence: ".timer-foot",
-      callback: ".timer-foot", close: ".close-button", home: ".home-waiting, .action", turn: ".timer-foot",
+      callback: ".timer-foot", close: ".close-button", home: ".home-foot > :last-child", turn: ".timer-foot",
       card: ".certificate-foot",
     }[name];
     const rail = document.querySelector(".rail");
@@ -175,15 +175,10 @@ try {
             await advance(300);
           }
           const locked = await act(`return document.querySelector(".action").disabled`);
-          if (locked) {
-            // A new day: the last close moves back, and the page reopens
-            await act(`const s = JSON.parse(localStorage.getItem("finance-sim")); s.closedOn = "2000-01-01"; localStorage.setItem("finance-sim", JSON.stringify(s)); return 1`);
-            await send("Page.reload");
-            await advance(2500);
-          } else {
-            await act(`document.querySelector(".action").click(); return 1`);
-            await advance(300);
-          }
+          if (locked && month < 3) problems.push(`home after month ${month}: waits for tomorrow inside the first sitting`);
+          if (!locked && month >= 3) problems.push(`home after month ${month}: does not wait for tomorrow`);
+          await act(`document.querySelector(${locked ? '".home-now"' : '".action"'}).click(); return 1`);
+          await advance(300);
         } else if (m.name === "card") {
           await act(`document.querySelector(".certificate-foot .close-button").click(); return 1`);
           await advance(300);

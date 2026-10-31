@@ -794,6 +794,25 @@ html, body {
   color: var(--bone-dimmer);
 }
 
+/* The exception under the locked button: a real button, but a line of text, not a second
+   button the size of the first (ruled 31 October 2026) */
+.home-now {
+  align-self: center;
+  min-height: 36px;
+  padding: 6px 12px;
+  background: none;
+  border: 0;
+  color: var(--bone-dim);
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.home-now:hover { color: var(--bone); }
+.home-now:focus-visible { outline: 2px solid var(--bone); outline-offset: 2px; border-radius: 4px; }
+
 /* ---------- Month card ---------- */
 
 .month-card {
@@ -962,6 +981,13 @@ html, body {
   font-weight: 800;
   line-height: 1.1;
   color: var(--bone);
+}
+/* How long the chapter took: a plain line under the title, no colour, no verdict */
+.report-played {
+  margin: 10px 0 0;
+  font-size: 16px;
+  line-height: 1.4;
+  color: var(--bone-dim);
 }
 .report-worth { margin-top: 32px; }
 .report-bars { padding: 34px 0 0; gap: 16px; }
@@ -1261,5 +1287,7 @@ html, body {
   .home.locked .home-foot { padding-bottom: 10px; }
   .home.locked .home-worth { padding-top: 8px; }
   .home.locked .action { height: 52px; }
+  /* Play the next month now joins the line above it, still a 25px target */
+  .home.locked .home-now { min-height: 0; padding: 4px 12px; margin-top: -6px; }
 }
 

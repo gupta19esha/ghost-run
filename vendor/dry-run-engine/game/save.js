@@ -2,20 +2,33 @@
 //
 // The save is not the engine's state. It is what the player did: the seed, every choice in
 // the order it was made, how many months they have closed, the day they last closed one, the
-// streak of days in a row that ended on, and which bars have had their line shown.
-// One session per day means one month closed per local day: a month started and left
-// unfinished does not use up the day. Resuming replays those choices through the engine, so
-// the run is the same run (UI.md build rule 4) and the save stays small.
+// streak of days in a row that ended on, which bars have had their line shown, the day the
+// run began, and the day each chapter closed. Resuming replays those choices through the
+// engine, so the run is the same run (UI.md build rule 4) and the save stays small.
 //
-// A save that no longer replays, because the sheet changed under it, is dropped and the
-// player starts again from the landing screen. There is no older format to carry forward.
+// The daily gate (UI.md, ruled 31 October 2026): the first FIRST_SITTING_MONTHS months play in
+// one sitting. After that, one month a day is the way the game is meant to be played: Home
+// waits for tomorrow once a month has closed today, and offers the next month now as well. A
+// month started and left unfinished does not use up the day.
+//
+// The format is version 1 and stays 1. A field added later goes beside the others, and
+// upgrade() fills it in when an older save lacks it, so every save written before it still
+// reads. readSave refuses any save whose version is not VERSION, so raising VERSION would throw
+// every existing run away. A field an older save cannot know, such as startedOn, is null, and
+// whatever shows it says nothing rather than guess.
+//
+// A save that no longer reads or replays, because the sheet changed under it, is not deleted:
+// it is set aside under SET_ASIDE_KEY, where the next such save replaces it, and the player
+// starts again from the landing screen.
 
 import {
   createState, applyDecision, advanceMonth, decisionsForMonth, getBars, compareBars, chapterComplete,
 } from "../engine/index.js";
-import { SAVE_KEY } from "./config.js";
+import { SAVE_KEY, FIRST_SITTING_MONTHS } from "./config.js";
 
 const VERSION = 1;
+// Where a save that no longer reads or replays is kept instead of deleted
+export const SET_ASIDE_KEY = `${SAVE_KEY}-set-aside`;
 
 // The device's calendar day, "2026-09-18". One session per day is a local day.
 export function today() {
@@ -29,7 +42,19 @@ function yesterday() {
 }
 
 export function newSave({ seed }) {
-  return { version: VERSION, seed, choices: [], closed: 0, closedOn: null, streak: 0, explained: [] };
+  return {
+    version: VERSION, seed, choices: [], closed: 0, closedOn: null, streak: 0, explained: [],
+    startedOn: today(), chapterClosedOn: {},
+  };
+}
+
+// An older save, brought up to the fields this one writes, without changing any it has.
+// startedOn is unknown for a run begun before it was recorded, so null.
+export function upgrade(save) {
+  return {
+    closed: 0, closedOn: null, streak: 0, explained: [], startedOn: null, chapterClosedOn: {},
+    ...save,
+  };
 }
 
 // Each bar's line shows once per player (ruled 30 September 2026, ONBOARDING.md section 5):
@@ -95,29 +120,59 @@ export function writeSave(save) {
   }
 }
 
+// The save, upgraded, or null for none. One that is there but does not read is set aside
+// first, so starting again cannot write over it
 export function readSave() {
+  let raw = null;
   try {
-    const save = JSON.parse(localStorage.getItem(SAVE_KEY));
-    if (save?.version !== VERSION || !Array.isArray(save.choices)) return null;
-    return save;
+    raw = localStorage.getItem(SAVE_KEY);
+    if (raw === null) return null;
+    const save = JSON.parse(raw);
+    if (save?.version === VERSION && Number.isInteger(save.seed) && Array.isArray(save.choices)) return upgrade(save);
   } catch (whatever) {
-    return null;
+    // Not JSON, or no storage
+  }
+  if (raw !== null) setAside(raw);
+  return null;
+}
+
+function setAside(raw) {
+  try {
+    localStorage.setItem(SET_ASIDE_KEY, raw);
+  } catch (whatever) {
+    // No storage, nothing to keep.
   }
 }
 
-// Home's button waits for tomorrow once a month has been closed today
-export function playedToday(save) {
-  return save.closedOn === today();
+// Home's button waits for tomorrow once a month has been closed today, after the first sitting
+export function waitsForTomorrow(save) {
+  return save.closed >= FIRST_SITTING_MONTHS && save.closedOn === today();
 }
 
 // The streak (UI.md step 7): days in a row on which the player closed a month. Closing one
-// the day after the last adds a day; a second close on the same day, which only a
-// screenshot script can make, changes nothing; anything later starts again at one.
-export function recordClose(save, month) {
+// the day after the last adds a day; a second close on the same day, in the first sitting or
+// played early, changes nothing, so playing on costs the streak nothing; anything later starts
+// again at one. chapter: the chapter this close completes, or null.
+export function recordClose(save, month, chapter = null) {
   const day = today();
   if (save.closedOn !== day) save.streak = save.closedOn === yesterday() ? (save.streak ?? 0) + 1 : 1;
   save.closed = month;
   save.closedOn = day;
+  if (chapter !== null) save.chapterClosedOn = { ...save.chapterClosedOn, [chapter]: day };
+}
+
+// The calendar days a chapter took, counting the day it began and the day it closed: 1 for a
+// chapter played in one day. null when either day is unknown, as for a run begun before the
+// save recorded its first day. A chapter after the first begins the day the one before closed.
+export function chapterDays(save, chapter) {
+  const began = chapter === 1 ? save.startedOn : save.chapterClosedOn?.[chapter - 1];
+  const closed = save.chapterClosedOn?.[chapter];
+  if (!began || !closed) return null;
+  const day = (text) => {
+    const [y, m, d] = text.split("-").map(Number);
+    return Date.UTC(y, m - 1, d);
+  };
+  return Math.round((day(closed) - day(began)) / 86400000) + 1;
 }
 
 // The streak as it stands: alive while the last close was today or yesterday, otherwise
@@ -126,12 +181,24 @@ export function currentStreak(save) {
   return save.closedOn === today() || save.closedOn === yesterday() ? save.streak ?? 0 : 0;
 }
 
+// Testing only (Start again, a jump to a month): the run goes
 export function dropSave() {
   try {
     localStorage.removeItem(SAVE_KEY);
   } catch (whatever) {
     // Nothing to drop.
   }
+}
+
+// A save that does not replay: kept under SET_ASIDE_KEY, then taken off the run
+export function setAsideSave() {
+  try {
+    const raw = localStorage.getItem(SAVE_KEY);
+    if (raw !== null) setAside(raw);
+  } catch (whatever) {
+    // No storage.
+  }
+  dropSave();
 }
 
 // Replays the save through the engine and says where the player was:

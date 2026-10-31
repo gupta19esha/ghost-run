@@ -45,6 +45,9 @@ const LIFE_SO_FAR = "your life so far";
 // (design/HomeLocked.html). The month number is the engine's.
 const LOCKED = "Come back tomorrow";
 const waiting = (month) => `One month a day. Month ${month} is waiting.`;
+// The exception, under them: the next month, now, at no cost (ruled 31 October 2026). The
+// product owner's words
+const NOW = "Play the next month now";
 
 const BARS = [
   ["safety", "Safety"],
@@ -219,7 +222,14 @@ export function homeScreen({ onHowItWorks, chapter, bars, labels, compared, mark
     const note = document.createElement("p");
     note.className = "home-waiting";
     note.textContent = waiting(month);
-    foot.append(note);
+    // Smaller and quieter than the button above it, but a real button: playing on is allowed
+    // and costs nothing, the streak included (game/save.js)
+    const now = document.createElement("button");
+    now.type = "button";
+    now.className = "home-now";
+    now.textContent = NOW;
+    now.addEventListener("click", onPlay, { once: true });
+    foot.append(note, now);
   } else {
     play.addEventListener("click", onPlay, { once: true });
   }
