@@ -104,6 +104,7 @@ html, body {
   .landing-band .illo {
     position: absolute;
     inset: 0;
+    height: auto;
     aspect-ratio: auto;
     max-height: none;
     background: none;
@@ -201,16 +202,22 @@ html, body {
 
 /* ---------- Illustration ---------- */
 
-/* The colour block: 390 by 286 on the artboard, the top third. It keeps that shape on a
-   narrower phone, and on a short one gives up height before the options do. */
+/* The colour block: 390 by 286 on the artboard, the top third. Always the full width of the
+   screen, edge to edge (ruled 31 October 2026, UI.md Illustration rule 5), and as tall as
+   that width's share of the artboard, so on a narrower phone it keeps the artboard's shape;
+   a short one takes height off it, never width. Its height is set, not an aspect-ratio: with an
+   aspect-ratio, iOS Safari carries a max-height across to the width and the block comes in
+   from both edges. The ground and the figure (screens/illustrations.js) are layered in it. */
 .illo {
+  position: relative;
   flex-shrink: 0;
-  aspect-ratio: 390 / 286;
+  width: 100%;
+  height: calc(min(100vw, 480px) * 286 / 390);
   max-height: 34dvh;
   background: var(--deep);
   overflow: hidden;
 }
-.illo svg { display: block; width: 100%; height: 100%; }
+.illo svg { position: absolute; inset: 0; display: block; width: 100%; height: 100%; }
 
 .illo-muted { background: var(--deep-muted); }
 .illo-muted svg { opacity: 0.45; }
@@ -1287,7 +1294,33 @@ html, body {
   .home.locked .home-foot { padding-bottom: 10px; }
   .home.locked .home-worth { padding-top: 8px; }
   .home.locked .action { height: 52px; }
-  /* Play the next month now joins the line above it, still a 25px target */
+}
+/* Play the next month now joins the line above it, still a 25px target, on any phone shorter
+   than the artboard: an iPhone in Safari with its toolbar tucked away is 745 tall */
+@media (max-height: 800px) {
   .home.locked .home-now { min-height: 0; padding: 4px 12px; margin-top: -6px; }
 }
 
+
+/* ---------- The decision, on a phone ---------- */
+
+/* The screen is exactly the window, and the illustration takes whatever the words and the
+   options leave (ruled 31 October 2026). Before, a short window capped the illustration at a
+   share of its height (34, 30 or 28dvh) and the room it gave up went to an empty spacer above
+   the options: on an iPhone in Safari, with the toolbar showing, about a sixth of the screen
+   between "why does this matter?" and the first card. Now there is no spacer: the options
+   still sit at the bottom, in thumb reach (rule 5), and the illustration grows into the room
+   above them, or gives it up.
+   The illustration gives way to 20dvh before the words do. Below that the decision takes the
+   compact layout (decision.js), whose illustration gives way down to a 64px strip. */
+@media (max-width: 899px) {
+  .decision { height: 100dvh; }
+  .decision > .grow { display: none; }
+  .decision > .illo,
+  .decision.compact > .illo { flex: 1 1 auto; max-height: none; min-height: 20dvh; }
+  .decision.compact > .illo { min-height: 64px; }
+}
+
+/* The iPhone's home indicator: with the toolbar tucked away the page runs under it, so every
+   screen keeps its last button or line above it. 0 everywhere else */
+.screen { padding-bottom: env(safe-area-inset-bottom, 0px); }

@@ -21,7 +21,8 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const DESKTOP = [[900, 600], [1024, 768], [1280, 720], [1366, 768], [1440, 900], [1920, 1080]];
-const PHONE = [[320, 568], [360, 640], [390, 844]];
+// 390 by 664 and 390 by 745: an iPhone 14 in Safari, its toolbar showing and tucked away
+const PHONE = [[320, 568], [360, 640], [390, 664], [390, 745], [390, 844]];
 const sizesArg = process.argv.find((a) => a.startsWith("--sizes="))?.split("=")[1];
 const SIZES = sizesArg
   ? sizesArg.split(",").map((s) => s.split("x").map(Number))

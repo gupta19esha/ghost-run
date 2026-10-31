@@ -82,6 +82,18 @@ Rules:
 3. On the consequence screen the same illustration stays, desaturated, so the player
    knows they are still in the same moment.
 4. If a decision has no illustration yet, the colour block ships empty. Never filler.
+5. The block bleeds: it always runs the full width of the screen, edge to edge, and the
+   lighter disc behind each drawing runs off the screen at its corner, at every size of block
+   (ruled 31 October 2026). The disc and the subject are two layers: the disc keeps to its
+   corner, and the subject is scaled to the block's height and centred on its own bounds.
+   Before, on a phone shorter than the artboard, the block was wider than the drawing and the
+   whole drawing was shrunk into its middle, so the disc floated short of the edge and a
+   subject composed to lean away from its disc, such as D01's payslip, sat left of centre
+   with an empty field beside it. In iOS Safari the block also came in from both edges and
+   cut the disc, because it was sized by an aspect-ratio under a max-height
+   (`game/screens/illustrations.js`). On a phone the decision's illustration takes whatever
+   the words and options leave, so there is no empty space above the options (style.css,
+   "The decision, on a phone").
 
 This scales to 30 decisions without hiring anyone, and stays consistent because the
 vocabulary is small.

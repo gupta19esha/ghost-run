@@ -100,7 +100,9 @@ body { background: var(--ink); }
 .lp-month-line { margin: 0; font-family: var(--display); font-size: 26px; font-weight: 800; line-height: 1.1; }
 .lp-salary { margin: 4px 0 0; font-size: 16px; color: color-mix(in srgb, var(--ink) 84%, var(--deep)); }
 .lp-salary .money { color: var(--marigold); font-weight: 700; }
-.lp-month-illo .illo { max-height: none; border-radius: 0 0 18px 18px; }
+/* The phone on the page is narrower than the window, so the block takes its shape from its own
+   width, not the window's as in the game */
+.lp-month-illo .illo { height: auto; aspect-ratio: 390 / 286; max-height: none; border-radius: 0 0 18px 18px; }
 .lp-situation { margin: 18px 0 0; font-family: var(--display); font-size: 22px; font-weight: 700; line-height: 1.28; }
 .lp-choice { margin-top: 16px; }
 .lp-choice .options { padding: 0; }

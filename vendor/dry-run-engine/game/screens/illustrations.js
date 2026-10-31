@@ -8,8 +8,22 @@
 //
 // All thirty Chapter 1 decisions have one. A decision with no entry here gets an empty colour
 // block, never filler (UI.md rule 4).
+//
+// Every drawing is a ground and a figure. The ground is its first shape, the lighter disc in a
+// corner that runs off the edge; the figure is everything after it. They are drawn as two
+// layers in one block that always runs the full width of the screen (ruled 31 October 2026,
+// UI.md, Illustration rule 5):
+// - the ground keeps to its corner and runs off the block's edge, at any size of block. On a
+//   short phone the block is wider than the drawing's 390 by 286, and drawn as one picture the
+//   disc was pulled in off the edge, floating, and cut by nothing
+// - the figure is scaled to the block's height and centred on its own bounds, so a drawing
+//   composed to lean away from its disc does not leave an empty field on one side once the
+//   block is wider than the artboard. Measured once per drawing (centreOf).
 
 const VIEWBOX = "0 0 390 286";
+const WIDTH = 390;
+const HEIGHT = 286;
+const SVG = "http://www.w3.org/2000/svg";
 
 // The palette swap from ILLUSTRATIONS-1.md: each full colour and the muted colour it becomes
 const MUTED = {
@@ -521,20 +535,65 @@ const ILLUSTRATIONS = {
 };
 
 // The colour block, with the drawing in it when the decision has one
+function layer(className, viewBox, align, shapes) {
+  const svg = document.createElementNS(SVG, "svg");
+  svg.setAttribute("class", className);
+  svg.setAttribute("viewBox", viewBox);
+  svg.setAttribute("preserveAspectRatio", `${align} meet`);
+  svg.setAttribute("fill", "none");
+  svg.setAttribute("aria-hidden", "true");
+  svg.append(...shapes);
+  return svg;
+}
+
+// The ground and the figure of a drawing, as nodes. The ground is the first shape when it is
+// the corner disc, a circle; a drawing without one is all figure
+function parts(markup) {
+  const holder = document.createElementNS(SVG, "svg");
+  holder.innerHTML = markup;
+  const shapes = [...holder.children];
+  const ground = shapes[0]?.tagName === "circle" ? shapes.shift() : null;
+  return { ground, figure: shapes };
+}
+
+// The ground's corner: the side of the artboard its centre is on
+function corner(ground) {
+  const x = Number(ground.getAttribute("cx")) < WIDTH / 2 ? "xMin" : "xMax";
+  const y = Number(ground.getAttribute("cy")) < HEIGHT / 2 ? "YMin" : "YMax";
+  return x + y;
+}
+
+// Where the figure's bounds centre across the artboard, measured off screen once per drawing.
+// Before the page has a body to measure in, the artboard's own centre
+const centres = new Map();
+function centreOf(key, figure) {
+  if (centres.has(key)) return centres.get(key);
+  if (!document.body) return WIDTH / 2;
+  const probe = document.createElementNS(SVG, "svg");
+  probe.setAttribute("viewBox", VIEWBOX);
+  probe.setAttribute("width", String(WIDTH));
+  probe.setAttribute("height", String(HEIGHT));
+  probe.style.cssText = "position:absolute;left:-9999px;top:0;visibility:hidden";
+  const group = document.createElementNS(SVG, "g");
+  group.append(...figure.map((shape) => shape.cloneNode(true)));
+  probe.append(group);
+  document.body.append(probe);
+  const box = group.getBBox();
+  probe.remove();
+  const centre = box.width > 0 ? box.x + box.width / 2 : WIDTH / 2;
+  centres.set(key, centre);
+  return centre;
+}
+
 export function illustration(decisionId, form) {
   const block = document.createElement("div");
   block.className = `illo illo-${form}`;
   const drawing = ILLUSTRATIONS[decisionId];
   if (drawing) {
-    const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-    svg.setAttribute("viewBox", VIEWBOX);
-    // On a short screen the block is wider than the drawing's shape. The whole drawing fits
-    // inside it rather than being cropped: the block is the ground colour, so the sides blend
-    svg.setAttribute("preserveAspectRatio", "xMidYMid meet");
-    svg.setAttribute("fill", "none");
-    svg.setAttribute("aria-hidden", "true");
-    svg.innerHTML = drawing[form];
-    block.append(svg);
+    const { ground, figure } = parts(drawing[form]);
+    if (ground) block.append(layer("illo-ground", VIEWBOX, corner(ground), [ground]));
+    const shift = centreOf(`${decisionId}-${form}`, figure) - WIDTH / 2;
+    block.append(layer("illo-figure", `${shift} 0 ${WIDTH} ${HEIGHT}`, "xMidYMid", figure));
   }
   return block;
 }

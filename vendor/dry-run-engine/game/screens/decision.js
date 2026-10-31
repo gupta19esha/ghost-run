@@ -9,9 +9,10 @@
 //
 // A screen that would not fit takes the compact layout four-option decisions always use
 // (ruled 28 September 2026): measured once it is on the page, so a long situation or long
-// option labels on a small phone never push the last card off the screen. If the compact layout
-// still runs over, as D14's four cards do on a 320 by 568 phone when two of their labels take two
-// lines, the illustration gives up the rest, down to a strip.
+// option labels on a small phone never push the last card off the screen. On a phone the
+// illustration takes what the words and options leave (style.css, "The decision, on a phone"),
+// down to a strip in the compact layout, so D14's four cards fit a 320 by 568 phone even with
+// two of their labels on two lines.
 //
 // The copy is the sheet's, passed in already filled by text/. The artboard's wording differs
 // in places, such as "Submit the declaration now"; the sheet wins, because the UI writes no
@@ -21,10 +22,6 @@ import { illustration } from "./illustrations.js";
 
 const MONTH_LABEL = "Month";
 const WHY = "why does this matter?";
-// The least of the illustration a decision keeps, in px, however short the screen
-const ILLO_FLOOR = 64;
-// From here the illustration stands beside the options (desktop.css), so it has no room to give
-const SIDE_BY_SIDE = "(min-width: 900px)";
 
 // decision: from the engine. situation: the situation text, filled. onChoose(optionId).
 // netWorth: the engine's net worth before this choice, already formatted by text/, or null
@@ -96,19 +93,10 @@ export function decisionScreen({ decision, month, situation, netWorth = null, on
 
   screen.append(illustration(decision.decision_id, "full"), body, grow, options);
 
-  // Once on the page: if the last card ends below the screen, take the compact layout, and if it
-  // still does, take what is left from the illustration
+  // Once on the page: if the last card ends below the screen, take the compact layout
   screen.start = () => {
     const last = options.lastElementChild;
-    if (!last) return;
-    const over = () => Math.ceil(last.getBoundingClientRect().bottom - window.innerHeight);
-    if (over() > 0) screen.classList.add("compact");
-    // Enough for the options' own margin below the last card too, so it does not sit on the edge
-    const illo = screen.querySelector(".illo");
-    if (over() > 0 && illo && !matchMedia(SIDE_BY_SIDE).matches) {
-      const cut = Math.ceil(options.getBoundingClientRect().bottom - window.innerHeight);
-      illo.style.maxHeight = `${Math.max(ILLO_FLOOR, Math.floor(illo.getBoundingClientRect().height) - cut)}px`;
-    }
+    if (last && Math.ceil(last.getBoundingClientRect().bottom) > window.innerHeight) screen.classList.add("compact");
   };
   return screen;
 }

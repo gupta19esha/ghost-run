@@ -27,7 +27,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from check_engine_browser import QuietHandler, find_chrome, ROOT  # noqa: E402
 
-SIZES = [(320, 568), (360, 640), (390, 844)]
+# 390 by 664: an iPhone 14 in Safari with its toolbar showing, the shortest a 390 phone gets
+SIZES = [(320, 568), (360, 640), (390, 664), (390, 844)]
 OUTER = """<!doctype html><html><body style="margin:0"><pre id="out"></pre><script>
 const p = new URLSearchParams(location.search);
 const f = document.createElement("iframe"); f.width = p.get("w"); f.height = p.get("h"); f.style.border = "0";
