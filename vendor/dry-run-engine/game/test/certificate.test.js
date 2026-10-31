@@ -57,3 +57,16 @@ test("the card names the twenty ideas the chapter collected, in the order they c
   assert.equal(card.ideas.titles[0], "EPF");
   assert.equal(card.ideas.titles.at(-1), "Guaranteed returns");
 });
+
+test("the locked card is the chapter's own: its name, the spec's ages and length, its ideas, no figures", async () => {
+  const { lockedChapterCard } = await import("../certificate.js");
+  const { CHAPTERS } = await import("../chapters.js");
+  const locked = lockedChapterCard(1);
+  assert.equal(locked.locked, true);
+  assert.deepEqual(locked.chapter, card.chapter, "the same chapter heading the finished card has");
+  assert.deepEqual(locked.ages, { from: 22, to: 24 });
+  assert.equal(locked.months, CHAPTERS[0].months);
+  assert.equal(locked.ideas.count, "0 of 20 ideas");
+  assert.deepEqual(locked.ideas.titles, card.ideas.titles);
+  for (const key of ["netWorth", "change", "shape", "line"]) assert.equal(locked[key], undefined, key);
+});

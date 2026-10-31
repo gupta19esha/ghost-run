@@ -15,6 +15,8 @@
 // The chapter's progress (UI.md rule 10) must show on every screen of a month and Home, as the
 // strip on a phone or in the rail on a desktop window, and on no other screen. The ideas open
 // once from Home and once from the report; they scroll by design, so only their width is checked.
+// The chapter start (UI.md rule 11) must come between the landing and month 1, exactly once, with
+// its button in reach while it scrolls, and open again from the ideas.
 //
 // node --experimental-websocket scripts/check-game-fit.mjs [--phone] [--sizes=1440x900,900x600]
 // (Node 22 and later need no flag.) Chrome: CHROME, or the usual install path.
@@ -107,7 +109,7 @@ try {
     const key = {
       landing: ".action", month: ".month-line", decision: ".option:last-of-type", consequence: ".timer-foot",
       callback: ".timer-foot", close: ".close-button", home: ".home-foot > :last-child", turn: ".timer-foot",
-      card: ".certificate-foot",
+      card: ".certificate-foot", start: ".start-foot",
     }[name];
     const rail = document.querySelector(".rail");
     const railShown = rail && !rail.hidden && getComputedStyle(rail).display !== "none";
@@ -137,6 +139,7 @@ try {
       const problems = [];
       const seen = new Map();
       let sideTrips = false;
+      let starts = 0;
       let month = 0;
       for (let step = 0; step < 600; step++) {
         const m = await measure();
@@ -150,9 +153,16 @@ try {
         const inMonth = ["month", "decision", "consequence", "callback", "close", "home"].includes(m.name);
         if (inMonth && !m.progress) problems.push(`${label}: no chapter progress`);
         if (!inMonth && m.progress && m.name !== "timeline" && m.name !== "how") problems.push(`${label}: shows the chapter progress`);
+        if (m.name === "month" && month === 0 && !seen.has("start")) problems.push("month 1: no chapter start before it");
         if (!seen.has(m.name)) seen.set(m.name, m);
         const act = (expr) => run(expr);
         if (m.name === "landing") await act(`document.querySelector(".action").click(); return 1`);
+        else if (m.name === "start") {
+          starts += 1;
+          if (starts > 1 || month > 0) problems.push("start: shown a second time, or after month 1");
+          await act(`document.querySelector(".start-foot .action").click(); return 1`);
+          await advance(300);
+        }
         else if (m.name === "month") await advance(2100);
         else if (m.name === "decision") {
           await act(`const o = [...document.querySelectorAll(".option")]; o[${path === "first" ? 0 : "o.length - 1"}].click(); return 1`);
@@ -189,6 +199,15 @@ try {
             if (ideas.sideways > 0) problems.push(`ideas: scrolls sideways by ${ideas.sideways}px`);
             if (w < 900 && ideas.progress) problems.push("ideas: shows the chapter's progress strip");
             seen.set("ideas", ideas);
+            await act(`document.querySelector(".ideas-chapter").click(); return 1`);
+            await advance(300);
+            const again = await measure();
+            if (again.name !== "start") problems.push("ideas: the chapter's name does not open the chapter start");
+            if (again.sideways > 0) problems.push(`start, again: scrolls sideways by ${again.sideways}px`);
+            if (again.keyOver > 0) problems.push(`start, again: its button ends ${again.keyOver}px below the window`);
+            await act(`document.querySelector(".start-foot button").click(); return 1`);
+            await advance(300);
+            if ((await measure()).name !== "ideas") problems.push("start, again: Close does not go back to the ideas");
             await act(`document.querySelector(".ideas .icon-button").click(); return 1`);
             await advance(300);
           }

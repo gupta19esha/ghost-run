@@ -31,15 +31,17 @@ import { reportScreen } from "./screens/report.js";
 import { chapterTurnScreen } from "./screens/chapter-turn.js";
 import { certificateScreen } from "./screens/certificate.js";
 import { ideasScreen } from "./screens/ideas.js";
+import { chapterStartScreen } from "./screens/chapter-start.js";
+import { chapterInfo } from "./chapters.js";
 import { ideasSoFar } from "./ideas.js";
 import { chapterProgress, createStrip } from "./progress.js";
-import { chapterCard } from "./certificate.js";
+import { chapterCard, lockedChapterCard } from "./certificate.js";
 import { barLabels } from "./labels.js";
 import { createRail, ways } from "./rail.js";
 import { lifeSoFar } from "./timeline.js";
 import {
   newSave, readSave, writeSave, dropSave, setAsideSave, replay, waitsForTomorrow, recordClose, currentStreak, chapterDays,
-  explainedAlready, recordExplained, jumpSave, introSeen, recordIntroSeen,
+  explainedAlready, recordExplained, jumpSave, introSeen, recordIntroSeen, chapterOpened, recordChapterOpened,
 } from "./save.js";
 import { installTestingTools } from "./testing.js";
 import { BALANCED_CHOICES } from "./balanced-path.js";
@@ -59,7 +61,7 @@ let homeContinuing = false;
 
 // Screenshots only (scripts/screenshot_ui.py): play= lists the choices to make, in order,
 // separated by commas, and stop= names the screen to hold once they are made: home, month,
-// decision, consequence, callback, close, timeline, how, ideas, turn, card or report. With stop=timeline, month= opens that
+// decision, consequence, callback, close, timeline, how, ideas, start, turn, card or report. With stop=timeline, month= opens that
 // month. Everything in between is tapped through. Nothing
 // in play uses it; with no query string it does nothing. It always starts a new run from the
 // landing screen, and plays past the day's limit unless stop=home.
@@ -138,9 +140,33 @@ function begin() {
   startMonth();
 }
 
+// A chapter's first month opens with the chapter start the first time (UI.md rule 11): for
+// chapter 1 that is straight after Begin. It is recorded as seen once it shows, so a reload or a
+// return from Home goes straight to the month. A screenshot script passes it unless it stops there
 function startMonth() {
+  const place = chapterPlace(state.month);
+  const first = place?.index === 1 && !chapterOpened(save, place.chapter);
+  if (first && !(script.active && !holding("start"))) {
+    recordChapterOpened(save, place.chapter);
+    writeSave(save);
+    showChapterStart(place.chapter, { onDone: startMonth });
+    return;
+  }
   monthStart = getBars(state);
   showMonthCard();
+}
+
+// The chapter start: on the way into the chapter, or again from the ideas, when its button
+// closes it. Once the chapter is finished its card is the player's own; before, it is locked
+function showChapterStart(chapter, { again = false, onDone }) {
+  const info = chapterInfo(chapter);
+  show(chapterStartScreen({
+    chapter: { number: formatCount(chapter), name: info.name, ages: info.ages, months: info.months },
+    ideas: ideasSoFar(save.closed, chapter),
+    card: chapterComplete(state, chapter) ? chapterCard(state, save, chapter) : lockedChapterCard(chapter),
+    again,
+    onDone,
+  }));
 }
 
 // Continuing a month the player left partway through: the month card again, so they re-enter
@@ -438,10 +464,13 @@ function openTimeline(back = () => goHome(homeLastMonth, homeContinuing), view =
 
 // The ideas: every concept card of the chapter, collected or still locked (UI.md rule 10).
 // Close goes back where it came from, as the timeline's does
+// The chapter's name over them opens the chapter start again, whose Close comes back here
 function openIdeas(back = () => goHome(homeLastMonth, homeContinuing), view = homeBoard) {
+  const chapter = chapterPlace(state.month)?.chapter ?? 1;
   show(ideasScreen({
-    chapter: { number: formatCount(1) },
-    ideas: ideasSoFar(save.closed),
+    chapter: { number: formatCount(chapter), name: chapterInfo(chapter).name },
+    ideas: ideasSoFar(save.closed, chapter),
+    onChapter: () => showChapterStart(chapter, { again: true, onDone: () => openIdeas(back, view) }),
     onClose: back,
   }), view, null);
 }

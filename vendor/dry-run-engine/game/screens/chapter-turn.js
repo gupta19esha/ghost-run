@@ -22,7 +22,7 @@ const YOU_ARE = (age) => `You are ${age}.`;
 
 // The mark, larger: one tick for each month of the chapter round a circle, lit marigold up to
 // lit, the rest slate. The same drawing as the landing's (design/dry-run-mark.svg)
-function mark(months, lit) {
+export function mark(months, lit) {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("class", "turn-mark");
   svg.setAttribute("viewBox", "0 0 118 118");

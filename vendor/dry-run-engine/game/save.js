@@ -3,7 +3,7 @@
 // The save is not the engine's state. It is what the player did: the seed, every choice in
 // the order it was made, how many months they have closed, the day they last closed one, the
 // streak of days in a row that ended on, which bars have had their line shown, the day the
-// run began, and the day each chapter closed. Resuming replays those choices through the
+// run began, the day each chapter closed, and which chapters' start screens have been seen. Resuming replays those choices through the
 // engine, so the run is the same run (UI.md build rule 4) and the save stays small.
 //
 // The daily gate (UI.md, ruled 31 October 2026): the first FIRST_SITTING_MONTHS months play in
@@ -44,7 +44,7 @@ function yesterday() {
 export function newSave({ seed }) {
   return {
     version: VERSION, seed, choices: [], closed: 0, closedOn: null, streak: 0, explained: [],
-    startedOn: today(), chapterClosedOn: {},
+    startedOn: today(), chapterClosedOn: {}, chaptersOpened: [],
   };
 }
 
@@ -52,7 +52,7 @@ export function newSave({ seed }) {
 // startedOn is unknown for a run begun before it was recorded, so null.
 export function upgrade(save) {
   return {
-    closed: 0, closedOn: null, streak: 0, explained: [], startedOn: null, chapterClosedOn: {},
+    closed: 0, closedOn: null, streak: 0, explained: [], startedOn: null, chapterClosedOn: {}, chaptersOpened: [],
     ...save,
   };
 }
@@ -66,6 +66,17 @@ export function explainedAlready(save, key) {
 
 export function recordExplained(save, key) {
   save.explained = [...new Set([...(save.explained ?? []), key])];
+}
+
+// The chapter start (UI.md rule 11) shows once per chapter, before its first month. An older
+// save has none recorded: it is past chapter 1's first month unless it has closed none, and
+// then seeing it once is right
+export function chapterOpened(save, chapter) {
+  return (save.chaptersOpened ?? []).includes(chapter);
+}
+
+export function recordChapterOpened(save, chapter) {
+  save.chaptersOpened = [...new Set([...(save.chaptersOpened ?? []), chapter])];
 }
 
 // Testing only (TEST_TOOLS, game/testing.js): a run played for the tester up to the start of

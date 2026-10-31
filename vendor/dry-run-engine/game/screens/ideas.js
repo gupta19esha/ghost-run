@@ -7,7 +7,8 @@
 // and the engine's. No coins, gems or points: the reward is the collection.
 //
 // No artboard drew it before the ruling; design/Ideas.html draws it now. The close button's
-// label is month close's "Close", as the timeline's is.
+// label is month close's "Close", as the timeline's is. Under "Chapter one", the chapter's name
+// is a link to the chapter start (UI.md rule 11).
 
 import { closeIcon } from "./timeline.js";
 
@@ -24,9 +25,9 @@ function lock() {
   return svg;
 }
 
-// chapter: { number in words } or null. ideas: game/ideas.js's ideasSoFar. onClose: back to
-// where it opened from
-export function ideasScreen({ chapter, ideas, onClose }) {
+// chapter: { number in words, name } or null. ideas: game/ideas.js's ideasSoFar. onChapter:
+// opens the chapter start. onClose: back to where it opened from
+export function ideasScreen({ chapter, ideas, onChapter = null, onClose }) {
   const screen = document.createElement("section");
   screen.className = "screen ideas";
   screen.dataset.screen = "ideas";
@@ -39,6 +40,14 @@ export function ideasScreen({ chapter, ideas, onClose }) {
     label.className = "month-label";
     label.textContent = `${CHAPTER} ${chapter.number}`;
     heading.append(label);
+    if (onChapter && chapter.name) {
+      const link = document.createElement("button");
+      link.type = "button";
+      link.className = "home-how ideas-chapter";
+      link.textContent = chapter.name;
+      link.addEventListener("click", onChapter, { once: true });
+      heading.append(link);
+    }
   }
   const title = document.createElement("h1");
   title.className = "ideas-title";

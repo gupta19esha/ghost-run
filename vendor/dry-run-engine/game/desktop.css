@@ -208,7 +208,8 @@
 
   .timeline,
   .how,
-  .ideas { width: min(100%, 680px); margin: 0 auto; padding-top: 24px; }
+  .ideas,
+  .chapter-start { width: min(100%, 680px); margin: 0 auto; padding-top: 24px; }
 
   /* The chapter's progress is the rail's here (game/rail.js), so the phone's strip goes */
   .chapter-progress-strip { display: none; }

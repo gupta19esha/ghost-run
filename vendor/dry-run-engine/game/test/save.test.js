@@ -123,3 +123,16 @@ test("the days a chapter took count both ends", () => {
   // A later chapter counts from the day the one before closed
   assert.equal(chapterDays({ ...save, chapterClosedOn: { 1: "2026-10-09", 2: "2026-10-20" } }, 2), 12);
 });
+
+test("a chapter's start shows once: an older save has none recorded, and recording keeps the rest", async () => {
+  const { chapterOpened, recordChapterOpened } = await import("../save.js");
+  const old = upgrade(JSON.parse(demo));
+  assert.deepEqual(old.chaptersOpened, []);
+  assert.equal(chapterOpened(old, 1), false);
+  const save = newSave({ seed: 1 });
+  recordChapterOpened(save, 1);
+  recordChapterOpened(save, 1);
+  assert.deepEqual(save.chaptersOpened, [1]);
+  assert.equal(chapterOpened(save, 1), true);
+  assert.equal(chapterOpened(save, 2), false);
+});

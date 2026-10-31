@@ -109,6 +109,7 @@ Six exist as designed artboards. Build them to match.
 |---|---|---|
 | Landing | Says what the game is and what it tracks, starts the run | Tap Begin |
 | Home | Four bars, net worth, month and age, streak, one button. Top right, "How it works", and under it the ideas collected, "3 of 20 ideas" (rule 10). Waiting for tomorrow, a second, smaller action under the button: "Play the next month now" (rule 9) | Tap play |
+| Chapter start | Before a chapter's first month, once: its number, name, ages and length, its ideas as locked titles under their count, and its chapter card, locked. Opens again from the ideas (rule 11) | Play the month; Close when opened again |
 | Ideas | Every concept card of the chapter in order: collected ones in full, locked ones as the lock and their month. Heading: the count (rule 10) | Close |
 | How it works | The landing's lede and bullets, and what each of the four measures, read-only. Testers only: "Start again" | Close, top or foot |
 | Month card | "Month 14. You are 23." Salary line, when there is salary | Auto, 2s |
@@ -270,6 +271,37 @@ scenario packs, Phase 2, and a content job rather than a settings screen.
     Why: a card that showed once at month close and was gone taught a thing and then lost it.
     Kept and counted, they are what the chapter was for, and the player can see how far
     through it they are without a score that means nothing outside the game.
+11. **A chapter starts by showing what it holds.** Ruled 31 October 2026 by the product owner.
+    Before a chapter's first month, one screen (`game/screens/chapter-start.js`,
+    `design/ChapterStart.html`):
+    - **The chapter:** its number, its name, and "22 to 24 · 24 months": the ages and length
+      are the product spec's table (HANDOFF.md section 4, `game/chapters.js`). The name is the
+      sheet's `chapter_title` where the sheet has the chapter, so it reads as Home, the turn and
+      the card read ("First salary"); the table's ("First Salary") only for a chapter the sheet
+      does not have yet. Above them, the turn's mark, small, every tick unlit, drawing round.
+    - **What it teaches:** the ideas' titles in month order under their count, "0 of 20 ideas",
+      each with the lock until its month closes. Unlike the ideas screen, a locked title shows:
+      this is the chapter's promise, and the bodies stay for the month that earns them.
+    - **What it gives:** the chapter card itself, drawn locked, under "Your chapter card": the
+      chapter, ages, mark and ideas it will carry, the places for net worth, the line, the bars'
+      figures and the run's line left empty rather than filled with made-up figures, and a lock
+      where the line will be. Shown, not described. Once the chapter is finished, the screen
+      opened again shows the player's own card.
+    - **One button:** Home's "Play the month". Nothing on it is timed and the button is pinned
+      in reach while the rest scrolls, so a player who wants to play skips it with one tap.
+    - **Once:** the save records the chapters whose start has shown (`chaptersOpened`), as it
+      shows, so a reload or a return from Home goes straight to the month. An older save has
+      none recorded; one that has closed a month is past chapter 1's first, so it never sees it.
+      The chapter's name under its number on the ideas screen opens it again, with "Close" as
+      its button, back to the ideas.
+    - **Where:** for chapter 1, after Begin and before month 1's month card. For any later
+      chapter, before its first month, which is where its transition ends: the turn that opens
+      it, then this. Main has no chapter 2 yet; the chapter-2 branch's opening turn goes to Home,
+      and should go here instead when it takes this change.
+
+    No words are new: the chapter's number, name, ages and length, the idea titles and the
+    count are existing data or the product owner's, and the labels and buttons are other
+    screens'.
 
 ---
 

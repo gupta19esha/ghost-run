@@ -13,7 +13,8 @@ import {
 } from "../engine/index.js";
 import { formatMoney, formatCount } from "../text/render.js";
 import { barLabels } from "./labels.js";
-import { ideasSoFar } from "./ideas.js";
+import { ideasSoFar, ideasCount } from "./ideas.js";
+import { chapterInfo } from "./chapters.js";
 
 export const CARD_BARS = [
   ["safety", "Safety"],
@@ -57,5 +58,22 @@ export function chapterCard(state, save, chapter = 1) {
     shape: [{ month: 0, net_worth: getBars(start).netWorth }, ...months.map(({ month, net_worth }) => ({ month, net_worth }))],
     ideas: { count: ideas.count, titles: ideas.cards.filter((card) => card.collected).map((card) => card.title) },
     line: `${choices} choices, ${months.length} months. Best month ${best.month}, ${moved(best.change)}. Hardest month ${worst.month}, ${moved(worst.change)}.`,
+  };
+}
+
+// The card a chapter will give, before it is played (UI.md rule 11): what the chapter start
+// shows, locked. Its chapter, ages and ideas are the ones the finished card will have; it has no
+// figures, because none exist yet, and the drawing leaves their places empty rather than invent
+// any. chapter: which chapter.
+export function lockedChapterCard(chapter = 1) {
+  const info = chapterInfo(chapter);
+  const ideas = ideasSoFar(0, chapter);
+  return {
+    locked: true,
+    chapter: { number: formatCount(chapter), title: info.name },
+    ages: info.ages,
+    months: info.months,
+    bars: CARD_BARS.map(([key, name]) => ({ key, name })),
+    ideas: { count: ideasCount(0, ideas.total), titles: ideas.cards.map((card) => card.title) },
   };
 }

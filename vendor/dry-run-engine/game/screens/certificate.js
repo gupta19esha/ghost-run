@@ -21,6 +21,8 @@ const HEADING = "Your chapter card";
 const SAVE = "Save the card";
 const NET_WORTH = "Net worth";
 const DISCLAIMER = "Educational simulation. Not investment advice.";
+// For a screen reader only: the locked card, which the eye sees by its lock
+const LOCKED = "locked";
 
 const DISPLAY = '"Baloo 2", "Mukta", system-ui, sans-serif';
 const BODY = '"Mukta", system-ui, sans-serif';
@@ -84,16 +86,17 @@ function lines(ctx, text, width, by = " ") {
   return out;
 }
 
-// The game's mark, every month of the chapter lit: ticks round a circle
-function drawMark(ctx, { x, y, r, months }, t) {
+// The game's mark: a tick round a circle for each month of the chapter, the first lit of them
+// marigold. Every one is lit on a finished chapter's card; none on a locked one
+function drawMark(ctx, { x, y, r, months, lit = months }, t) {
   ctx.fillStyle = t.deepRaised;
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = t.marigold;
   ctx.lineWidth = r * 0.085;
   ctx.lineCap = "round";
   for (let i = 0; i < months; i++) {
+    ctx.strokeStyle = i < lit ? t.marigold : t.mutedPaper;
     const angle = ((i * (360 / months) - 90) * Math.PI) / 180;
     const [c, s] = [Math.cos(angle), Math.sin(angle)];
     ctx.beginPath();
@@ -156,8 +159,9 @@ function drawShape(ctx, shape, { x, y, w, h }, t) {
   }
 }
 
-// The ideas, numbered, down one column and then the next, so they read in the order they came
-function drawIdeas(ctx, ideas, { x, y, w }, t) {
+// The ideas, numbered, down one column and then the next, so they read in the order they came.
+// Not yet collected, on a locked card, they are slate
+function drawIdeas(ctx, ideas, { x, y, w }, t, locked = false) {
   ctx.fillStyle = t.slate;
   ctx.font = `600 20px ${BODY}`;
   ctx.fillText(ideas.count, x, y);
@@ -174,7 +178,7 @@ function drawIdeas(ctx, ideas, { x, y, w }, t) {
     ctx.textAlign = "right";
     ctx.fillText(String(i + 1), left + number - 12, baseline);
     ctx.textAlign = "left";
-    ctx.fillStyle = t.text;
+    ctx.fillStyle = locked ? t.slate : t.text;
     fit(ctx, title, { weight: 400, size: 19, min: 15, family: BODY, width: column - number });
     ctx.fillText(title, left + number, baseline);
   });
@@ -195,7 +199,8 @@ export function drawCard(canvas, card, host) {
   const panel = 400;
   ctx.fillStyle = t.deep;
   ctx.fillRect(0, 0, panel, CARD_HEIGHT);
-  drawMark(ctx, { x: 116, y: 116, r: 60, months: card.shape.length - 1 }, t);
+  const months = card.locked ? card.months : card.shape.length - 1;
+  drawMark(ctx, { x: 116, y: 116, r: 60, months, lit: card.locked ? 0 : months }, t);
   ctx.fillStyle = t.mutedPaper;
   ctx.font = `600 20px ${BODY}`;
   ctx.letterSpacing = "2px";
@@ -215,9 +220,14 @@ export function drawCard(canvas, card, host) {
   ctx.font = `400 18px ${BODY}`;
   ctx.fillText(host, 56, CARD_HEIGHT - 49);
 
-  // Net worth and how it moved
   const left = 456;
   const width = CARD_WIDTH - left - 56;
+  if (card.locked) {
+    drawLocked(ctx, card, { left, width }, t);
+    return;
+  }
+
+  // Net worth and how it moved
   ctx.fillStyle = t.slate;
   ctx.font = `600 20px ${BODY}`;
   ctx.fillText(NET_WORTH, left, 80);
@@ -271,9 +281,93 @@ export function drawCard(canvas, card, host) {
   ctx.fillText(DISCLAIMER, left, CARD_HEIGHT - 36);
 }
 
+// A chapter's card before it is played (UI.md rule 11): the same card, its figures' places left
+// empty, since there are none yet, its ideas in slate, and a lock over it
+function drawLocked(ctx, card, { left, width }, t) {
+  const empty = (x, y, w, h) => {
+    ctx.fillStyle = t.rule;
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, Math.min(h / 2, 12));
+    ctx.fill();
+  };
+  ctx.fillStyle = t.slate;
+  ctx.font = `600 20px ${BODY}`;
+  ctx.fillText(NET_WORTH, left, 80);
+  empty(left, 100, 320, 60);
+  empty(left, 178, 240, 18);
+  // The shape's ground and a tick for each month, nothing drawn on them
+  ctx.fillRect(left, 372, width, 2);
+  for (let i = 1; i <= card.months; i++) {
+    const x = left + (i / card.months) * width;
+    ctx.fillRect(x - 1.5, 388, 3, 10);
+  }
+  const gap = 28;
+  const column = (width - gap * 2) / 3;
+  card.bars.forEach((bar, i) => {
+    const x = left + i * (column + gap);
+    ctx.fillStyle = t.text;
+    ctx.font = `600 22px ${BODY}`;
+    ctx.fillText(bar.name, x, 448);
+    ctx.fillStyle = t.raised;
+    ctx.beginPath();
+    ctx.roundRect(x, 486, column, 14, 7);
+    ctx.fill();
+  });
+  empty(left, 530, width * 0.78, 18);
+  empty(left, 558, width * 0.52, 18);
+  ctx.fillStyle = t.rule;
+  ctx.fillRect(left, 610, width, 2);
+  drawIdeas(ctx, card.ideas, { x: left, y: 650, w: width }, t, true);
+  ctx.fillStyle = t.slate;
+  ctx.font = `400 15px ${BODY}`;
+  ctx.fillText(DISCLAIMER, left, CARD_HEIGHT - 36);
+
+  // The lock, where the chapter's line will be drawn
+  const [x, y] = [left + width / 2, 290];
+  ctx.fillStyle = t.raised;
+  ctx.beginPath();
+  ctx.arc(x, y, 64, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.strokeStyle = t.rule;
+  ctx.lineWidth = 3;
+  ctx.stroke();
+  ctx.fillStyle = t.slate;
+  ctx.beginPath();
+  ctx.roundRect(x - 26, y - 6, 52, 40, 8);
+  ctx.fill();
+  ctx.strokeStyle = t.slate;
+  ctx.lineWidth = 8;
+  ctx.lineCap = "round";
+  ctx.beginPath();
+  ctx.moveTo(x - 15, y - 6);
+  ctx.lineTo(x - 15, y - 16);
+  ctx.arc(x, y - 16, 15, Math.PI, 0);
+  ctx.lineTo(x + 15, y - 6);
+  ctx.stroke();
+}
+
 // The words a screen reader has for the card
 function describe(card) {
+  if (card.locked) return `${HEADING}, ${LOCKED}. Chapter ${card.chapter.number}, ${card.chapter.title}, ${card.ages.from} to ${card.ages.to}. ${card.ideas.count}: ${card.ideas.titles.join(", ")}.`;
   return `Chapter ${card.chapter.number}, ${card.chapter.title}, ${card.ages.from} to ${card.ages.to}. ${NET_WORTH} ${card.netWorth.text}. ${card.line} ${card.ideas.count}: ${card.ideas.titles.join(", ")}.`;
+}
+
+// The card on its own canvas, drawn once the type has loaded: for a screen that shows it inside
+// other things, such as the chapter start. Returns the canvas and a start() to call once it is
+// on the page
+export function cardCanvas(card) {
+  const canvas = document.createElement("canvas");
+  canvas.className = "certificate-card";
+  canvas.width = CARD_WIDTH;
+  canvas.height = CARD_HEIGHT;
+  canvas.setAttribute("role", "img");
+  canvas.setAttribute("aria-label", describe(card));
+  const start = () => {
+    const draw = () => drawCard(canvas, card, location.host);
+    draw();
+    Promise.all(FONTS.map((font) => document.fonts.load(font, "₹0 Aa"))).then(draw, draw);
+  };
+  return { canvas, start };
 }
 
 // card: chapterCard's figures. onBack: the button under it, with its words in back.
