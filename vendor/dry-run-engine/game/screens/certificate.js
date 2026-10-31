@@ -1,6 +1,9 @@
 // The chapter card: the chapter closed, drawn for the player to keep and post. Net worth and how
-// it moved, the three bars, the shape of the chapter as a line of net worth month by month, and
-// a line of the run's own figures. 1200 by 627, the size LinkedIn shows a landscape image at.
+// it moved, the three bars, the shape of the chapter as a line of net worth month by month, a
+// line of the run's own figures, and the ideas the chapter collected, numbered, in the order they
+// came: what finishing the chapter taught, by name (UI.md rule 10, ruled 31 October 2026).
+// 1200 by 1000: it was 1200 by 627, LinkedIn's landscape link image, until the twenty ideas
+// needed the room. A post shows an image of this shape whole.
 //
 // Drawn in the browser from the save, on a canvas, with no server: the figures come from
 // game/certificate.js, which takes every one from the engine and words every piece of money
@@ -12,7 +15,7 @@
 import { PRODUCT_NAME } from "../config.js";
 
 export const CARD_WIDTH = 1200;
-export const CARD_HEIGHT = 627;
+export const CARD_HEIGHT = 1000;
 
 const HEADING = "Your chapter card";
 const SAVE = "Save the card";
@@ -153,6 +156,30 @@ function drawShape(ctx, shape, { x, y, w, h }, t) {
   }
 }
 
+// The ideas, numbered, down one column and then the next, so they read in the order they came
+function drawIdeas(ctx, ideas, { x, y, w }, t) {
+  ctx.fillStyle = t.slate;
+  ctx.font = `600 20px ${BODY}`;
+  ctx.fillText(ideas.count, x, y);
+  const columns = 2;
+  const gap = 28;
+  const column = (w - gap * (columns - 1)) / columns;
+  const rows = Math.ceil(ideas.titles.length / columns);
+  const number = 34;
+  ideas.titles.forEach((title, i) => {
+    const left = x + Math.floor(i / rows) * (column + gap);
+    const baseline = y + 40 + (i % rows) * 26;
+    ctx.fillStyle = t.slate;
+    ctx.font = `600 17px ${BODY}`;
+    ctx.textAlign = "right";
+    ctx.fillText(String(i + 1), left + number - 12, baseline);
+    ctx.textAlign = "left";
+    ctx.fillStyle = t.text;
+    fit(ctx, title, { weight: 400, size: 19, min: 15, family: BODY, width: column - number });
+    ctx.fillText(title, left + number, baseline);
+  });
+}
+
 // card: chapterCard's figures. host: where the game is, for the foot. Draws onto canvas
 export function drawCard(canvas, card, host) {
   const t = tokens();
@@ -183,10 +210,10 @@ export function drawCard(canvas, card, host) {
   ctx.fillText(`${card.ages.from} to ${card.ages.to}`, 56, 324 + (title.length - 1) * 66 + 52);
   ctx.fillStyle = t.paper;
   ctx.font = `800 30px ${DISPLAY}`;
-  ctx.fillText(PRODUCT_NAME, 56, 548);
+  ctx.fillText(PRODUCT_NAME, 56, CARD_HEIGHT - 79);
   ctx.fillStyle = t.mutedPaper;
   ctx.font = `400 18px ${BODY}`;
-  ctx.fillText(host, 56, 578);
+  ctx.fillText(host, 56, CARD_HEIGHT - 49);
 
   // Net worth and how it moved
   const left = 456;
@@ -230,20 +257,23 @@ export function drawCard(canvas, card, host) {
     ctx.fill();
   });
 
-  // The run's own figures, then the disclaimer
+  // The run's own figures, the ideas under a hairline, then the disclaimer
   ctx.fillStyle = t.text;
   ctx.font = `400 21px ${BODY}`;
   const sentences = lines(ctx, card.line, width, "sentence");
   const run = sentences.every((l) => ctx.measureText(l).width <= width) ? sentences : lines(ctx, card.line, width);
   run.slice(0, 2).forEach((line, i) => ctx.fillText(line, left, 548 + i * 28));
+  ctx.fillStyle = t.rule;
+  ctx.fillRect(left, 610, width, 2);
+  drawIdeas(ctx, card.ideas, { x: left, y: 650, w: width }, t);
   ctx.fillStyle = t.slate;
   ctx.font = `400 15px ${BODY}`;
-  ctx.fillText(DISCLAIMER, left, 606);
+  ctx.fillText(DISCLAIMER, left, CARD_HEIGHT - 36);
 }
 
 // The words a screen reader has for the card
 function describe(card) {
-  return `Chapter ${card.chapter.number}, ${card.chapter.title}, ${card.ages.from} to ${card.ages.to}. ${NET_WORTH} ${card.netWorth.text}. ${card.line}`;
+  return `Chapter ${card.chapter.number}, ${card.chapter.title}, ${card.ages.from} to ${card.ages.to}. ${NET_WORTH} ${card.netWorth.text}. ${card.line} ${card.ideas.count}: ${card.ideas.titles.join(", ")}.`;
 }
 
 // card: chapterCard's figures. onBack: the button under it, with its words in back.

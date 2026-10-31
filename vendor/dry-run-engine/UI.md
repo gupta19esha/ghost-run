@@ -108,13 +108,14 @@ Six exist as designed artboards. Build them to match.
 | Screen | Purpose | Leaves |
 |---|---|---|
 | Landing | Says what the game is and what it tracks, starts the run | Tap Begin |
-| Home | Four bars, net worth, month and age, streak, one button. Top right, "How it works". Waiting for tomorrow, a second, smaller action under the button: "Play the next month now" (rule 9) | Tap play |
+| Home | Four bars, net worth, month and age, streak, one button. Top right, "How it works", and under it the ideas collected, "3 of 20 ideas" (rule 10). Waiting for tomorrow, a second, smaller action under the button: "Play the next month now" (rule 9) | Tap play |
+| Ideas | Every concept card of the chapter in order: collected ones in full, locked ones as the lock and their month. Heading: the count (rule 10) | Close |
 | How it works | The landing's lede and bullets, and what each of the four measures, read-only. Testers only: "Start again" | Close, top or foot |
 | Month card | "Month 14. You are 23." Salary line, when there is salary | Auto, 2s |
 | Decision | Illustration, situation, 2 to 4 option cards | Tap an option |
 | Consequence | Chosen card stays, result line, the affected bar visibly moves. The first time a bar moves, one line says what it measures | Auto, 2.5s, tappable. 5s when it carries a bar's line |
 | Callback | Deferred text on a bare ground | Auto, 3.5s, tappable |
-| Month close | Net worth counts, three bars, concept card, the hook. Month 1 only: a line under net worth and each bar says what it measures | Tap to close |
+| Month close | Net worth counts, three bars, concept card with the count at its head's right, the hook. Month 1 only: a line under net worth and each bar says what it measures | Tap to close |
 
 ### The landing screen
 
@@ -239,6 +240,36 @@ scenario packs, Phase 2, and a content job rather than a settings screen.
    The save format did not change version: the new fields sit beside the old ones and an
    older save is read with them filled in, so no existing run is lost (`game/save.js`). A save
    that no longer reads or replays is set aside under its own key, not deleted.
+10. **Where you are in the chapter, and what it has taught.** Ruled 31 October 2026 by the
+    product owner. No coins, gems, points or any currency but the rupee's, anywhere: the
+    reward is the collection.
+    - **The chapter's progress:** "Month N of 24" and a bar, counted in the chapter, not the
+      whole game, so the next chapter starts its own (`chapterPlace` in `engine/chapter.js`,
+      `game/progress.js`). Its widths are shares of the chapter. The months closed fill it in
+      bone-dim and the month being played is the next slot in the timer's colour: neutral,
+      because marigold is money and teal and vermilion are how a bar moved. On a phone it is a
+      strip across the top of the month card, the decision, the result, a callback, the month
+      close and Home, and of no other screen. The top of each closes up by about its height, so
+      every screen that fitted a phone still fits it; the month 1 close at 320 by 568, already
+      the one that scrolls (rule 8), scrolls 8px further. On a desktop window the rail holds
+      it, under where the player is.
+    - **The ideas:** the twenty concept cards (`CONCEPTS.md`) as a collection, in the order
+      they were set (`chapterConcepts` in `engine/chapter.js`, `game/ideas.js`). A card is
+      collected once its month has closed, whatever was chosen, which is when month close
+      already showed it, so the save needed nothing new. A collected card shows its month, its
+      title and its body; a locked one shows the lock and the month it waits for, and nothing
+      of what it says. It opens from Home and from the chapter report (`design/Ideas.html`).
+    - **The count:** "12 of 20 ideas", the product owner's words. It heads the ideas, sits under
+      "How it works" on Home, at the right of the concept card's head at month close (a count
+      there, not a link: the close is on its way to Home), and under the concepts on the report,
+      where it opens them.
+    - **The chapter card** names the ideas, numbered, in the order they came, under the run's
+      line: finishing the chapter reads as having learned twenty named things. The card grew
+      from 1200 by 627 to 1200 by 1000 to hold them.
+
+    Why: a card that showed once at month close and was gone taught a thing and then lost it.
+    Kept and counted, they are what the chapter was for, and the player can see how far
+    through it they are without a score that means nothing outside the game.
 
 ---
 
@@ -323,7 +354,8 @@ Stop after each. Screenshot at all three widths.
 - **The product name.** Closed: Dry Run, in `PRODUCT_NAME` in `game/config.js`. Decided, not
   trademark-checked (HANDOFF.md section 7).
 - **Concept card text.** Built: `concept_title` and `concept_body` on the sheet (v24), the
-  product owner's copy, 20 cards. Months 7, 13, 19 and 23 carry none, deliberately.
+  product owner's copy, 20 cards. Months 7, 13, 19 and 23 carry none, deliberately. Since 31
+  October 2026 they are kept as a collection, the ideas (rule 10).
 - **The hook line.** Built: `hook_line` on the sheet (v23), the product owner's copy, under the artboard's "Next month" label. Month
   24's close has none; the chapter report goes there. It goes on the locked Home as well as
   at month close: "Next month, your mother's friend has a policy

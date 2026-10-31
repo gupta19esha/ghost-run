@@ -7,4 +7,4 @@ export { getBars, explainBars, compareBars, safetyInDanger, barMarks } from "./b
 export { applyDecision } from "./apply.js";
 export { tokenValues, TOKENS } from "./tokens.js";
 export { decisionsForMonth, optionsFor, optionOffered, getDecision, conceptForMonth, monthSummary } from "./content.js";
-export { chapterMonths, chapterComplete } from "./chapter.js";
+export { chapterMonths, chapterComplete, chapterPlace, chapterConcepts } from "./chapter.js";

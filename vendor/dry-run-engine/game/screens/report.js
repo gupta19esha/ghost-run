@@ -11,6 +11,9 @@
 //
 // Under the bars, a link back to the chapter card (game/screens/certificate.js). Its words are
 // Ghost Run's, not REPORT-COPY.md's.
+//
+// Under the concepts it learned, the count, "20 of 20 ideas", opening the collection (UI.md
+// rule 10, ruled 31 October 2026). The words are the product owner's.
 
 import { direction, arrow } from "./moves.js";
 
@@ -51,9 +54,11 @@ function playedLine({ months, days }) {
 // the chapter. safetyDanger: safetyInDanger now. best, worst: chapterMonths rows. concepts:
 // the titles unlocked, in month order, with their count and the rest in words.
 // played: { months, days } in words, days null when the save does not know them.
+// ideas: the count collected, in words. onIdeas: opens them.
 // money: text/'s formatMoney. onTimeline: the button at the end. onCard: opens the chapter card.
 export function reportScreen({
-  chapter, years, age, bars, labels, compared, safetyDanger, best, worst, concepts, played, money, onTimeline, onCard,
+  chapter, years, age, bars, labels, compared, safetyDanger, best, worst, concepts, played, ideas, onIdeas, money, onTimeline,
+  onCard,
 }) {
   const screen = document.createElement("section");
   screen.className = "screen report";
@@ -162,7 +167,12 @@ export function reportScreen({
   const named = document.createElement("p");
   named.className = "concept-body";
   named.textContent = concepts.rest ? `${concepts.titles.join(", ")}, and ${concepts.rest} more.` : `${concepts.titles.join(", ")}.`;
-  learned.append(learnedHead, named);
+  const all = document.createElement("button");
+  all.type = "button";
+  all.className = "report-card-link report-ideas";
+  all.textContent = ideas;
+  all.addEventListener("click", onIdeas, { once: true });
+  learned.append(learnedHead, named, all);
 
   const next = document.createElement("div");
   next.className = "report-section report-next";

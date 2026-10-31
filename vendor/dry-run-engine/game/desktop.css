@@ -18,6 +18,8 @@
      columns; the rest sit in a column of their own width in the middle of the stage. */
 
 .rail { display: none; }
+/* The rail's progress shows only with the rail */
+.rail-progress { margin-top: 10px; }
 
 @media (min-width: 900px) {
   :root {
@@ -205,7 +207,12 @@
   .home.continuing .home-foot { position: static; }
 
   .timeline,
-  .how { width: min(100%, 680px); margin: 0 auto; padding-top: 24px; }
+  .how,
+  .ideas { width: min(100%, 680px); margin: 0 auto; padding-top: 24px; }
+
+  /* The chapter's progress is the rail's here (game/rail.js), so the phone's strip goes */
+  .chapter-progress-strip { display: none; }
+  body.progressed { --strip: 0px; }
 
   /* ---------- The landing: its pictures on the left, its words on the right ---------- */
 
@@ -274,7 +281,8 @@
   .certificate { width: min(100%, 960px); margin: 0 auto; justify-content: center; padding: var(--stage-pad); }
   .certificate > .grow { display: none; }
   /* The card as large as the window lets it be, with its buttons still on screen */
-  .certificate-card { max-width: calc((100dvh - 2 * var(--stage-pad) - 120px) * 1200 / 627); margin-left: auto; margin-right: auto; }
+  /* 170px: the label over the card, its margin, and the buttons under it */
+  .certificate-card { max-width: calc((100dvh - 2 * var(--stage-pad) - 170px) * 1200 / 1000); margin-left: auto; margin-right: auto; }
   .certificate-head { padding-top: 0; }
   .certificate-foot { flex-direction: row; padding-bottom: 0; }
   .certificate-foot > * { flex: 1 1 0; }

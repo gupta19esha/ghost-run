@@ -10,7 +10,7 @@
 
 import {
   createState, applyDecision, advanceMonth, decisionsForMonth, getDecision, conceptForMonth, chapterMonths, chapterComplete,
-  monthSummary, getBars, compareBars, barMarks,
+  chapterPlace, monthSummary, getBars, compareBars, barMarks,
   safetyInDanger, salaryThisMonth, tokenValues,
 } from "../engine/index.js";
 import { renderText, formatMoney, formatCount } from "../text/render.js";
@@ -30,6 +30,9 @@ import { howItWorksScreen } from "./screens/how-it-works.js";
 import { reportScreen } from "./screens/report.js";
 import { chapterTurnScreen } from "./screens/chapter-turn.js";
 import { certificateScreen } from "./screens/certificate.js";
+import { ideasScreen } from "./screens/ideas.js";
+import { ideasSoFar } from "./ideas.js";
+import { chapterProgress, createStrip } from "./progress.js";
 import { chapterCard } from "./certificate.js";
 import { barLabels } from "./labels.js";
 import { createRail, ways } from "./rail.js";
@@ -56,7 +59,7 @@ let homeContinuing = false;
 
 // Screenshots only (scripts/screenshot_ui.py): play= lists the choices to make, in order,
 // separated by commas, and stop= names the screen to hold once they are made: home, month,
-// decision, consequence, callback, close, timeline, how, turn, card or report. With stop=timeline, month= opens that
+// decision, consequence, callback, close, timeline, how, ideas, turn, card or report. With stop=timeline, month= opens that
 // month. Everything in between is tapped through. Nothing
 // in play uses it; with no query string it does nothing. It always starts a new run from the
 // landing screen, and plays past the day's limit unless stop=home.
@@ -69,9 +72,11 @@ const script = {
 const holding = (screen) => script.stop === screen && script.play.length === 0;
 
 // view: what the rail holds beside the screen on a desktop window (game/rail.js), or null for a
-// screen that stands alone
-export function show(screen, view = null) {
+// screen that stands alone. progress: the chapter's progress strip above it on a phone, by
+// default the view's, which every screen of a month and Home has (UI.md rule 10); null for none
+export function show(screen, view = null, progress = view?.progress ?? null) {
   rail.show(view);
+  strip.set(progress);
   app.replaceChildren(screen);
   testing?.shown(screen);
   screen.start?.();
@@ -81,6 +86,10 @@ export function show(screen, view = null) {
 // the timeline and How it works (game/rail.js)
 const rail = createRail();
 document.body.append(rail.element);
+// The chapter's progress on a phone: a strip above the screens (game/progress.js). On a desktop
+// window the rail holds it instead
+const strip = createStrip();
+document.body.insertBefore(strip.element, app);
 // The chapter the rail names: the sheet's, on the month's decisions, kept through a month that
 // has none left, such as the close of the chapter's last
 let railChapter = null;
@@ -96,6 +105,9 @@ function board({ from = monthStart, to = getBars(state), moving = false, compare
   if (next?.chapter_title) railChapter = { number: formatCount(next.chapter), title: next.chapter_title };
   const way = ways(compared ?? compareBars(from, to));
   const start = moving ? from : to;
+  // The month on screen, in its chapter: the months before state.month are closed, so at a
+  // month's close, where state has moved on, its own month counts as closed too
+  const month = rest.month ?? state.month;
   return {
     chapter: railChapter,
     month: state.month,
@@ -107,6 +119,7 @@ function board({ from = monthStart, to = getBars(state), moving = false, compare
     labels: barLabels(state),
     marks: barMarks(),
     danger: safetyInDanger(state),
+    progress: chapterProgress(month, chapterPlace(month), state.month - 1),
     ...rest,
   };
 }
@@ -219,10 +232,12 @@ function runMonth() {
     })
     .filter((text) => text !== null);
   const monthEnd = events.find((e) => e.type === "bars");
-  showCallbacks(texts, () => closeMonth(closed, monthEnd));
+  showCallbacks(texts, closed, () => closeMonth(closed, monthEnd));
 }
 
-function showCallbacks(texts, then) {
+// closed: the month the callbacks land in. The engine has moved on to the next, so the rail and
+// the progress say this one, as its close will
+function showCallbacks(texts, closed, then) {
   if (texts.length === 0) {
     then();
     return;
@@ -232,8 +247,8 @@ function showCallbacks(texts, then) {
     text,
     holdMs: CALLBACK_MS,
     hold: holding("callback"),
-    onDone: () => showCallbacks(rest, then),
-  }), board());
+    onDone: () => showCallbacks(rest, closed, then),
+  }), board({ month: closed }));
 }
 
 function closeMonth(closed, monthEnd) {
@@ -243,6 +258,8 @@ function closeMonth(closed, monthEnd) {
     safetyDanger: safetyInDanger(state),
     hook: nextHook(),
     concept: conceptForMonth(closed),
+    // The count with this month's card in it, which is collected as it shows (UI.md rule 10)
+    ideas: ideasSoFar(closed).count,
     // The month 1 close says what all four measure (ruled 30 September 2026)
     explanations: closed === 1 ? BAR_LINES : null,
     money: formatMoney,
@@ -327,6 +344,8 @@ function showReport() {
     safetyDanger: safetyInDanger(state),
     best,
     worst,
+    ideas: ideasSoFar(save.closed).count,
+    onIdeas: () => openIdeas(showReport, null),
     concepts: {
       total: titles.length,
       count: formatCount(titles.length),
@@ -380,6 +399,8 @@ function goHome(lastMonth, continuing = false) {
     money: formatMoney,
     streak: currentStreak(save),
     hook: nextHook(),
+    ideas: ideasSoFar(save.closed).count,
+    onIdeas: () => openIdeas(),
     continuing,
     thisMonth,
     onPlay: continuing ? continueMonth : startMonth,
@@ -394,6 +415,7 @@ function goHome(lastMonth, continuing = false) {
   show(screen, homeBoard);
   if (holding("timeline")) openTimeline();
   else if (holding("how")) openHowItWorks();
+  else if (holding("ideas")) openIdeas();
   else if (script.active && !holding("home") && !locked) screen.querySelector(".action").click();
 }
 
@@ -411,7 +433,17 @@ function openTimeline(back = () => goHome(homeLastMonth, homeContinuing), view =
     money: formatMoney,
     open,
     onClose: back,
-  }), view);
+  }), view, null);
+}
+
+// The ideas: every concept card of the chapter, collected or still locked (UI.md rule 10).
+// Close goes back where it came from, as the timeline's does
+function openIdeas(back = () => goHome(homeLastMonth, homeContinuing), view = homeBoard) {
+  show(ideasScreen({
+    chapter: { number: formatCount(1) },
+    ideas: ideasSoFar(save.closed),
+    onClose: back,
+  }), view, null);
 }
 
 // How it works, from Home: the board again, read-only. Close goes back to Home as it was.
@@ -421,7 +453,7 @@ function openHowItWorks() {
     testTools: TEST_TOOLS,
     onRestart: restart,
     onClose: () => goHome(homeLastMonth, homeContinuing),
-  }), homeBoard);
+  }), homeBoard, null);
 }
 
 // Testing only (TEST_TOOLS): the save goes, and the run with it. The landing screen starts a new one

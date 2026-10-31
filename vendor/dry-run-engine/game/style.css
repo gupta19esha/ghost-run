@@ -15,10 +15,12 @@ html, body {
   -webkit-tap-highlight-color: transparent;
 }
 
-#app { min-height: 100dvh; }
+/* --strip: the chapter's progress strip above the screens, while it shows (body.progressed);
+   every screen takes the rest of the window */
+#app { min-height: calc(100dvh - var(--strip, 0px)); }
 
 .screen {
-  min-height: 100dvh;
+  min-height: calc(100dvh - var(--strip, 0px));
   display: flex;
   flex-direction: column;
   max-width: 480px;
@@ -434,8 +436,12 @@ html, body {
 
 .home-heading { display: flex; flex-direction: column; gap: 2px; }
 
-/* Top right: How it works, then the streak. In the top row, so Home is no taller */
-.home-corner { display: flex; align-items: center; gap: 12px; flex-shrink: 0; }
+/* Top right: How it works, then the streak, and under them the ideas collected. Beside the
+   chapter's two lines, so Home is no taller */
+.home-corner { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
+.home-corner-row { display: flex; align-items: center; gap: 12px; }
+.home-corner .home-ideas { padding: 0; line-height: 18px; font-variant-numeric: tabular-nums; }
+.home-corner .streak { padding-top: 5px; padding-bottom: 5px; }
 .home-how {
   padding: 8px 0;
   background: none;
@@ -975,6 +981,49 @@ html, body {
   line-height: 1.5;
   color: var(--bone-dim);
 }
+/* The ideas collected with this one, at the head's right (UI.md rule 10). Each piece of the
+   head keeps to one line; on a phone too narrow for both, the count goes under the label */
+.concept-head { flex-wrap: wrap; }
+.concept-head > span { white-space: nowrap; }
+.concept-count { margin-left: auto; letter-spacing: normal; font-variant-numeric: tabular-nums; }
+@media (max-width: 380px) {
+  .concept-head { gap: 6px; letter-spacing: 0.03em; }
+}
+
+/* ---------- The ideas ---------- */
+
+/* Every concept card of the chapter, in order (UI.md rule 10). A collected one is month close's
+   card; a locked one is its outline, with the lock and the month it waits for. It scrolls */
+.ideas { padding: 0 var(--gutter) 40px; }
+.ideas-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 28px 0 0;
+}
+.ideas-title {
+  margin: 4px 0 0;
+  font-family: var(--display);
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--bone);
+  font-variant-numeric: tabular-nums;
+}
+.ideas-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.ideas-list .idea { margin-top: 0; }
+.idea.locked {
+  padding: 16px 20px;
+  border: 1px dashed var(--rule);
+  border-radius: 12px;
+}
 
 /* ---------- Chapter report ---------- */
 
@@ -1026,6 +1075,7 @@ html, body {
 }
 .report-concepts { margin-top: 32px; padding: 20px; border-color: var(--deep); }
 .report-concepts .concept-body { margin-top: 10px; }
+.report-concepts .report-ideas { display: block; margin-top: 14px; font-variant-numeric: tabular-nums; }
 .report-next { margin-top: 36px; }
 .report-next-line {
   margin: 8px 0 0;
@@ -1139,7 +1189,7 @@ html, body {
   display: block;
   width: 100%;
   height: auto;
-  aspect-ratio: 1200 / 627;
+  aspect-ratio: 1200 / 1000;
   margin-top: 16px;
   border-radius: 12px;
   box-shadow: 0 1px 0 var(--rule), 0 10px 30px -12px rgba(33, 28, 22, 0.35);
@@ -1314,7 +1364,7 @@ html, body {
    The illustration gives way to 20dvh before the words do. Below that the decision takes the
    compact layout (decision.js), whose illustration gives way down to a 64px strip. */
 @media (max-width: 899px) {
-  .decision { height: 100dvh; }
+  .decision { height: calc(100dvh - var(--strip, 0px)); }
   .decision > .grow { display: none; }
   .decision > .illo,
   .decision.compact > .illo { flex: 1 1 auto; max-height: none; min-height: 20dvh; }
@@ -1330,7 +1380,7 @@ html, body {
    and 127px under one with a bar. The illustration gives way to 20dvh, and a result that still
    runs over scrolls, its timer below. */
 @media (max-width: 899px) {
-  .consequence { height: 100dvh; }
+  .consequence { height: calc(100dvh - var(--strip, 0px)); }
   .consequence > .grow { display: none; }
   .consequence > .illo { flex: 1 1 auto; max-height: none; min-height: 20dvh; }
 }
@@ -1338,3 +1388,71 @@ html, body {
 /* The iPhone's home indicator: with the toolbar tucked away the page runs under it, so every
    screen keeps its last button or line above it. 0 everywhere else */
 .screen { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* ---------- The chapter's progress ---------- */
+
+/* Month N of the chapter's length and a bar, chapter by chapter (UI.md rule 10, ruled 31 October
+   2026; game/progress.js). The months closed fill it in bone-dim, the month being played is the
+   next slot in the timer's colour. Neutral throughout: marigold is money, and teal and vermilion
+   are how a bar moved */
+.chapter-progress { display: flex; align-items: center; gap: 12px; }
+.chapter-progress[hidden] { display: none; }
+.chapter-progress-label {
+  flex-shrink: 0;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--slate);
+  font-variant-numeric: tabular-nums;
+}
+.chapter-progress-track {
+  position: relative;
+  flex-grow: 1;
+  height: 4px;
+  background: var(--ink-raised);
+  border-radius: 999px;
+  overflow: hidden;
+}
+.chapter-progress-done,
+.chapter-progress-now { position: absolute; top: 0; bottom: 0; left: 0; }
+.chapter-progress-done { background: var(--bone-dim); }
+.chapter-progress-now { background: var(--progress); }
+.chapter-progress-now[hidden] { display: none; }
+
+/* On a phone, a strip across the top, above every screen of a month and Home. It takes its
+   height from the screens under it (--strip), and the top of each closes up by about as much,
+   so the screen is barely taller than it was */
+body.progressed { --strip: 26px; }
+.chapter-progress-strip {
+  height: 26px;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 8px var(--gutter) 0;
+}
+.chapter-progress-strip .chapter-progress-label { line-height: 16px; }
+.progressed .home-top { padding-top: 12px; }
+.progressed .close-head { padding-top: 34px; }
+@media (max-height: 800px) {
+  .progressed .home-top { padding-top: 10px; }
+  .progressed .home-worth { padding-top: 24px; }
+  .progressed .home-bars { padding-top: 24px; gap: 14px; }
+  .progressed .close-head { padding-top: 12px; }
+  .progressed .explaining .close-bars { margin-top: 16px; }
+}
+@media (max-height: 700px) {
+  body.progressed { --strip: 20px; }
+  .chapter-progress-strip { height: 20px; padding-top: 4px; }
+  .progressed .home-top { padding-top: 6px; }
+  .progressed .home-worth { padding-top: 18px; }
+  .progressed .close-head { padding-top: 4px; }
+  .progressed .close-bars { margin-top: 16px; }
+  .progressed .explaining .close-head { padding-top: 2px; }
+  .progressed .explaining .close-bars { margin-top: 8px; }
+  /* The locked Home has closed up already (above); with the strip it closes up to it */
+  .progressed .home.locked .home-top { padding-top: 4px; }
+}
+@media (max-height: 600px) {
+  .progressed .home.locked .home-top { padding-top: 2px; }
+  .progressed .home.locked .home-bars { gap: 6px; }
+  .progressed .home.locked .home-foot { gap: 6px; }
+}

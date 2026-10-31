@@ -15,6 +15,7 @@
 // land at once.
 
 import { direction, arrow } from "./screens/moves.js";
+import { createProgress } from "./progress.js";
 
 const NET_WORTH = "Net worth";
 const CHAPTER = "Chapter";
@@ -42,7 +43,9 @@ export function createRail() {
   const chapterLabel = node("div", "month-label");
   const chapterTitle = node("div", "rail-chapter");
   const where = node("div", "rail-where");
-  head.append(chapterLabel, chapterTitle, where);
+  // The chapter's progress, under where the player is (UI.md rule 10)
+  const progress = createProgress("rail-progress");
+  head.append(chapterLabel, chapterTitle, where, progress.element);
 
   const worth = node("div", "rail-worth");
   const worthFigure = node("div", "rail-net-worth money");
@@ -87,6 +90,7 @@ export function createRail() {
   //   explanations: a line under each bar, keyed as bars are, or null. moved: the key of the bar
   //   a choice moved, which shows its direction as the result screen does, or null.
   //   quiet: a decision is on screen, so the bars stand down (UI.md rule 1).
+  //   progress: the chapter's progress (game/progress.js), or null.
   function show(view) {
     cancelAnimationFrame(counting);
     clearTimeout(landing);
@@ -98,6 +102,7 @@ export function createRail() {
     chapterLabel.textContent = view.chapter ? `${CHAPTER} ${view.chapter.number}` : "";
     chapterTitle.textContent = view.chapter?.title ?? "";
     where.textContent = `Month ${view.month} · you are ${view.age}`;
+    progress.set(view.progress ?? null);
 
     worthChip.hidden = !view.chip;
     if (view.chip) {

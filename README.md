@@ -118,9 +118,10 @@ Separately, the end of chapter one has been added to the game, in `game/` only. 
   open. Its keyframes are in `game/style.css`, and UI.md's "Motion, as built" records it.
 - Then the chapter card (`game/certificate.js` for the figures, `game/screens/certificate.js`
   for the drawing): net worth and its move over the two years, Safety, Freedom and Life with
-  the line beside each, the shape of the two years as net worth month by month, and one line of
-  the run's own figures. It is drawn on a canvas in the browser from the save, with no server,
-  1200 by 627 px for a LinkedIn post, and "Save the card" downloads it as a PNG. Every figure
+  the line beside each, the shape of the two years as net worth month by month, one line of
+  the run's own figures, and the twenty ideas the chapter taught, numbered, in order (UI.md rule
+  10). It is drawn on a canvas in the browser from the save, with no server, 1200 by 1000 px,
+  and "Save the card" downloads it as a PNG. Every figure
   comes from the engine and every amount is formatted by `text/`; `game/test/certificate.test.js`
   checks them against the demo life. The chapter report opens the card again ("Your chapter
   card"). The words on the card, its screen and the link are Ghost Run's, not the product owner's

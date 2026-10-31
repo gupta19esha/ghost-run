@@ -12,6 +12,10 @@
 // tomorrow, after the first three months, the check takes "Play the next month now", as a player
 // who plays on would.
 //
+// The chapter's progress (UI.md rule 10) must show on every screen of a month and Home, as the
+// strip on a phone or in the rail on a desktop window, and on no other screen. The ideas open
+// once from Home and once from the report; they scroll by design, so only their width is checked.
+//
 // node --experimental-websocket scripts/check-game-fit.mjs [--phone] [--sizes=1440x900,900x600]
 // (Node 22 and later need no flag.) Chrome: CHROME, or the usual install path.
 
@@ -119,6 +123,7 @@ try {
       art: art ? Math.round(art.width) + "x" + Math.round(art.height) : null,
       id: s.querySelector(".option")?.dataset.optionId?.split("-")[0] ?? null,
       compact: s.classList.contains("compact"),
+      progress: [...document.querySelectorAll(".chapter-progress")].find((p) => !p.hidden && p.getBoundingClientRect().width > 0)?.textContent ?? null,
     };`);
 
   for (const [w, h] of SIZES) {
@@ -142,6 +147,9 @@ try {
         if (fixed && m.keyOver > 0) problems.push(`${label}: its ${m.name === "decision" ? "last option" : "button or timer"} ends ${m.keyOver}px below the window`);
         if (m.railOver > 0) problems.push(`${label}: the rail overflows by ${m.railOver}px`);
         if (w >= 900 && ["month", "decision", "consequence", "callback", "close", "home", "timeline", "how"].includes(m.name) && !m.rail) problems.push(`${label}: no rail`);
+        const inMonth = ["month", "decision", "consequence", "callback", "close", "home"].includes(m.name);
+        if (inMonth && !m.progress) problems.push(`${label}: no chapter progress`);
+        if (!inMonth && m.progress && m.name !== "timeline" && m.name !== "how") problems.push(`${label}: shows the chapter progress`);
         if (!seen.has(m.name)) seen.set(m.name, m);
         const act = (expr) => run(expr);
         if (m.name === "landing") await act(`document.querySelector(".action").click(); return 1`);
@@ -174,6 +182,15 @@ try {
             seen.set("how", how);
             await act(`document.querySelector(".how .icon-button, .how-close").click(); return 1`);
             await advance(300);
+            await act(`document.querySelector(".home-ideas").click(); return 1`);
+            await advance(300);
+            const ideas = await measure();
+            if (ideas.name !== "ideas") problems.push("home: its ideas link does not open the ideas");
+            if (ideas.sideways > 0) problems.push(`ideas: scrolls sideways by ${ideas.sideways}px`);
+            if (w < 900 && ideas.progress) problems.push("ideas: shows the chapter's progress strip");
+            seen.set("ideas", ideas);
+            await act(`document.querySelector(".ideas .icon-button").click(); return 1`);
+            await advance(300);
           }
           const locked = await act(`return document.querySelector(".action").disabled`);
           if (locked && month < 3) problems.push(`home after month ${month}: waits for tomorrow inside the first sitting`);
@@ -183,7 +200,17 @@ try {
         } else if (m.name === "card") {
           await act(`document.querySelector(".certificate-foot .close-button").click(); return 1`);
           await advance(300);
-        } else if (m.name === "report") break;
+        } else if (m.name === "report") {
+          await act(`document.querySelector(".report-ideas").click(); return 1`);
+          await advance(300);
+          const ideas = await measure();
+          if (ideas.name !== "ideas") problems.push("report: its ideas link does not open the ideas");
+          if (ideas.sideways > 0) problems.push(`ideas from the report: scrolls sideways by ${ideas.sideways}px`);
+          await act(`document.querySelector(".ideas .icon-button").click(); return 1`);
+          await advance(300);
+          if ((await measure()).name !== "report") problems.push("ideas: Close does not go back to the report");
+          break;
+        }
         else { problems.push(`${label}: no way on`); break; }
       }
       const kinds = [...seen.keys()];

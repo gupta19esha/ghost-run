@@ -9,7 +9,8 @@
 // something", the concept's title and its body, the product owner's copy. It unlocks because
 // the month happened, whatever was chosen. Four months carry none, deliberately. The
 // artboard draws its lock and label in marigold; they are slate here, because marigold is
-// money only.
+// money only. At the head's right, the ideas collected with this one, "3 of 20 ideas" (UI.md
+// rule 10): a count, not a link, because the close is on its way to Home, which opens them.
 //
 // At the month 1 close only, the one screen that shows all four together says what each one
 // measures, a line under each (ruled 30 September 2026, UI.md rule 8). The bars then stack,
@@ -34,7 +35,7 @@ const BARS = [
 ];
 
 // design/MonthClose.html's card: the lock, the label, the title, the body
-function conceptCard({ title, body }) {
+function conceptCard({ title, body }, ideas) {
   const card = document.createElement("div");
   card.className = "concept";
   const head = document.createElement("div");
@@ -48,6 +49,12 @@ function conceptCard({ title, body }) {
   const label = document.createElement("span");
   label.textContent = LEARNED;
   head.append(lock, label);
+  if (ideas) {
+    const count = document.createElement("span");
+    count.className = "concept-count";
+    count.textContent = ideas;
+    head.append(count);
+  }
   const name = document.createElement("div");
   name.className = "concept-title";
   name.textContent = title;
@@ -69,9 +76,10 @@ const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").match
 
 // month: the month just closed. compared: compareBars from the engine. safetyDanger: the
 // engine's safetyInDanger at the month's end. hook: next month's line, or null. concept:
-// { title, body } from the engine's conceptForMonth, or null. money: text/'s formatter.
+// { title, body } from the engine's conceptForMonth, or null. ideas: the count collected with
+// it, in words, or null. money: text/'s formatter.
 // explanations: each one's line, keyed as compared is, at the month 1 close; otherwise null.
-export function monthCloseScreen({ month, compared, safetyDanger, hook, concept, explanations = null, money, onClose }) {
+export function monthCloseScreen({ month, compared, safetyDanger, hook, concept, ideas = null, explanations = null, money, onClose }) {
   const screen = document.createElement("section");
   screen.className = explanations ? "screen month-close explaining" : "screen month-close";
   screen.dataset.screen = "close";
@@ -137,7 +145,7 @@ export function monthCloseScreen({ month, compared, safetyDanger, hook, concept,
   foot.append(close);
 
   screen.append(head, bars);
-  if (concept) screen.append(conceptCard(concept));
+  if (concept) screen.append(conceptCard(concept, ideas));
   screen.append(grow, foot);
 
   // Net worth counts from where the month started to where it ended, and the bars move

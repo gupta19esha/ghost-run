@@ -21,6 +21,10 @@
 // Top right, the streak: days in a row with a month closed. Hidden while it is 0, so a new
 // or broken streak shows nothing rather than a zero.
 //
+// Under them, the ideas collected so far, "12 of 20 ideas", the product owner's words (UI.md
+// rule 10, ruled 31 October 2026). It opens the collection, so it is marigold, like the other
+// links. It sits beside the chapter's two lines, so it costs Home no height.
+//
 // Reopened partway through a month, Home comes first (ruled 28 September 2026,
 // FIRST-SESSION.md): under the bars, the choices already made this month, each with the
 // result line it showed, drawn as the progress timeline draws them. The button then continues
@@ -79,8 +83,8 @@ function streakChip(days) {
 // says where the player is. continuing: the month is partly played, and the button carries
 // it on. thisMonth: the choices made so far this month, { label, line }, oldest first.
 // marks: where each bar's good mark sits, 0 to 100, from the engine. onHowItWorks: opens
-// How it works.
-export function homeScreen({ onHowItWorks, chapter, bars, labels, compared, marks, safetyDanger, month, age, money, locked, hook, streak, continuing = false, thisMonth = [], onPlay, onTimeline }) {
+// How it works. ideas: the count collected, in words (game/ideas.js). onIdeas: opens them.
+export function homeScreen({ onHowItWorks, ideas, onIdeas, chapter, bars, labels, compared, marks, safetyDanger, month, age, money, locked, hook, streak, continuing = false, thisMonth = [], onPlay, onTimeline }) {
   const screen = document.createElement("section");
   screen.className = `screen home${continuing ? " continuing" : ""}${locked ? " locked" : ""}`;
   screen.dataset.screen = "home";
@@ -106,8 +110,16 @@ export function homeScreen({ onHowItWorks, chapter, bars, labels, compared, mark
   how.className = "home-how";
   how.textContent = HOW_IT_WORKS;
   how.addEventListener("click", onHowItWorks);
-  corner.append(how);
-  if (streak > 0) corner.append(streakChip(streak));
+  const row = document.createElement("div");
+  row.className = "home-corner-row";
+  row.append(how);
+  if (streak > 0) row.append(streakChip(streak));
+  const collected = document.createElement("button");
+  collected.type = "button";
+  collected.className = "home-how home-ideas";
+  collected.textContent = ideas;
+  collected.addEventListener("click", onIdeas);
+  corner.append(row, collected);
   top.append(corner);
 
   const worth = document.createElement("div");

@@ -5,7 +5,7 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { replay } from "../save.js";
 import { chapterCard } from "../certificate.js";
-import { createState, getBars, chapterMonths, safetyInDanger } from "../../engine/index.js";
+import { createState, getBars, chapterMonths, safetyInDanger, chapterConcepts } from "../../engine/index.js";
 import { formatMoney } from "../../text/render.js";
 import { barLabels } from "../labels.js";
 
@@ -49,4 +49,11 @@ test("the run's line names its choices and the months the report names", () => {
   assert.ok(card.line.includes(`Best month ${best.month}, up ${formatMoney(best.change)}.`), card.line);
   assert.ok(card.line.includes(`Hardest month ${worst.month}, down ${formatMoney(-worst.change)}.`), card.line);
   assert.deepEqual([card.chapter.number, card.ages.from, card.ages.to, card.years], ["one", 22, 24, "two"]);
+});
+
+test("the card names the twenty ideas the chapter collected, in the order they came", () => {
+  assert.equal(card.ideas.count, "20 of 20 ideas");
+  assert.deepEqual(card.ideas.titles, chapterConcepts(1).map((c) => c.title));
+  assert.equal(card.ideas.titles[0], "EPF");
+  assert.equal(card.ideas.titles.at(-1), "Guaranteed returns");
 });

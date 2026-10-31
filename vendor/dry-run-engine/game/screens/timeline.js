@@ -14,7 +14,7 @@ import { direction, arrow } from "./moves.js";
 
 const CLOSE = "Close";
 
-function closeIcon() {
+export function closeIcon() {
   const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
   svg.setAttribute("width", "16");
   svg.setAttribute("height", "16");

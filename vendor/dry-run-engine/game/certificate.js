@@ -4,14 +4,16 @@
 //
 // What it holds, once the chapter's last month has closed: net worth and how it moved over the
 // chapter, the three bars with the line beside each and how each moved, the shape of the
-// chapter as net worth at the end of every month from where the run began, and one line of the
-// run's own figures: how many choices, the best month and the hardest.
+// chapter as net worth at the end of every month from where the run began, one line of the
+// run's own figures: how many choices, the best month and the hardest, and the ideas the chapter
+// collected, by title, in the order they came (UI.md rule 10, ruled 31 October 2026).
 
 import {
   createState, getBars, compareBars, chapterMonths, decisionsForMonth, getDecision, safetyInDanger,
 } from "../engine/index.js";
 import { formatMoney, formatCount } from "../text/render.js";
 import { barLabels } from "./labels.js";
+import { ideasSoFar } from "./ideas.js";
 
 export const CARD_BARS = [
   ["safety", "Safety"],
@@ -36,6 +38,7 @@ export function chapterCard(state, save, chapter = 1) {
   const best = months.reduce((a, b) => (b.change > a.change ? b : a));
   const worst = months.reduce((a, b) => (b.change < a.change ? b : a));
   const choices = save.choices.filter((id) => getDecision(id.split("-")[0]).chapter === chapter).length;
+  const ideas = ideasSoFar(months[months.length - 1].month, chapter);
   return {
     chapter: { number: formatCount(chapter), title: first.chapter_title },
     ages: { from: start.age, to: state.age },
@@ -52,6 +55,7 @@ export function chapterCard(state, save, chapter = 1) {
       danger: key === "safety" && safetyInDanger(state),
     })),
     shape: [{ month: 0, net_worth: getBars(start).netWorth }, ...months.map(({ month, net_worth }) => ({ month, net_worth }))],
+    ideas: { count: ideas.count, titles: ideas.cards.filter((card) => card.collected).map((card) => card.title) },
     line: `${choices} choices, ${months.length} months. Best month ${best.month}, ${moved(best.change)}. Hardest month ${worst.month}, ${moved(worst.change)}.`,
   };
 }

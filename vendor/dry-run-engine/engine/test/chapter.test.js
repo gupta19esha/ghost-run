@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 
 import {
   createState, applyDecision, advanceMonth, decisionsForMonth, getBars, compareBars, chapterMonths, chapterComplete,
+  chapterPlace, chapterConcepts, conceptForMonth,
 } from "../index.js";
 
 // Plays whole months, taking each decision's first option, and records what month close
@@ -43,4 +44,20 @@ test("chapterMonths over the whole chapter: 24 months that add up to the chapter
 test("chapterComplete: only once month 24 has closed", () => {
   assert.equal(chapterComplete(play(23).state), false);
   assert.equal(chapterComplete(play(24).state), true);
+});
+
+test("chapterPlace: month N of the chapter's 24, and nothing after it", () => {
+  assert.deepEqual(chapterPlace(1), { chapter: 1, index: 1, length: 24 });
+  assert.deepEqual(chapterPlace(24), { chapter: 1, index: 24, length: 24 });
+  assert.equal(chapterPlace(25), null);
+});
+
+test("chapterConcepts: Chapter 1's twenty cards, in month order, the same cards month close shows", () => {
+  const cards = chapterConcepts(1);
+  assert.equal(cards.length, 20);
+  assert.deepEqual(cards.map((c) => c.month), [...cards.map((c) => c.month)].sort((a, b) => a - b));
+  for (const month of [7, 13, 19, 23]) assert.ok(!cards.some((c) => c.month === month), `month ${month} carries none`);
+  for (const card of cards) assert.equal(card.title, conceptForMonth(card.month).title);
+  assert.equal(cards[0].title, "EPF");
+  assert.equal(cards[19].title, "Guaranteed returns");
 });
