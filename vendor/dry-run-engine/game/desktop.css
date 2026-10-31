@@ -1,0 +1,341 @@
+/* The game on a desktop window, 900 px wide and up: its own layout, not the phone column centred
+   on a wide page. Below 900 px nothing here applies and every screen is as it was built.
+
+   Loaded last, after style.css and Daylight, so it wins on order alone. It moves things and sizes
+   them; the look is still Daylight's.
+
+   - The rail (game/rail.js) stands beside every screen of a month, Home, the timeline and How it
+     works: chapter, month and age, net worth and the three bars. From 1200 px it runs down the
+     left; between 900 and 1200 px it is a band across the top, so the split below it has the
+     whole width (a column down the left would leave the illustration about 220 px). The screens
+     beside it no longer carry their own bars. During a decision the rail's bars stand down
+     (UI.md rule 1).
+   - The decision and the result split: the illustration takes the left and goes large, on its
+     colour block; the month, the situation and the options, or the chosen card and the result,
+     sit on the right at a reading width. The month close splits the same way, with net worth
+     counting on the left in place of the drawing.
+   - The landing splits its band of pictures from its words; the chapter report reads in two
+     columns; the rest sit in a column of their own width in the middle of the stage. */
+
+.rail { display: none; }
+
+@media (min-width: 900px) {
+  :root {
+    --rail: clamp(236px, 19vw, 300px);
+    --stage-pad: clamp(28px, 3.2vw, 56px);
+    --reading: clamp(360px, 32vw, 460px);
+    /* What the rail takes from the stage: its width at the left, or its height at the top */
+    --left: 0px;
+    --top: 0px;
+  }
+
+  /* ---------- The stage and the rail ---------- */
+
+  body.railed #app { margin-left: var(--left); padding-top: var(--top); }
+  .screen { max-width: none; margin: 0; }
+
+  .rail:not([hidden]) {
+    position: fixed;
+    z-index: 5;
+    display: flex;
+    background: var(--paper-dim);
+  }
+  .rail-head { display: flex; flex-direction: column; gap: 2px; }
+  .rail-head > .month-label:empty { display: none; }
+  .rail-chapter {
+    font-family: var(--display);
+    font-size: 21px;
+    font-weight: 700;
+    line-height: 1.15;
+    color: var(--bone);
+  }
+  .rail-where { margin-top: 6px; font-size: 14px; color: var(--slate); }
+  .rail-net-worth {
+    margin-top: 4px;
+    font-size: clamp(32px, 2.8vw, 42px);
+    font-weight: 800;
+    line-height: 1.05;
+    color: color-mix(in srgb, var(--marigold), var(--bone) var(--toward-ink));
+  }
+  .rail-chip { margin-top: 10px; padding: 4px 9px; width: fit-content; }
+  .rail-chip[hidden] { display: none; }
+  .rail-bars { display: flex; flex-direction: column; gap: 20px; }
+  .rail.quiet .rail-bars { display: none; }
+  .rail-bar { display: flex; flex-direction: column; gap: 7px; }
+  /* The bar a choice moved, on the result: a wash of its colour, so the eye goes to it */
+  .rail-bar.moved {
+    margin: -10px -12px;
+    padding: 10px 12px;
+    border-radius: 14px;
+    background: var(--move-faint);
+  }
+  .rail-bar-chip { padding: 2px 8px; font-size: 12px; }
+  .rail-bar-chip[hidden] { display: none; }
+  .rail-bar.move-up { --move-hatch: var(--teal-hatch); }
+  .rail-bar.move-down,
+  .rail-bar.danger { --move-hatch: var(--vermilion-hatch); }
+  .rail-bar.move-flat { --move-hatch: var(--slate); }
+  .rail-track {
+    position: relative;
+    display: flex;
+    height: 12px;
+    background: #EDE3CF;
+    border-radius: 999px;
+    box-shadow: inset 0 1px 2px rgba(33, 28, 22, 0.12);
+    overflow: hidden;
+  }
+  .rail-solid,
+  .rail-change {
+    height: 100%;
+    transition: width 800ms cubic-bezier(0.2, 0.7, 0.2, 1) 250ms;
+  }
+  .rail-solid.still,
+  .rail-change.still { transition: none; }
+  .rail-solid { background: var(--move); }
+  .rail-change {
+    background: repeating-linear-gradient(135deg, var(--move), var(--move) 3px, var(--move-hatch) 3px, var(--move-hatch) 6px);
+  }
+  .rail-track .home-bar-mark[hidden] { display: none; }
+  .rail-figure { font-size: 13px; line-height: 1.35; color: var(--slate); font-variant-numeric: tabular-nums; }
+  .rail-figure:empty { display: none; }
+  .rail-explained { margin: 0; font-size: 13px; line-height: 1.4; color: var(--slate); }
+  .rail-explained[hidden] { display: none; }
+
+  /* ---------- The split: decision, result, month close ---------- */
+
+  .decision,
+  .decision.compact,
+  .consequence,
+  .month-close {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) var(--reading);
+    grid-template-rows: 1fr auto auto auto 1fr;
+    column-gap: var(--stage-pad);
+    height: calc(100dvh - var(--top));
+    min-height: 520px;
+    padding: var(--stage-pad);
+  }
+  .decision > *,
+  .consequence > *,
+  .month-close > * { grid-column: 2; }
+  .decision > .grow,
+  .consequence > .grow,
+  .month-close > .grow { display: none; }
+
+  /* The illustration, large, on its colour block, in the shape it was drawn in (390 by 286), as
+     wide as the column allows and no taller than the window */
+  .decision > .illo,
+  .decision.compact > .illo,
+  .consequence > .illo {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: center;
+    width: 100%;
+    aspect-ratio: 390 / 286;
+    max-height: calc(100dvh - var(--top) - 2 * var(--stage-pad));
+    border-radius: 28px;
+  }
+
+  .decision-body { grid-row: 2; padding: 0; }
+  .options,
+  .compact .options { grid-row: 3; gap: 12px; padding: 28px 0 0; }
+  /* Net worth is in the rail, where it is on every screen of the month */
+  .decision-worth { display: none; }
+  .situation,
+  .compact .situation { font-size: clamp(24px, 2vw, 28px); line-height: 1.32; }
+  .option,
+  .compact .option { min-height: 60px; }
+
+  .chosen-holder { grid-row: 2; margin-top: 0; padding: 0; }
+  .result { grid-row: 3; margin: 28px 0 0; font-size: clamp(26px, 2.1vw, 30px); }
+  /* The bar that moved moves in the rail, with its line under it the first time */
+  .consequence > .bar { display: none; }
+  .consequence > .timer-foot { grid-row: 4; padding: 36px 0 0; }
+
+  /* The month close: net worth counting on the left, where the drawing is on the others, the
+     concept and the hook on the right. The bars move in the rail */
+  .month-close > .close-head {
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: center;
+    width: 100%;
+    aspect-ratio: 390 / 286;
+    max-height: calc(100dvh - var(--top) - 2 * var(--stage-pad));
+    justify-content: center;
+    padding: 40px;
+    background: var(--ink-raised);
+    border: 2px solid var(--card-edge);
+    border-radius: 28px;
+  }
+  .month-close .net-worth,
+  .month-close.explaining .net-worth { margin-top: 18px; font-size: clamp(64px, 7vw, 112px); }
+  .month-close .chip-large { margin-top: 18px; font-size: 16px; padding: 6px 13px; }
+  .month-close .close-head .close-explained { max-width: 34ch; font-size: 15px; }
+  .month-close > .close-bars { display: none; }
+  .month-close > .concept { grid-row: 2; margin-top: 0; }
+  .month-close > .close-foot { grid-row: 3; padding: 28px 0 0; }
+  .month-close .hook-line { font-size: 22px; }
+  .month-close .close-button { height: 56px; }
+
+  /* ---------- One column in the stage: month card, callback, Home, timeline, How it works ---------- */
+
+  .month-card,
+  .callback { align-items: center; }
+  .month-line { font-size: 40px; }
+  .salary-line { font-size: 19px; }
+  .callback-text { max-width: 30ch; margin: 0 auto; font-size: clamp(28px, 2.4vw, 34px); text-align: center; }
+  .timer-foot { width: min(100%, 520px); align-self: center; }
+
+  /* Home: net worth and the bars are the rail's. What is left sits in the middle */
+  .screen { min-height: calc(100dvh - var(--top)); }
+  .home {
+    width: min(100%, 560px);
+    margin: 0 auto;
+    justify-content: center;
+    padding: var(--stage-pad) 0;
+  }
+  .home > .home-worth,
+  .home > .home-bars,
+  .home > .grow { display: none; }
+  .home-top,
+  .home-foot,
+  .home-this-month { padding-left: 0; padding-right: 0; }
+  .home-foot { padding-top: 40px; }
+  .home.continuing .home-foot { position: static; }
+
+  .timeline,
+  .how { width: min(100%, 680px); margin: 0 auto; padding-top: 24px; }
+
+  /* ---------- The landing: its pictures on the left, its words on the right ---------- */
+
+  .landing {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) clamp(380px, 36vw, 520px);
+    grid-template-rows: 1fr auto auto auto auto auto 1fr;
+    column-gap: var(--stage-pad);
+    height: 100dvh;
+    min-height: 600px;
+    padding: var(--stage-pad);
+  }
+  .landing > * { grid-column: 2; }
+  .landing > .grow { display: none; }
+  .landing > .landing-mark { grid-row: 2; padding-top: 0; }
+  .landing > .landing-title { grid-row: 3; font-size: clamp(40px, 3.4vw, 54px); }
+  .landing > .landing-lede { grid-row: 4; }
+  .landing > .landing-points { grid-row: 5; }
+  .landing > .landing-foot { grid-row: 6; padding: 32px 0 0; }
+  .landing > .landing-band {
+    display: block;
+    position: relative;
+    grid-column: 1;
+    grid-row: 1 / -1;
+    align-self: center;
+    width: 100%;
+    aspect-ratio: 390 / 286;
+    height: auto;
+    max-height: calc(100dvh - var(--top) - 2 * var(--stage-pad));
+    margin: 0;
+    background: var(--deep);
+    border-radius: 28px;
+    overflow: hidden;
+  }
+  .landing-band .illo {
+    position: absolute;
+    inset: 0;
+    aspect-ratio: auto;
+    max-height: none;
+    background: none;
+    border-radius: 0;
+    opacity: 0;
+  }
+  .landing-band .illo:last-child { opacity: 1; }
+
+  /* ---------- The report in two columns, and the chapter card ---------- */
+
+  .report {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-auto-flow: row dense;
+    align-content: start;
+    column-gap: calc(2 * var(--stage-pad));
+    width: min(100%, 1120px);
+    margin: 0 auto;
+    padding: 0 var(--stage-pad);
+  }
+  .report > * { grid-column: 1; }
+  .report > .report-section,
+  .report > .report-concepts,
+  .report > .report-foot { grid-column: 2; }
+  .report > .grow { display: none; }
+  .report > .report-section:not(.report-next) { margin-top: 56px; }
+
+  .certificate { width: min(100%, 960px); margin: 0 auto; justify-content: center; padding: var(--stage-pad); }
+  .certificate > .grow { display: none; }
+  /* The card as large as the window lets it be, with its buttons still on screen */
+  .certificate-card { max-width: calc((100dvh - 2 * var(--stage-pad) - 120px) * 1200 / 627); margin-left: auto; margin-right: auto; }
+  .certificate-head { padding-top: 0; }
+  .certificate-foot { flex-direction: row; padding-bottom: 0; }
+  .certificate-foot > * { flex: 1 1 0; }
+}
+
+/* From 1200 px: the rail runs down the left */
+@media (min-width: 1200px) {
+  body.railed { --left: var(--rail); }
+  .rail:not([hidden]) {
+    inset: 0 auto 0 0;
+    width: var(--rail);
+    flex-direction: column;
+    gap: 30px;
+    padding: 36px 26px;
+    overflow-y: auto;
+    border-right: 1px solid var(--rule);
+  }
+}
+
+/* From 900 to 1200 px: the rail is a band across the top, where it is, net worth, then the three
+   bars side by side. rail.js keeps --rail-height to its height, so the screens below it take
+   what is left of the window */
+@media (min-width: 900px) and (max-width: 1199px) {
+  body.railed { --top: var(--rail-height, 96px); }
+  .rail:not([hidden]) {
+    inset: 0 0 auto 0;
+    display: grid;
+    grid-template-columns: minmax(0, 0.9fr) minmax(0, 1fr) minmax(0, 3.3fr);
+    align-items: start;
+    column-gap: 28px;
+    padding: 16px var(--stage-pad);
+    border-bottom: 1px solid var(--rule);
+  }
+  .rail-head > .month-label { display: none; }
+  .rail-chapter { font-size: 18px; }
+  .rail-where { margin-top: 2px; font-size: 13px; }
+  .rail-net-worth { font-size: 28px; }
+  .rail-chip { margin-top: 6px; }
+  .rail-bars { flex-direction: row; gap: 24px; }
+  .rail-bar { flex: 1 1 0; min-width: 0; gap: 5px; }
+  .rail-bar.moved { margin: -8px -10px; padding: 8px 10px; }
+  .rail-explained { font-size: 12px; }
+  /* During a decision the band holds where the player is and net worth (UI.md rule 1) */
+  .rail.quiet { grid-template-columns: minmax(0, 0.9fr) minmax(0, 4.3fr); }
+}
+
+/* A short desktop window: the split screens close up, and the words keep their size */
+@media (min-width: 900px) and (max-height: 760px) {
+  .decision,
+  .consequence,
+  .month-close,
+  .landing { padding-top: 24px; padding-bottom: 24px; }
+  .options,
+  .compact .options { gap: 10px; padding-top: 20px; }
+  .option,
+  .compact .option { min-height: 54px; }
+  .rail:not([hidden]) { gap: 22px; padding-top: 26px; padding-bottom: 26px; }
+  .month-close > .close-foot { padding-top: 20px; }
+  .situation { font-size: 23px; }
+  .compact .situation { font-size: 21px; line-height: 1.28; }
+  .compact .options { gap: 8px; padding-top: 16px; }
+  .compact .option { min-height: 50px; }
+}
+@media (min-width: 900px) and (max-width: 1199px) and (max-height: 760px) {
+  .rail:not([hidden]) { padding-top: 10px; padding-bottom: 10px; }
+}

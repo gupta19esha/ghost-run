@@ -138,6 +138,10 @@ scenario packs, Phase 2, and a content job rather than a settings screen.
    credited. ₹41,300 in.", when the salary is not in that figure until the month runs.
    Net worth is not cash: whether the player should see cash, net worth or both is open
    (`FIRST-SESSION.md` section 6).
+   **On a desktop window (900 px and up, 31 October 2026):** net worth and the bars stand in a
+   rail beside the screens (`game/rail.js`, `game/desktop.css`). The rule holds there: during a
+   decision the rail shows where the player is and net worth, and its bars stand down until the
+   result.
 2. Never make the player tap Continue on a consequence. It auto-advances.
 3. Money is the largest type in the product and animates when it changes.
 4. A falling number is vermilion, a rising one teal. The colour arrives before the player

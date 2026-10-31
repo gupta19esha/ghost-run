@@ -127,6 +127,31 @@ Separately, the end of chapter one has been added to the game, in `game/` only. 
 - `game/labels.js` holds the line beside Safety and Freedom, which `game/main.js` had, so the
   card and the report share it.
 
+The game also has a desktop layout of its own, from 900 px wide (`game/desktop.css`, linked in
+`game/index.html` after Daylight, and `game/rail.js`). Below 900 px nothing changes: screenshots
+of the same screens before and after are identical at 360, 390 and 899 px wide.
+
+- **The rail** holds where the player is, net worth and Safety, Freedom and Life, and stays put
+  while the screens change beside it. From 1200 px it runs down the left; from 900 to 1199 px it
+  is a band across the top, because a column there would leave the illustration about 220 px
+  wide. Bars move in it as they do on the result screen, net worth counts in it as the month
+  close counts, and the first-time line under a bar shows under the rail's bar. `game/main.js`
+  says what it holds on each screen (`board()`), from the engine.
+- **UI.md rule 1 holds:** during a decision the rail shows where the player is and net worth (the
+  rule's one exception) and its bars stand down; they come back with the result.
+- **The decision and the result split:** the illustration large on the left, in the shape it was
+  drawn in, and the month, situation and options, or the chosen card and the result, on the
+  right at a reading width. The month close splits the same way, net worth counting on the left
+  in place of the drawing. The landing splits its pictures from its words, the chapter report
+  reads in two columns, and Home, the timeline and How it works sit in a column of their own.
+
+`scripts/check-game-fit.mjs` is the fit check for every screen at any size: it plays chapter one
+through the real game in headless Chrome on virtual time, on two paths (each decision's first
+option and its last), and fails if anything scrolls sideways, if a screen's button, timer or
+last option ends below the window, or if the rail overflows. Desktop sizes by default (900 by
+600 to 1920 by 1080), `--phone` for 320 by 568, 360 by 640 and 390 by 844.
+`node --experimental-websocket scripts/check-game-fit.mjs` on Node 20.
+
 ## Chapters three to six: the blocker
 
 Chapters three to six are not started. They can't be, because the market isn't written that far.

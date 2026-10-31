@@ -30,6 +30,7 @@ import { chapterTurnScreen } from "./screens/chapter-turn.js";
 import { certificateScreen } from "./screens/certificate.js";
 import { chapterCard } from "./certificate.js";
 import { barLabels } from "./labels.js";
+import { createRail, ways } from "./rail.js";
 import { lifeSoFar } from "./timeline.js";
 import {
   newSave, readSave, writeSave, dropSave, replay, playedToday, recordClose, currentStreak, explainedAlready, recordExplained,
@@ -65,10 +66,47 @@ const script = {
 };
 const holding = (screen) => script.stop === screen && script.play.length === 0;
 
-export function show(screen) {
+// view: what the rail holds beside the screen on a desktop window (game/rail.js), or null for a
+// screen that stands alone
+export function show(screen, view = null) {
+  rail.show(view);
   app.replaceChildren(screen);
   testing?.shown(screen);
   screen.start?.();
+}
+
+// The rail, on a desktop window: net worth and the bars, beside every screen of a month, Home,
+// the timeline and How it works (game/rail.js)
+const rail = createRail();
+document.body.append(rail.element);
+// The chapter the rail names: the sheet's, on the month's decisions, kept through a month that
+// has none left, such as the close of the chapter's last
+let railChapter = null;
+// What the rail held on Home, for the screens Home opens
+let homeBoard = null;
+
+// What the rail holds: the engine's figures now, each bar coloured by how it has moved since
+// the month began. from and to: getBars readings, when something moves on this screen (moving:
+// the rail moves the bars and counts net worth from one to the other). compared: compareBars to
+// colour by instead. The rest goes to the rail as it is: month, chip, moved, explanations, quiet
+function board({ from = monthStart, to = getBars(state), moving = false, compared = null, ...rest } = {}) {
+  const [next] = decisionsForMonth({ ...state, decisions_taken: {} });
+  if (next?.chapter_title) railChapter = { number: formatCount(next.chapter), title: next.chapter_title };
+  const way = ways(compared ?? compareBars(from, to));
+  const start = moving ? from : to;
+  return {
+    chapter: railChapter,
+    month: state.month,
+    age: state.age,
+    money: formatMoney,
+    netWorth: { from: start.netWorth, to: to.netWorth },
+    chip: null,
+    bars: Object.fromEntries(Object.keys(way).map((key) => [key, { from: start[key], to: to[key], way: way[key] }])),
+    labels: barLabels(state),
+    marks: barMarks(),
+    danger: safetyInDanger(state),
+    ...rest,
+  };
 }
 
 // Testing tools, tester builds only (TEST_TOOLS): the corner control and its panel
@@ -106,7 +144,7 @@ function showMonthCard() {
     holdMs: MONTH_CARD_MS,
     hold: holding("month"),
     onDone: nextDecision,
-  }));
+  }), board());
 }
 
 // The month's decisions one at a time, in sheet order. When none are left, the month runs.
@@ -124,7 +162,7 @@ function nextDecision() {
     netWorth: formatMoney(getBars(state).netWorth),
     onChoose: (optionId) => choose(decision, optionId),
   });
-  show(screen);
+  show(screen, board({ quiet: true }));
   const next = script.play.shift();
   if (next) screen.querySelector(`[data-option-id="${CSS.escape(next)}"]`)?.click();
 }
@@ -156,6 +194,12 @@ function choose(decision, optionId) {
     holdMs: explanation ? CONSEQUENCE_EXPLAINED_MS : CONSEQUENCE_MS,
     hold: holding("consequence"),
     onDone: nextDecision,
+  }), board({
+    from: bars.before,
+    to: bars.after,
+    moving: true,
+    moved: move?.key ?? null,
+    explanations: explanation ? { [move.key]: explanation } : null,
   }));
 }
 
@@ -187,7 +231,7 @@ function showCallbacks(texts, then) {
     holdMs: CALLBACK_MS,
     hold: holding("callback"),
     onDone: () => showCallbacks(rest, then),
-  }));
+  }), board());
 }
 
 function closeMonth(closed, monthEnd) {
@@ -208,9 +252,18 @@ function closeMonth(closed, monthEnd) {
       else goHome(compareBars(monthStart, monthEnd));
     },
   });
-  show(screen);
+  show(screen, board({
+    from: monthStart,
+    to: monthEnd,
+    moving: true,
+    month: closed,
+    explanations: closed === 1 ? BAR_LINES : null,
+  }));
   if (script.active && !holding("close")) screen.querySelector(".close-button").click();
 }
+
+// The words after the change beside net worth in the rail on Home, as Home has them
+const THIS_MONTH = "this month";
 
 // The hook for the month that is waiting: the sheet's hook_line on its first decision (v22).
 // After month 24 there are no decisions, so no hook: the chapter report goes there.
@@ -278,7 +331,7 @@ function showReport() {
       rest: titles.length > listed.length ? formatCount(titles.length - listed.length) : null,
     },
     money: formatMoney,
-    onTimeline: () => openTimeline(showReport),
+    onTimeline: () => openTimeline(showReport, null),
     onCard: () => showCard(chapterCard(state, save), CARD_BACK, showReport),
   }));
 }
@@ -324,7 +377,12 @@ function goHome(lastMonth, continuing = false) {
     onTimeline: () => openTimeline(),
     onHowItWorks: () => openHowItWorks(),
   });
-  show(screen);
+  const moved = lastMonth?.netWorth.change ?? 0;
+  homeBoard = board({
+    compared: lastMonth ?? compareBars(getBars(state), getBars(state)),
+    chip: moved === 0 ? null : { way: moved > 0 ? "up" : "down", text: `${formatMoney(Math.abs(moved))} ${THIS_MONTH}` },
+  });
+  show(screen, homeBoard);
   if (holding("timeline")) openTimeline();
   else if (holding("how")) openHowItWorks();
   else if (script.active && !holding("home") && !locked) screen.querySelector(".action").click();
@@ -332,7 +390,8 @@ function goHome(lastMonth, continuing = false) {
 
 // The life so far, from the save. Close goes back where it came from: Home as it was, or
 // the chapter report.
-function openTimeline(back = () => goHome(homeLastMonth, homeContinuing)) {
+// view: the rail beside it, Home's when it opens from Home
+function openTimeline(back = () => goHome(homeLastMonth, homeContinuing), view = homeBoard) {
   const months = lifeSoFar(save);
   if (!months) return;
   const [first] = months;
@@ -343,7 +402,7 @@ function openTimeline(back = () => goHome(homeLastMonth, homeContinuing)) {
     money: formatMoney,
     open,
     onClose: back,
-  }));
+  }), view);
 }
 
 // How it works, from Home: the board again, read-only. Close goes back to Home as it was.
@@ -353,7 +412,7 @@ function openHowItWorks() {
     testTools: TEST_TOOLS,
     onRestart: restart,
     onClose: () => goHome(homeLastMonth, homeContinuing),
-  }));
+  }), homeBoard);
 }
 
 // Testing only (TEST_TOOLS): the save goes, and the run with it. The landing screen starts a new one
