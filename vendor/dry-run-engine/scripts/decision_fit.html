@@ -1,6 +1,8 @@
 <!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<link rel="stylesheet" href="/game/tokens.css"><link rel="stylesheet" href="/game/style.css"></head>
+<!-- A phone's scrollbar takes no width: without this, a screen that runs over is drawn 15 px
+narrower, wraps differently, and is measured wrong -->
+<style>html { scrollbar-width: none; }</style></head>
 <body><main id="app"></main><pre id="out" hidden></pre>
 <script type="module">
 // Used by scripts/check_decision_fit.py. Renders every decision screen in turn, in this
@@ -8,12 +10,31 @@
 // so a screen that would not fit takes the compact layout), and measures where the last option
 // card ends. Two paths, one taking each decision's first offered option and one its last, so
 // options offered only to some players (rule 29), such as D20-D, are rendered too.
+//
+// The stylesheets are the ones game/index.html links, read from it, so the screens are measured
+// in the look a player sees (on the site, Daylight's taller option cards) and a stylesheet added
+// to the game is measured too. One that does not load fails the check.
+//
+// Every font the stylesheets declare is loaded before the first screen. The screens are drawn in
+// one go, with no pause in which a font could arrive, and document.fonts.ready waits only for
+// fonts already in use, so without this every screen was measured in the fallback font.
 import { createState, applyDecision, advanceMonth, decisionsForMonth, tokenValues, getBars } from "/engine/index.js";
 import { renderText, formatMoney } from "/text/render.js";
 import { decisionScreen } from "/game/screens/decision.js";
 
 const app = document.getElementById("app");
 const results = [];
+const game = new DOMParser().parseFromString(await (await fetch("/game/index.html")).text(), "text/html");
+const missing = [];
+for (const link of game.querySelectorAll('link[rel="stylesheet"]')) {
+  const href = new URL(link.getAttribute("href"), `${location.origin}/game/`).href;
+  const sheet = Object.assign(document.createElement("link"), { rel: "stylesheet", href });
+  document.head.append(sheet);
+  await new Promise((resolve) => { sheet.onload = resolve; sheet.onerror = () => { missing.push(href); resolve(); }; });
+}
+for (const face of document.fonts) {
+  await face.load().catch(() => missing.push(`${face.family} ${face.weight}`));
+}
 await document.fonts.ready;
 for (const path of ["first", "last"]) {
   let state = createState(1);
@@ -35,6 +56,7 @@ for (const path of ["first", "last"]) {
     state = advanceMonth(state).state;
   }
 }
-document.getElementById("out").textContent = "RESULT" + JSON.stringify(results) + "END";
-parent.postMessage("RESULT" + JSON.stringify(results) + "END", "*");
+const report = "RESULT" + JSON.stringify({ missing, results }) + "END";
+document.getElementById("out").textContent = report;
+parent.postMessage(report, "*");
 </script></body></html>

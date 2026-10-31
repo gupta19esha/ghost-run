@@ -155,9 +155,12 @@ scenario packs, Phase 2, and a content job rather than a settings screen.
 6. Every screen works at 320px. Test at 320 by 568, 360 by 640 and 390 by 844: the height
    matters as much as the width. A decision whose last card would end below the screen
    takes the compact layout four-option decisions always use, measured once it is on the
-   page (ruled 28 September 2026). At 320 by 568 that is D01, D02, D05, D09, D11 and D16,
-   besides the four-option D07, D14, D17 and D28. Checked for all 30 decisions at all three
-   sizes; the words are never cut to fit.
+   page (ruled 28 September 2026). At 320 by 568, in Daylight, that is D01, D02, D03, D04,
+   D05, D11, D15, D16, D19, D21 and D29, besides the four-option D07, D14, D17 and D28. If the
+   compact layout still runs over, the illustration gives up the rest, down to a 64px strip:
+   at 320 by 568 only D14 needs it, as two of its four cards take two lines.
+   Checked for all 30 decisions at all three sizes, with the game's own stylesheets and
+   fonts (scripts/check_decision_fit.py); the words are never cut to fit.
 7. Colour never appears on an unchosen option. Every option card has the same neutral left
    edge. Teal means good and vermilion means bad, so a coloured option tells the player the
    answer before they have thought about it, and no option is obviously correct at the
