@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { monthPreview, monthOutcome, landingFork, chapters, CHAPTER_DAYS, SHOWN_DECISION, SHOWN_FORK } from "../landing-model.js";
 import { readRun } from "../ghost-model.js";
 import { getDecision } from "../../vendor/dry-run-engine/engine/index.js";
+import { formatRupees } from "../../vendor/dry-run-engine/text/render.js";
 
 const save = JSON.parse(readFileSync(new URL("../demo/save.json", import.meta.url), "utf8"));
 
@@ -67,6 +68,24 @@ test("the landing's written month and chapters are the engine's and the plan's, 
   }
   // Chapter one open, two to six locked
   assert.equal((html.match(/class="lp-chapter-state">Locked</g) || []).length, chapters().filter((c) => !c.live).length);
+});
+
+// The line that gives a reader outside India the scale. Its figures are the engine's: the month's
+// salary, the studio's rent in month 1, the class's cost, and the class as a share of the salary
+test("the scale line's figures are the engine's", () => {
+  const html = readFileSync(new URL("../index.html", import.meta.url), "utf8");
+  const line = html.match(/<p class="lp-body lp-scale">(.*?)<\/p>/)?.[1];
+  assert.ok(line, "index.html has the scale line");
+  const preview = monthPreview(save);
+  const studio = -getDecision("D02").options["D02-A"].money_monthly;
+  const coaching = -getDecision("D12").options["D12-A"].money_once;
+  const salary = Number(preview.salary.replace(/[^0-9]/g, ""));
+  assert.ok(line.startsWith(`${preview.salary} is`), line);
+  assert.ok(line.includes(`a studio near the office at ${formatRupees(studio)}`), line);
+  assert.ok(line.includes(`costs ${formatRupees(coaching)}, nearly a fifth of it`), line);
+  // Nearly a fifth: under 20%, and closer to it than to anything else a reader would say
+  assert.ok(coaching / salary < 0.2 && coaching / salary > 0.18, `${coaching} of ${salary}`);
+  assert.ok(!/\$|USD|dollar|€|£/.test(line), "no currency is converted");
 });
 
 test("the chapters run 22 to 42, 240 months, and chapter one is the game's own", () => {

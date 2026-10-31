@@ -18,7 +18,8 @@ any choice to see the ghost, the life you would have had with the other option.
 - `web/daylight.css` is the game's visual direction, Daylight, laid over the vendored game.
 - `web/index.html` is the landing page, served at the site root (`web/landing.js`,
   `web/landing.css`): what this is and Play, how a month works with month 7 of the demo life to
-  try, the six chapters from 22 to 42, the ghost run, and Play, which goes straight into the
+  try (with one line giving a reader outside India the scale of its rupees, in the game's
+  figures, never converted), the six chapters from 22 to 42, the ghost run, and Play, which goes straight into the
   game. Two designs sharing a palette, a typeface and a voice: a phone's single column with a
   sticky Play bar, and from 900px a desktop layout of its own, with a header carrying Play, a
   two-column hero, the month inside a phone frame and the chapters across the width. Its figures
