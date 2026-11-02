@@ -1,0 +1,38 @@
+{
+  "provider": "claude",
+  "model": "claude-opus-5-5",
+  "attempt": 1,
+  "request": "6e82fa2be80874550f51579755285d43480a7c8ab88469ff3e02f5ca3b0b71ac",
+  "narration": "For {identical_months} months the two lives ran exactly alike. In month {fork_month}, at the first appraisal, you chose {real_choice} and the ghost chose {ghost_choice}. In month {first_bar_apart_month}, {first_bar_apart} was the first score to come apart, the one that reads the days rather than the bank. When the layoff came in month {layoff_month}, the ghost's net worth and yours were {layoff_net_worth_gap}. At month {end_month}, the money was still {net_worth_gap}. The difference sat in how the days felt: the ghost's Life finished {life_gap}.",
+  "usage": {
+    "input_tokens": 3693,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 0
+    },
+    "iterations": [
+      {
+        "input_tokens": 3693,
+        "output_tokens": 1384,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 0
+        },
+        "type": "message",
+        "model": null
+      }
+    ],
+    "output_tokens": 1384,
+    "output_tokens_details": {
+      "thinking_tokens": 1182
+    },
+    "service_tier": "standard",
+    "inference_geo": "global",
+    "speed": "standard"
+  },
+  "at": "2026-11-02T09:09:41.070Z"
+}

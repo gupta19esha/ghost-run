@@ -1,0 +1,38 @@
+{
+  "provider": "claude",
+  "model": "claude-opus-5-5",
+  "attempt": 1,
+  "request": "ee73a9bfae0dbdd1870775567f1592050c4b80e959cf3bc4db442e6228119ad1",
+  "narration": "For {identical_months} month the two lives ran exactly alike. In month {fork_month}, you chose {real_choice} and the ghost took {ghost_choice}. That same month, {first_bar_apart} was the first score to part. In month {layoff_month}, the month of the layoff and the month the money stood furthest apart, the ghost had {layoff_net_worth_gap}. At month {end_month} the ghost finished with {net_worth_gap}. Its days sat a shade lighter, with Life {life_gap}.",
+  "usage": {
+    "input_tokens": 3779,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 0
+    },
+    "iterations": [
+      {
+        "input_tokens": 3779,
+        "output_tokens": 1089,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 0
+        },
+        "type": "message",
+        "model": null
+      }
+    ],
+    "output_tokens": 1089,
+    "output_tokens_details": {
+      "thinking_tokens": 919
+    },
+    "service_tier": "standard",
+    "inference_geo": "global",
+    "speed": "standard"
+  },
+  "at": "2026-11-02T09:05:18.293Z"
+}

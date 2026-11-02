@@ -1,0 +1,38 @@
+{
+  "provider": "claude",
+  "model": "claude-opus-5-5",
+  "attempt": 1,
+  "request": "520516c07ed84a7fd4bcd09ac8ceb4bf544afdb57573d9caf54811999e7dbe31",
+  "narration": "For {identical_months} months the two lives were the same. In month {fork_month} the invitations came, and you chose {real_choice} while the ghost took {ghost_choice}. In month {layoff_month}, the month the job ended in both lives, the ghost had {layoff_net_worth_gap}. By month {end_month} the ghost still had {net_worth_gap}. The ghost's days held a little less living, its Life {life_gap}.",
+  "usage": {
+    "input_tokens": 3801,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 0
+    },
+    "iterations": [
+      {
+        "input_tokens": 3801,
+        "output_tokens": 943,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 0
+        },
+        "type": "message",
+        "model": null
+      }
+    ],
+    "output_tokens": 943,
+    "output_tokens_details": {
+      "thinking_tokens": 801
+    },
+    "service_tier": "standard",
+    "inference_geo": "global",
+    "speed": "standard"
+  },
+  "at": "2026-11-02T09:14:57.800Z"
+}

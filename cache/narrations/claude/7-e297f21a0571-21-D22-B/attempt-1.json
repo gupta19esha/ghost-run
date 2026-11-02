@@ -1,0 +1,38 @@
+{
+  "provider": "claude",
+  "model": "claude-opus-5-5",
+  "attempt": 1,
+  "request": "e65a5df7fcf7941eb90481819393a1e4fbc180ecc6cbb974422bd314632f9629",
+  "narration": "The same money, a different life. For {identical_months} months there was only one of you. In month {fork_month} you chose {real_choice}, and the ghost chose {ghost_choice}. Both of you were laid off in month {layoff_month}, the ghost with {layoff_net_worth_gap}. By month {end_month} less of the ghost's pay was claimed before each month began, its Freedom {freedom_gap}. The ghost ended with {net_worth_gap}.",
+  "usage": {
+    "input_tokens": 3871,
+    "cache_creation_input_tokens": 0,
+    "cache_read_input_tokens": 0,
+    "cache_creation": {
+      "ephemeral_5m_input_tokens": 0,
+      "ephemeral_1h_input_tokens": 0
+    },
+    "iterations": [
+      {
+        "input_tokens": 3871,
+        "output_tokens": 1133,
+        "cache_read_input_tokens": 0,
+        "cache_creation_input_tokens": 0,
+        "cache_creation": {
+          "ephemeral_5m_input_tokens": 0,
+          "ephemeral_1h_input_tokens": 0
+        },
+        "type": "message",
+        "model": null
+      }
+    ],
+    "output_tokens": 1133,
+    "output_tokens_details": {
+      "thinking_tokens": 981
+    },
+    "service_tier": "standard",
+    "inference_geo": "global",
+    "speed": "standard"
+  },
+  "at": "2026-11-02T09:13:27.589Z"
+}
