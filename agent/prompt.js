@@ -6,7 +6,7 @@
 // it what each token will print, to write around, and forbids every digit.
 
 import { TOKENS, resolveTokens } from "../verify/tokens.js";
-import { FORMATS } from "../verify/render.js";
+import { printTokens } from "../verify/render.js";
 import { UNITS } from "./rank.js";
 import { getDecision } from "../vendor/dry-run-engine/engine/index.js";
 import { BAR_LINES } from "../vendor/dry-run-engine/game/screens/bar-lines.js";
@@ -14,6 +14,7 @@ import { isUnavailable } from "../vendor/dry-run-engine/engine/token-figures.js"
 
 const BAR_KEYS = ["safety", "freedom", "life"];
 const BAR_NAMES = { netWorth: "Net worth", safety: "Safety", freedom: "Freedom", life: "Life" };
+const GAP_TOKENS = new Set(["net_worth_gap", "safety_gap", "freedom_gap", "life_gap", "widest_gap", "layoff_net_worth_gap"]);
 
 // The same money, a different life: net worth ends within a quarter of a unit (agent/rank.js
 // UNITS, so about 8,750) while a bar ends a whole unit or more apart. -> the bar that moved most,
@@ -53,7 +54,23 @@ const MEANING = {
   substitution_month: "the month of that decision",
   withdrawn_choice: "the player's choice there, which the ghost could not take, in quotation marks",
   substitute_choice: "what the ghost took instead, in quotation marks",
+  widest_gap_month: "the month the two lives' net worth was furthest apart",
+  widest_gap: "the ghost's net worth against the player's in that month, from the ghost's side",
+  ghost_ahead_months: "how many months the ghost's net worth was above the player's, as a word",
+  first_bar_apart_month: "the first month Safety, Freedom or Life differed between the two lives",
+  first_bar_apart: "which of those it was, by name",
+  ghost_lowest_month: "the month the ghost's net worth was at its lowest after the split",
+  layoff_month: "the month of the layoff, the same in both lives",
+  layoff_real_net_worth: "the player's net worth at the close of that month",
+  layoff_ghost_net_worth: "the ghost's net worth at the close of that month",
+  layoff_net_worth_gap: "the ghost's net worth against the player's at the close of that month, from the ghost's side",
+  crossover_month: "the first month the ghost's net worth moved to the other side of the player's",
+  crossover_count: "how many times that happened, as a word",
 };
+
+// The no-cause rule in the system prompt stands on SIMULATION-MATHS.md section 14, "The timeline
+// shows cost by month, not by choice": a month's change is the sum of every choice, salary, costs,
+// returns and shocks, and the engine keeps no attribution of it to a choice.
 
 // The game's own lines, for its voice: result texts from the sheet with no figures in them
 const VOICE = [
@@ -68,39 +85,69 @@ const VOICE = [
 
 export const SYSTEM = `You write the narration for Ghost Run, a game about money in the first two years of a working life in India. The player starts at twenty-two with a first salary and makes one or two choices a month for twenty-four months. They have finished. One of their choices has been changed and the same two years played again by the ghost: the life that took the other option. Everything after that choice was the player's own, wherever the ghost could follow. You tell the player how the two lives came apart.
 
-The game tracks four things. Net worth: ${BAR_LINES.netWorth} Safety: ${BAR_LINES.safety} Freedom: ${BAR_LINES.freedom} Life: ${BAR_LINES.life} Safety, Freedom and Life are bars out of a hundred. In month twenty-two the player is laid off, at the bottom of a market fall.
+The game tracks four things. Net worth: ${BAR_LINES.netWorth} Safety: ${BAR_LINES.safety} Freedom: ${BAR_LINES.freedom} Life: ${BAR_LINES.life} In month twenty-two the player is laid off, at the bottom of a market fall.
 
-Voice. Write like the game: short, plain sentences, calm and observant, a little dry. Call the player "you" and the other life "the ghost". These lines are the game's own:
+Safety, Freedom and Life are scores from zero to a hundred, measured in points. A point is not a rupee, so never state a score as an amount of money.
+- Safety is how long you would survive with zero income: the money you could reach, set against your essential costs each month, along with your health cover, and your term cover if anyone depends on you.
+- Freedom is how much of your income is already committed: rent, loan payments, premiums, debt minimums and locked saving commitments. With no commitments it is a hundred, and the more that is committed the lower it goes.
+- Life is the one score not worked out from money alone. It is moved by what your choices did to your days, and it drifts toward a baseline set by what you spend on yourself. With no salary, that baseline is at its floor.
+
+Voice. Write like the game: short, plain, specific sentences, calm and a little dry, with no hedging. Call the player "you" and the other life "the ghost". These lines are the game's own:
 ${VOICE.map((line) => `- ${line}`).join("\n")}
-No exclamation marks, no questions to the reader, no markdown, no headings, no lists. One paragraph, between ninety and one hundred and eighty words.
+No exclamation marks, no questions to the reader, no markdown, no headings, no lists. One paragraph of four to six sentences, counting any required sentence. Short ones. Stop at the last fact: no summing up at the end.
+
+At most one figure per sentence. A figure is an amount: money, scores, gaps and counts. A month that places the sentence in time and a choice token's label do not count.
+
+A gap token prints a complete phrase, its amount and its direction together, as the brief shows. Nothing may follow one in its clause: no word of direction, comparison or measure. End the clause or the sentence there, and write the words before it so that the phrase completes them.
+
+Each choice token prints a label that already says its own amount and description. Introduce it with a plain verb such as chose or took, and never wrap it in a phrase that says what the label says, such as putting money into it, paying it, or naming what it buys.
+
+Give each fact once. Never restate a gap as two scores, or two scores as a gap: for any one measure, use its gap or its two ends, never both. Leave out what you do not need. You need not mention all four measures.
+
+A sentence makes an observation anchored to a token. It does not report the token. Say what a score's level or move means for this life, in your own words. Paraphrasing what a score means is wanted, and it is what brings a sentence alive, so do not hold back from it and do not reuse the wording of the definitions above.
+
+Narrate in time order. First, how long the two lives were identical, unless that token prints zero. Next, the month they split and what each side chose. Then anything that happened after that. Last, where they ended. Never reach back to something earlier.
+
+Every narration must say where the money ended, with {net_worth_gap} or with both ends at the last month. A gap from the middle of the run does not count.
+
+The brief's tokens include what happened between the split and the end: when the money was furthest apart, how long the ghost was ahead, when a score first parted, the layoff and where each life stood then, and whether the lead changed hands. Those are the middle of this story, and they are what makes it this life and no other. Use the one or two that say the most, each in its place in time, and leave out the rest. They say what happened and when, never why.
+
+You may describe what each side did and what happened, in order. You may never claim that a choice caused an outcome. The engine keeps no attribution of a change to a choice, because a month's change is the sum of every choice made in it, earlier choices still running, salary, living costs, returns and any shock (section fourteen of the maths document), so a claimed cause would be the narration inventing it. The checker rejects because, caused, led to, meant that, which is why, as a result, resulted in and due to. Do not get round it with other words such as so, since, which left, thanks to, cost, drove or made. Set the two side by side and leave the link to the player. The one exception is the required sentence below, whose "so" is the game's own rule.
 
 Never give advice. Never say or imply that either choice was better, worse, wiser, right, wrong or a mistake, and never say what the player should do, should have done, or could do next time. Describe what happened to each life and leave the judgement to the player.
 
-Figures. You never write a number. Not one digit, anywhere: not in a figure, a month, a label or a quotation. Every figure comes from the simulation through a token: write its name in braces, exactly as listed in the brief, such as {net_worth_gap}, and the game puts the figure there. Write each sentence so it reads naturally with the printed value the brief shows for that token. Use only the tokens the brief lists; never invent one or change its spelling, and never use a token the brief marks unavailable. The option labels contain figures, so never quote or paraphrase an option's wording yourself: use {real_choice}, {ghost_choice}, {withdrawn_choice} and {substitute_choice}. A small count that has no token, such as "two years", is written as a word; never use words to state a figure that has a token.
+Figures. You never write a number. Not one digit, anywhere: not in a figure, a month, a label or a quotation. Every figure comes from the simulation through a token: write its name in braces, exactly as listed in the brief, such as {net_worth_gap}, and the game puts the figure there. Write each sentence so it reads naturally with the printed value the brief shows for that token. Use only the tokens the brief lists; never invent one or change its spelling, and never use a token the brief marks unavailable. The option labels contain figures, so never quote or paraphrase an option's wording yourself: use {real_choice}, {ghost_choice}, {withdrawn_choice} and {substitute_choice}. Each of those prints a whole label in quotation marks, and the brief shows the exact text. Read it before you write the sentence around it, and never repeat in your own words anything the label already says. A small count that has no token, such as "two years", is written as a word; never use words to state a figure that has a token.
+
+Every sentence must contain at least one token, because a sentence with none could say anything and nothing could check it. Two things are forbidden: asserting an event the brief does not give, and asserting a cause. Paraphrase is neither. Saying what a score's level or move means is paraphrase, and allowed. Saying that a holding, a market or a person did something the brief does not give is inventing an event, and forbidden.
 
 When the brief says a later choice of the player's was not available to the ghost, you must write one sentence that names it with {withdrawn_choice}, says in that same sentence that it was not available on this path, and says what the ghost took instead with {substitute_choice}.
 
-When the brief says the fork is the same money, a different life, your first sentence is exactly: ${SAME_MONEY_LEAD} Then say what moved instead of the money.
+When the brief says the fork is the same money, a different life, your first sentence is exactly: ${SAME_MONEY_LEAD} That sentence alone needs no token. It has already said the money is the same, so never say again, in any words, that the money is close, level or similar. Then say what moved instead of the money.
 
 Reply with the narration only.`;
 
 // The brief for one fork: what happened, and every token with what it prints
 export function brief(result) {
   const values = resolveTokens(result);
-  const end = result.divergence.at(-1);
+  const printed = printTokens(values);
   const bar = sameMoney(result);
   const lines = [];
   const decision = values.fork_decision ? getDecision(values.fork_decision) : null;
   if (decision) {
     lines.push(`The changed choice was in month ${values.fork_month}. What the player read then, for context only, never to quote: "${decision.situation_text}"`);
   }
-  lines.push(`At month ${values.end_month}, the ghost's gaps from the player: net worth ${FORMATS.net_worth_gap(values.net_worth_gap)}, ` +
-    BAR_KEYS.map((k) => `${BAR_NAMES[k]} ${FORMATS[`${k}_gap`](values[`${k}_gap`])}`).join(", ") + ".");
+  const labels = ["real_choice", "ghost_choice", "withdrawn_choice", "substitute_choice"].filter((token) => token in printed);
+  if (labels.length > 0) {
+    lines.push("The exact text the choice tokens print, each a whole phrase in quotation marks. Fit your sentence around it, and repeat none of its words:",
+      ...labels.map((token) => `{${token}} prints ${printed[token]}`), "");
+  }
+  lines.push(`At month ${values.end_month}, the ghost's gaps from the player: net worth ${printed.net_worth_gap}, ` +
+    BAR_KEYS.map((k) => `${BAR_NAMES[k]} ${printed[`${k}_gap`]}`).join(", ") + ".");
   if (bar) {
-    lines.push(`This fork is the same money, a different life: the money ends almost level, while ${BAR_NAMES[bar]} ends ${FORMATS[`${bar}_gap`](end[bar])}. Lead on it.`);
+    lines.push(`This fork is the same money, a different life: the money ends almost level, while ${BAR_NAMES[bar]} ends ${printed[`${bar}_gap`]}. Lead on it.`);
   }
   if (result.substitutions.length > 0) {
-    lines.push(`A later choice of the player's was not available to the ghost: in month ${values.substitution_month}, ${FORMATS.withdrawn_choice(values.withdrawn_choice)} could not be taken on this path, so the ghost took ${FORMATS.substitute_choice(values.substitute_choice)}. You must say so.`);
+    lines.push(`A later choice of the player's was not available to the ghost: in month ${values.substitution_month}, ${printed.withdrawn_choice} could not be taken on this path, so the ghost took ${printed.substitute_choice}. You must say so.`);
   } else {
     lines.push("The ghost could take every later choice the player made.");
   }
@@ -109,7 +156,7 @@ export function brief(result) {
     const value = values[token];
     lines.push(isUnavailable(value)
       ? `{${token}}: unavailable for this fork, do not use`
-      : `{${token}}: ${MEANING[token]}. Prints: ${FORMATS[token](value)}`);
+      : `{${token}}: ${MEANING[token]}. Prints${GAP_TOKENS.has(token) ? " this complete phrase, and nothing may follow it" : ""}: ${printed[token]}`);
   }
   return lines.join("\n");
 }
@@ -122,6 +169,8 @@ export function rejection(failures) {
     if (f.rule === "unknown_token") return f.found ? `{${f.found}} is not a token. Use only the tokens the brief lists.` : "It has a brace that is not part of a token.";
     if (f.rule === "null_token") return `{${f.found}} is unavailable for this fork. Leave it out.`;
     if (f.rule === "substitution_unmentioned") return "It never says that the player's later choice was not available on this path. Add that sentence, with {withdrawn_choice} and {substitute_choice}.";
+    if (f.rule === "sentence_without_token") return `This sentence has no token in it, so nothing in it can be checked: "${f.found}" Remove it, or say only what a token in that sentence carries.`;
+    if (f.rule === "causal_claim") return `"${f.found}" claims a cause, and the game keeps no record of what caused what. Set the events side by side, in order, with no causal link.`;
     if (f.rule === "lead") return `This fork is the same money, a different life, so the first sentence must be exactly: ${SAME_MONEY_LEAD}`;
     return f.detail;
   }))];

@@ -8,6 +8,8 @@
 
 import { fork, alternativesAt } from "../runner/fork.js";
 import { getDecision } from "../vendor/dry-run-engine/engine/index.js";
+import { resolveTokens } from "../verify/tokens.js";
+import { shownMoneyGap } from "../verify/render.js";
 
 const KEYS = ["netWorth", "safety", "freedom", "life"];
 const BARS = ["safety", "freedom", "life"];
@@ -109,8 +111,9 @@ export const SCORES = Object.freeze({
 export const SCORE = "surprise";
 
 // Every fork of the save, in choice order then sheet order:
-// [{ monthIndex, decisionId, month, real, option, features, fork }]. fork is fork()'s full
-// result, so the UI can show and narrate it without running it again.
+// [{ monthIndex, decisionId, month, real, option, features, shownGap, fork }]. shownGap is the net
+// worth gap as the screens display it. fork is fork()'s full result, so the UI can show and
+// narrate it without running it again.
 // onFork(entry, done, total), when given, is called after each fork: the ghost screen's ranking
 // worker reports progress with it.
 export function forksOf(save, { onFork = null } = {}) {
@@ -120,7 +123,9 @@ export function forksOf(save, { onFork = null } = {}) {
     const result = fork(save, monthIndex, option);
     const decisionId = option.split("-")[0];
     const month = getDecision(decisionId).month;
-    const entry = { monthIndex, decisionId, month, real: save.choices[monthIndex], option, features: features(result, month), fork: result };
+    const values = resolveTokens(result);
+    const shownGap = shownMoneyGap(values.real_net_worth, values.ghost_net_worth);
+    const entry = { monthIndex, decisionId, month, real: save.choices[monthIndex], option, features: features(result, month), shownGap, fork: result };
     forks.push(entry);
     if (onFork) onFork(entry, forks.length, plan.length);
   }

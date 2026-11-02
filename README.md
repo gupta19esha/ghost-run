@@ -9,7 +9,12 @@ any choice to see the ghost, the life you would have had with the other option.
   through the same engine code, so a fork that takes the player's own option is byte-identical
   to the real run.
 - `verify/` checks a narration of a fork. Every figure must be a token resolved from the fork
-  result, and `verify/render.js` is the only place figures are formatted.
+  result, every sentence must hold a token and claim no cause, and `verify/render.js` is the only place figures are
+  formatted. Each figure has one displayed value across the ghost flow: net worth to the rupee,
+  bars in whole points, and a gap is the difference of the two values shown.
+- `verify/tokens.js` also gives a narration the middle of the run, each null where the run has
+  none: when the money was furthest apart, the months the ghost led, the first bar to part, the
+  ghost's lowest month after the split, the layoff and where each life stood, and whether the lead changed hands.
 - `agent/rank.js` forks a save at every choice and orders the forks by a score, `surprise` as
   ruled; `scripts/measure-rank.mjs` measures the candidates.
 - `web/demo/save.json` is a finished 24-month save for the UI to load (see `web/demo/README.md`).

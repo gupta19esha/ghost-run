@@ -14,15 +14,14 @@
 // motion is inside a step, and plays the first time the step is reached.
 
 import { readRun, forkView, checkAttempts, costList, surpriseList, surpriseWords, reasons, markedDraft, BAR_KEYS, BAR_NAMES, optionLabel } from "./ghost-model.js";
-import { formatMoney, formatRupees } from "../vendor/dry-run-engine/text/render.js";
-import { FORMATS } from "../verify/render.js";
+import { formatMoney } from "../vendor/dry-run-engine/text/render.js";
+import { FORMATS, exactMoneyGap, shownMoneyGap } from "../verify/render.js";
 import { animate, count, later, tween, reduced, stopAll } from "./motion.js";
 import { h, ghostMark, chart, hideGhost, drawGhost, legend, track, moveBar, arrive } from "./ui.js";
 import { sound, buzz, isMuted, setMuted } from "./sound.js";
 
 const app = document.getElementById("app");
 const money = (n) => formatMoney(n);
-const short = (n) => `${n < 0 ? "−" : ""}₹${formatRupees(Math.abs(n))}`;
 
 // ---------- The life, and its forks ----------
 
@@ -122,7 +121,7 @@ function runStep() {
   const ticks = h("ol", { class: "ticks", "aria-label": `${run.months.length} of 24 months closed` },
     Array.from({ length: 24 }, (_, i) => h("li", { class: `tick${i < run.months.length ? " is-closed" : ""}` })));
   const worth = h("p", { class: "home-net-worth money tabular" }, money(end.netWorth));
-  const gain = end.netWorth - run.startNetWorth;
+  const gain = shownMoneyGap(run.startNetWorth, end.netWorth);
   const gainText = h("span", { class: "tabular" }, money(Math.abs(gain)));
   const bars = BAR_KEYS.map((k) => h("div", { class: "gbar" }, h("span", { class: "gbar-name" }, BAR_NAMES[k]), track(end[k])));
 
@@ -191,7 +190,7 @@ function chooseStep() {
         h("span", { class: "list-what" }, optionLabel(f.option)),
         h("span", { class: "list-instead" }, `instead of “${optionLabel(f.real)}”`),
         h("span", { class: "list-why" }, way === "cost"
-          ? `The ghost ends ${money(f.features.end.netWorth)} richer`
+          ? `The ghost ends ${money(f.shownGap)} richer`
           : surpriseWords(f.reason, f.features.end)))))));
   }
   const redraw = () => { if (way !== "months" && document.body.contains(body)) draw(); };
@@ -225,7 +224,7 @@ function monthsList(choose) {
       h("span", { class: "month-text" },
         h("span", { class: "month-summary" }, m.summary ?? `Month ${m.month}`),
         h("span", { class: "month-chose" }, m.choices.map((c) => c.chosen.label).join(" · "))),
-      h("span", { class: "month-worth tabular" }, short(run.bars.find((b) => b.month === m.month).netWorth)));
+      h("span", { class: "month-worth tabular" }, money(run.bars.find((b) => b.month === m.month).netWorth)));
     return h("li", { class: "month" }, row, detail);
   }));
 }
@@ -306,7 +305,7 @@ function endStep(index, option) {
   const play = () => {
     count(realFigure, 0, nw.real, money, { duration: 700 });
     count(ghostFigure, 0, nw.ghost, money, { duration: 700 });
-    tween({ duration: 700, update: (p) => { gapLine.textContent = FORMATS.net_worth_gap((nw.ghost - nw.real) * p); } });
+    tween({ duration: 700, update: (p) => { gapLine.textContent = exactMoneyGap(nw.real, nw.real + (nw.ghost - nw.real) * p); } });
     rows.forEach((r, i) => {
       moveBar(r.realTrack, 0, r.c.real, { delay: 200 + i * 80 });
       r.ghostTrack.style.opacity = reduced() ? "" : "0";
@@ -317,8 +316,8 @@ function endStep(index, option) {
         moveBar(r.ghostTrack, r.c.real, r.c.ghost, { onStart: (rise) => (rise ? sound.rise : sound.fall)() });
         const gap = r.c.ghost - r.c.real;
         tween({ duration: gap >= 0 ? 500 : 360, update: (p) => {
-          const v = gap * p;
-          r.label.textContent = Math.round(Math.abs(v)) === 0 ? "Level" : `Ghost ${FORMATS[`${r.c.key}_gap`](v)}`;
+          const words = p === 1 ? r.c.gap : FORMATS[`${r.c.key}_gap`](gap * p);
+          r.label.textContent = words === "level" ? "Level" : `Ghost ${words}`;
         } });
       });
     });
@@ -397,7 +396,7 @@ function narrationCard(view, checked) {
   }
 
   const figures = accepted && h("ul", { class: "figures", hidden: true }, accepted.figures.map((f) =>
-    h("li", {}, h("code", {}, `{${f.token}}`), " ", h("span", {}, FORMATS[f.token](f.value)))));
+    h("li", {}, h("code", {}, `{${f.token}}`), " ", h("span", {}, f.text))));
 
   const rejectedList = rejected.map((a) => {
     const draft = h("p", { class: "draft", hidden: true },

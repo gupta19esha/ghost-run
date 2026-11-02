@@ -35,9 +35,9 @@ test("a typed figure is one reason, and the draft marks it whole", async () => {
   const [rejected] = checkAttempts(result, await served(result, { NARRATE_STUB_MISTAKES: "1" })).rejected;
   const typed = reasons(rejected).filter((r) => r.rule === "numeral");
   assert.equal(typed.length, 1);
-  assert.ok(typed[0].count >= 2, "2,400 is two digit runs to verify()");
+  assert.ok(typed[0].count >= 2, "2,359 is two digit runs to verify()");
   const parts = markedDraft(rejected.narration, rejected.failures);
-  assert.deepEqual(parts.filter((p) => p.mark).map((p) => p.text), ["2,400"]);
+  assert.deepEqual(parts.filter((p) => p.mark).map((p) => p.text), ["2,359"]);
   assert.equal(parts.map((p) => p.text).join(""), rejected.narration);
 });
 

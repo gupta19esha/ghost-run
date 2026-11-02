@@ -10,6 +10,7 @@
 // the real run.
 
 import { getDecision } from "../vendor/dry-run-engine/engine/index.js";
+import { shownMoneyGap } from "./render.js";
 
 export const TOKENS = [
   // The fork point
@@ -41,6 +42,19 @@ export const TOKENS = [
   "substitution_month",
   "withdrawn_choice",
   "substitute_choice",
+  // What happened between the split and the end. Net worth gaps are as displayed
+  "widest_gap_month",
+  "widest_gap",
+  "ghost_ahead_months",
+  "first_bar_apart_month",
+  "first_bar_apart",
+  "ghost_lowest_month",
+  "layoff_month",
+  "layoff_real_net_worth",
+  "layoff_ghost_net_worth",
+  "layoff_net_worth_gap",
+  "crossover_month",
+  "crossover_count",
 ];
 
 // The tokens that describe a substitution. A narration of a fork with substitutions must use one
@@ -48,6 +62,7 @@ export const TOKENS = [
 export const SUBSTITUTION_TOKENS = ["substitution_count", "substituted_decision", "substitution_month", "withdrawn_choice", "substitute_choice"];
 
 const BARS = { net_worth: "netWorth", safety: "safety", freedom: "freedom", life: "life" };
+const BAR_LABELS = [["safety", "Safety"], ["freedom", "Freedom"], ["life", "Life"]];
 
 // Option ids carry their decision: D16-A is an option of D16
 const decisionOf = (optionId) => optionId.split("-")[0];
@@ -70,6 +85,53 @@ function identicalMonths({ real, ghost, divergence }) {
     months += 1;
   }
   return months;
+}
+
+// The middle of the run, over the months both runs closed. Each is null when the run has none
+function events({ real, ghost, divergence }, splitMonth) {
+  const row = (run, month) => run.bars.find((b) => b.month === month);
+  const gaps = divergence.map(({ month }) => ({ month, gap: shownMoneyGap(row(real, month).netWorth, row(ghost, month).netWorth) }));
+
+  // Ties go to the earliest month
+  const widest = gaps.reduce((best, g) => (Math.abs(g.gap) > Math.abs(best?.gap ?? 0) ? g : best), null);
+  const ahead = gaps.filter((g) => g.gap > 0).length;
+
+  // Apart as displayed, in whole points. Bars that part in the same month: the one furthest apart
+  const barGap = (month, key) => Math.abs(Math.round(row(ghost, month)[key]) - Math.round(row(real, month)[key]));
+  const barApart = gaps.find(({ month }) => BAR_LABELS.some(([key]) => barGap(month, key) > 0));
+  const firstBar = barApart && BAR_LABELS.reduce((best, bar) => (barGap(barApart.month, bar[0]) > barGap(barApart.month, best[0]) ? bar : best));
+
+  // After the split only: over the whole run it would nearly always be month 1
+  const lowest = splitMonth === null ? null : gaps.filter(({ month }) => month > splitMonth)
+    .reduce((best, { month }) => (!best || row(ghost, month).netWorth < row(ghost, best).netWorth ? month : best), null);
+
+  // A month the ghost's lead changes hands: the gap's sign flips, across any months at level
+  const crossings = [];
+  let side = 0;
+  for (const { month, gap } of gaps) {
+    if (gap !== 0 && side !== 0 && Math.sign(gap) !== side) crossings.push(month);
+    if (gap !== 0) side = Math.sign(gap);
+  }
+
+  // The layoff is scripted (the sheet's shock column, read by engine/shocks.js) and is the only
+  // scripted shock. It is an event only if both runs were laid off that month and reached it
+  const laidOff = real.state.employment.laid_off_month ?? null;
+  const layoff = laidOff !== null && ghost.state.employment.laid_off_month === laidOff && gaps.some((g) => g.month === laidOff) ? laidOff : null;
+
+  return {
+    widest_gap_month: widest?.month ?? null,
+    widest_gap: widest?.gap ?? null,
+    ghost_ahead_months: ahead > 0 ? ahead : null,
+    first_bar_apart_month: barApart?.month ?? null,
+    first_bar_apart: firstBar?.[1] ?? null,
+    ghost_lowest_month: lowest,
+    layoff_month: layoff,
+    layoff_real_net_worth: layoff === null ? null : row(real, layoff).netWorth,
+    layoff_ghost_net_worth: layoff === null ? null : row(ghost, layoff).netWorth,
+    layoff_net_worth_gap: layoff === null ? null : shownMoneyGap(row(real, layoff).netWorth, row(ghost, layoff).netWorth),
+    crossover_month: crossings[0] ?? null,
+    crossover_count: crossings.length > 0 ? crossings.length : null,
+  };
 }
 
 export function resolveTokens(forkResult) {
@@ -97,6 +159,7 @@ export function resolveTokens(forkResult) {
     withdrawn_choice: first ? optionLabel(first.withdrawn) : null,
     // Null when the rule ended the ghost there instead of choosing (keep-real-or-stop)
     substitute_choice: first ? optionLabel(first.chosen) : null,
+    ...events(forkResult, point ? getDecision(point.decisionId).month : null),
   };
   for (const [name, key] of Object.entries(BARS)) {
     values[`real_${name}`] = realEnd ? realEnd[key] : null;

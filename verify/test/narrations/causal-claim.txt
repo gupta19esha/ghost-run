@@ -1,0 +1,1 @@
+In month {fork_month} you chose {real_choice}. The ghost chose {ghost_choice} instead. Then in month {substitution_month} you chose {withdrawn_choice}, but that choice was not offered on the ghost path, so the ghost took {substitute_choice}. By month {end_month} the ghost has {net_worth_gap} because of what it chose.

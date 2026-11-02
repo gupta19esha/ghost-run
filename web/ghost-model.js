@@ -11,7 +11,8 @@ import { order, SCORE } from "../agent/rank.js";
 import { judge } from "../verify/attempts.js";
 import { leadCheck } from "../agent/checks.js";
 import { sameMoney, SAME_MONEY_LEAD } from "../agent/prompt.js";
-import { renderNarration, FORMATS } from "../verify/render.js";
+import { renderNarration, printTokens, exactMoneyGap } from "../verify/render.js";
+import { resolveTokens } from "../verify/tokens.js";
 import { createState, getBars, getDecision, tokenValues } from "../vendor/dry-run-engine/engine/index.js";
 import { renderText } from "../vendor/dry-run-engine/text/render.js";
 
@@ -123,6 +124,8 @@ export function failureWords(failure) {
   if (failure.rule === "substitution_unmentioned") {
     return `Never said that ${failure.found.map((o) => `“${label(o)}”`).join(" and ")} was not on the table on the ghost's path.`;
   }
+  if (failure.rule === "sentence_without_token") return `Wrote “${failure.found}”, a sentence with no figure from the simulation in it, so nothing could check it.`;
+  if (failure.rule === "causal_claim") return `Wrote “${failure.found}”, claiming a cause. The simulation keeps no record of which choice caused a change.`;
   if (failure.rule === "lead") return `Did not open with “${SAME_MONEY_LEAD}”, though the money ends almost level.`;
   return failure.detail;
 }
@@ -133,6 +136,7 @@ export function markedDraft(narration, failures) {
   const caught = [...new Set([
     ...(failures.some((f) => f.rule === "numeral") ? typedFigures(narration) : []),
     ...failures.filter((f) => f.rule === "unknown_token" && f.found).map((f) => `{${f.found}}`),
+    ...failures.filter((f) => f.rule === "sentence_without_token" || f.rule === "causal_claim").map((f) => f.found),
   ])].sort((a, b) => b.length - a.length);
   if (caught.length === 0) return [{ text: narration, mark: false }];
   const pattern = new RegExp(`(${caught.map(escape).join("|")})`, "g");
@@ -156,6 +160,7 @@ export function substitutionNotices(result) {
 // arrives separately (checkAttempts)
 export function forkView(save, monthIndex, option) {
   const result = fork(save, monthIndex, option);
+  const printed = printTokens(resolveTokens(result));
   const decisionId = option.split("-")[0];
   const month = getDecision(decisionId).month;
   const end = result.divergence.at(-1);
@@ -174,7 +179,7 @@ export function forkView(save, monthIndex, option) {
       name: BAR_NAMES[key],
       real: realEnd[key],
       ghost: ghostEnd[key],
-      gap: key === "netWorth" ? FORMATS.net_worth_gap(end[key]) : FORMATS[`${key}_gap`](end[key]),
+      gap: key === "netWorth" ? exactMoneyGap(realEnd[key], ghostEnd[key]) : printed[`${key}_gap`],
     })),
     endMonth: end.month,
     sameMoney: sameMoney(result),

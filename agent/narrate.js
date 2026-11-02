@@ -182,7 +182,7 @@ function stub(forkResult, attempt, previous, env) {
   if (forkResult.substitutions.length > 0) {
     sentences.splice(bar ? 3 : 1, 0, "In month {substitution_month}, {withdrawn_choice} was not available on this path, so the ghost took {substitute_choice}.");
   }
-  sentences.push("This narration is a stand-in, written without a model.");
+  sentences.push("This account of month {fork_month} is a stand-in, written without a model.");
   const narration = sentences.join(" ");
   const toldAboutDigits = previous.some((a) => a.failures.some((f) => f.rule === "numeral"));
   if (env.NARRATE_STUB_MISTAKES === "1" && !toldAboutDigits) {

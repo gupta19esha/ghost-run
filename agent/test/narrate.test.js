@@ -47,10 +47,42 @@ test("the prompt: tokens, no digits, the substitution, the voice, no advice, the
   const withSub = brief(substituted);
   assert.match(withSub, /You must say so/);
   assert.match(withSub, /Lead on it/);
-  assert.match(withSub, /\{net_worth_gap\}: .* Prints: 300 more/);
+  assert.match(withSub, /\{net_worth_gap\}: .* nothing may follow it: 273 more/);
   const without = brief(plain);
   assert.doesNotMatch(without, /You must say so|Lead on it/);
   assert.match(rejection([{ rule: "lead" }]), literal(SAME_MONEY_LEAD));
+});
+
+test("the prompt says what each bar means, and the brief shows each label's exact text", () => {
+  assert.match(SYSTEM, /A point is not a rupee/);
+  assert.match(SYSTEM, /Safety is how long you would survive with zero income/);
+  assert.match(SYSTEM, /Freedom is how much of your income is already committed/);
+  assert.match(SYSTEM, /Life is the one score not worked out from money alone/);
+  assert.match(SYSTEM, /Every sentence must contain at least one token/);
+  assert.match(SYSTEM, /At most one figure per sentence/);
+  assert.match(SYSTEM, /Never restate a gap as two scores, or two scores as a gap/);
+  assert.match(SYSTEM, /It does not report the token/);
+  assert.match(SYSTEM, /four to six sentences/);
+  assert.match(SYSTEM, /You may never claim that a choice caused an outcome/);
+  assert.match(SYSTEM, /section fourteen of the maths document/);
+  assert.match(SYSTEM, /Narrate in time order/);
+  assert.match(SYSTEM, /Every narration must say where the money ended/);
+  assert.match(SYSTEM, /Nothing may follow one in its clause/);
+  assert.match(SYSTEM, /Paraphrasing what a score means is wanted/);
+  assert.match(SYSTEM, /Two things are forbidden: asserting an event the brief does not give, and asserting a cause/);
+  assert.doesNotMatch(SYSTEM, /claimed before it arrived|ran a little fuller/, "no sentence to lift");
+  assert.match(SYSTEM, /never wrap it in a phrase that says what the label says/);
+  assert.match(SYSTEM, /what happened between the split and the end/);
+  assert.match(brief(substituted), /\{widest_gap_month\}: .* Prints: \d+/);
+  assert.match(SYSTEM, /never say again, in any words, that the money is close/);
+  assert.doesNotMatch(SYSTEM, /Reporting:|Observing:|\{freedom_gap\}/, "no example sentence to lift");
+  assert.match(rejection([{ rule: "causal_claim", found: "led to" }]), /"led to" claims a cause/);
+  const text = brief(substituted);
+  assert.match(text, literal("{real_choice} prints “5,000 a month into a broad equity index”"));
+  assert.match(text, literal("{ghost_choice} prints “5,000 a month into a recurring deposit”"));
+  assert.match(text, literal("{substitute_choice} prints “Ignore it”"));
+  assert.ok(text.indexOf("{real_choice} prints") < text.indexOf("Tokens, with what each prints"));
+  assert.match(rejection([{ rule: "sentence_without_token", found: "It held." }]), /no token in it.*"It held\."/);
 });
 
 // A Meta response, shaped as Meta's chat completions return one
