@@ -246,7 +246,7 @@ function splitStep(index, option) {
   narrationOf(index, option);
   const nw = view.compare[0];
   // Drawn at the card's own width, so its labels stay the size they are written at
-  const forkRoad = road({ ...view.road, height: chartHeight(), width: Math.min(innerWidth - 48, ROAD_MAX_WIDTH) });
+  const forkRoad = road({ ...view.road, character: save.character, height: chartHeight(), width: Math.min(innerWidth - 48, ROAD_MAX_WIDTH) });
   const chartLegend = legend(nw.real, nw.ghost);
   const legendGhost = chartLegend.querySelectorAll("b")[1];
   const notices = new Map(view.notices.map((n) => [n.month,

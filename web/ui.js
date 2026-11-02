@@ -3,6 +3,7 @@
 // decides its own. Money is formatted by text/render.js, never here.
 
 import { formatMoney } from "../vendor/dry-run-engine/text/render.js";
+import { DEFAULT_CHARACTER, characterMarkup } from "../vendor/dry-run-engine/game/character.js";
 import { animate, later, tween, reduced, EASE, CSS_EASE } from "./motion.js";
 
 const SVG = "http://www.w3.org/2000/svg";
@@ -41,6 +42,7 @@ export function ghostMark(size = 18) {
 // the drawing's height, at the same width, so a short phone can give the chart less of the screen.
 // width: the drawing's width, so a wide screen draws the months further apart, not bigger.
 // A chart with a ghost carries svg.ghost, what drawGhost() needs to draw it in
+const ROAD_WALK_HOPS = 8;
 let chartCount = 0;
 export function chart({ real, ghost = null, split = null, marks = [], height = 214, width = 342 }) {
   const W = width, H = height, L = 6, R = 6, T = 30, B = 26;
@@ -124,7 +126,7 @@ export function chart({ real, ghost = null, split = null, marks = [], height = 2
 // it at the fork and running alongside to the last month. Flat shapes, the hero's palette. points:
 // web/ghost-model.js's ghostRoad, in months and a sideways offset from your road. layoff: { month,
 // label }, marked across both. Carries svg.ghost, as chart does, so hideGhost and drawGhost draw it
-export function road({ months, points, split, marks = [], layoff = null, height = 214, width = 342 }) {
+export function road({ months, points, split, marks = [], layoff = null, height = 214, width = 342, character = DEFAULT_CHARACTER }) {
   const W = width, H = height, L = 14, R = 52;
   const mid = H * 0.62, reach = H * 0.26;
   const x = (m) => L + ((m - months[0]) / (months.at(-1) - months[0])) * (W - L - R);
@@ -218,17 +220,33 @@ export function road({ months, points, split, marks = [], layoff = null, height 
     return { month: m, at: lengths[i] / total, el: ring };
   }).filter(Boolean);
 
-  // You, and the ghost, each where their road ended: the hero's figure, scaled to stand on the road
-  const person = (px, py, fill) => s("g", { transform: `translate(${px} ${py}) scale(${(H * 0.18) / 76}) translate(-548 -300)` },
-    s("circle", { cx: 548, cy: 238, r: 12, fill }),
-    s("path", { d: "M531 300v-30a17 17 0 0 1 34 0v30Z", fill }));
-  svg.append(person(x(months.at(-1)) + 12, mid + roadWidth * 0.2, "var(--ink)"));
+  // You and your ghost, the same character, each walking their own road from the fork with a little
+  // bounce. The ghost ends a step further on, so that two lives ending close together do not stand
+  // in each other
+  const scale = (H * 0.2) / 76;
+  const walker = (pale) => {
+    const g = s("g", { class: pale ? "road-art-pale" : "road-art-you" });
+    g.innerHTML = characterMarkup(character, { pale });
+    return g;
+  };
+  const you = walker(false);
+  const pale = walker(true);
+  const stand = (g, px, py) => g.setAttribute("transform", `translate(${px} ${py}) scale(${scale}) translate(-548 -300)`);
+  const startX = x(split);
+  const endX = x(months.at(-1)) + 12;
+  const walk = (p, hx, hy) => {
+    const hop = p < 1 ? Math.abs(Math.sin(p * Math.PI * ROAD_WALK_HOPS)) * H * 0.025 : 0;
+    stand(you, startX + (endX - startX) * p, mid + roadWidth * 0.2 - hop);
+    stand(pale, hx + 12 + 22 * p, hy + roadWidth * 0.2 - hop);
+  };
+  svg.append(you, pale);
   const [ex, ey] = pts.at(-1);
-  // A step further on than you, so that two lives ending close together do not stand in each other
-  const endDot = s("g", { class: "chart-ghost-end-g" }, person(ex + 34, ey + roadWidth * 0.2, "var(--ghost-fill)"));
-  const head = s("circle", { cx: pts[0][0], cy: pts[0][1], r: 4, class: "chart-ghost-head" });
-  svg.append(endDot, head);
-  svg.ghost = { reveal, total, points: pts, lengths, rings, endDot, head, pill };
+  walk(1, ex, ey);
+  const endDot = s("g", { class: "chart-ghost-end-g" });
+  // The walker is the head of the ghost's road here, so the chart's dot is not put on the page
+  const head = s("circle");
+  svg.append(endDot);
+  svg.ghost = { reveal, total, points: pts, lengths, rings, endDot, head, pill, walk };
   return svg;
 }
 
@@ -238,6 +256,7 @@ export function hideGhost(svg) {
   if (reduced()) return;
   const { reveal, total, rings, endDot, pill } = svg.ghost;
   reveal.setAttribute("stroke-dashoffset", String(total));
+  svg.ghost.walk?.(0, svg.ghost.points[0][0], svg.ghost.points[0][1]);
   for (const ring of rings) ring.el.style.opacity = "0";
   endDot.style.opacity = "0";
   if (pill) pill.style.opacity = "0";
@@ -283,10 +302,13 @@ export function drawGhost(svg, { onRing = () => {}, progress = () => {}, done = 
       head.setAttribute("cx", hx.toFixed(1));
       head.setAttribute("cy", hy.toFixed(1));
       head.style.opacity = p > 0 && p < 1 ? "1" : "0";
+      g.walk?.(p, hx, hy);
       for (const ring of rings) if (p >= ring.at) land(ring);
       progress(p);
     },
     done: () => {
+      const [ex, ey] = points.at(-1);
+      g.walk?.(1, ex, ey);
       endDot.style.opacity = "";
       animate(endDot, [{ transform: "scale(0.2)" }, { transform: "scale(1)" }], { duration: 300, easing: CSS_EASE.land });
       done();

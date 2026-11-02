@@ -16,6 +16,7 @@
 import { direction, arrow } from "./moves.js";
 import { illustration } from "./illustrations.js";
 import { cardCanvas } from "./certificate.js";
+import { CHARACTERS, CHARACTER_VIEWBOX, characterMarkup } from "../character.js";
 
 const CLOSE = "Close";
 const CARD = "Your chapter card";
@@ -61,14 +62,17 @@ function lockedIdea(idea) {
   return marker;
 }
 
-// You, from the hero
-const figure = () => drawn("road-figure", "529 224 38 76",
-  `<circle cx="548" cy="238" r="12" fill="var(--ink)"/><path d="M531 300v-30a17 17 0 0 1 34 0v30Z" fill="var(--ink)"/>`);
+// The walk: a short step along the road with a little bounce, over this long, then a beat
+const WALK_MS = 900;
+const WALK_HOLD_MS = 350;
+const WALK_HOPS = 3;
+const WALK_BOUNCE_PX = 9;
+const WALK_FRAMES = 24;
 const tree = () => drawn("road-tree", "0 0 40 54",
   `<rect x="17" y="26" width="6" height="28" fill="var(--deep)"/><circle cx="20" cy="20" r="20" fill="var(--deep)"/>`);
 
 // The strip of road this stop stands on
-function track(stop, index) {
+function track(stop, index, character) {
   const el = span("road-track");
   el.append(span("road-way"));
   const dash = span("road-dash");
@@ -76,7 +80,7 @@ function track(stop, index) {
   el.append(dash);
   if (stop.month % TREE_EVERY === 2) el.append(tree());
   if (stop.event) el.append(span("road-barrier"));
-  if (stop.here) el.append(figure());
+  if (stop.here) el.append(drawn("road-figure", CHARACTER_VIEWBOX, characterMarkup(character)));
   return el;
 }
 
@@ -84,12 +88,18 @@ function track(stop, index) {
 // text/'s formatter. open: a month to show opened. onIdea(month): opens that month's idea. card:
 // chapterCard's figures or lockedChapterCard's, the far end of the road. onCard: opens it, once it
 // is the player's own. onPlay: this is the chapter opening, and its button plays the first month.
-// onClose otherwise: the close button
-export function timelineScreen({ stops, chapter, money, open = null, card, onCard = null, onIdea, onPlay = null, onClose = null }) {
+// onClose otherwise: the close button. character: who stands on the road. onCharacter(id): the
+// opening's choice of them. walkFrom and onWalked: a month has just closed, so the character walks
+// here from that month's stop, then onWalked goes on. A tap finishes it at once.
+export function timelineScreen({
+  stops, chapter, money, open = null, card, onCard = null, onIdea, onPlay = null, onClose = null,
+  character, onCharacter = null, walkFrom = null, onWalked = null,
+}) {
   const opening = Boolean(onPlay);
+  const walking = walkFrom !== null;
   const screen = document.createElement("section");
-  screen.className = `screen timeline${opening ? " opening" : ""}`;
-  screen.dataset.screen = opening ? "start" : "timeline";
+  screen.className = `screen timeline${opening ? " opening" : ""}${walking ? " walking" : ""}`;
+  screen.dataset.screen = opening ? "start" : walking ? "walk" : "timeline";
 
   const top = document.createElement("div");
   top.className = "timeline-top";
@@ -107,7 +117,7 @@ export function timelineScreen({ stops, chapter, money, open = null, card, onCar
     heading.append(label, title, line);
   }
   top.append(heading);
-  if (!opening) {
+  if (!opening && !walking) {
     const close = document.createElement("button");
     close.type = "button";
     close.className = "icon-button";
@@ -125,7 +135,7 @@ export function timelineScreen({ stops, chapter, money, open = null, card, onCar
     item.className = `road-stop ${stop.played ? "is-played" : "is-ahead"}${stop.event ? " has-event" : ""}`;
     item.dataset.month = String(stop.month);
     if (stop.here) item.setAttribute("aria-current", "step");
-    item.append(track(stop, index));
+    item.append(track(stop, index, character));
 
     const body = document.createElement("div");
     body.className = "road-body";
@@ -242,6 +252,27 @@ export function timelineScreen({ stops, chapter, money, open = null, card, onCar
   if (opening) {
     const foot = document.createElement("div");
     foot.className = "start-foot";
+    const picks = document.createElement("div");
+    picks.className = "road-picks";
+    picks.setAttribute("role", "group");
+    const pickButtons = CHARACTERS.map(({ id, name }) => {
+      const pick = document.createElement("button");
+      pick.type = "button";
+      pick.className = "road-pick";
+      pick.dataset.character = id;
+      pick.setAttribute("aria-pressed", String(id === character));
+      const swatch = span("road-pick-swatch");
+      swatch.append(drawn("road-pick-figure", CHARACTER_VIEWBOX, characterMarkup(id)));
+      pick.append(swatch, span("road-pick-name", name));
+      pick.addEventListener("click", () => {
+        for (const other of pickButtons) other.setAttribute("aria-pressed", String(other === pick));
+        road.querySelector(".road-figure").innerHTML = characterMarkup(id);
+        onCharacter(id);
+      });
+      return pick;
+    });
+    picks.append(...pickButtons);
+    foot.append(picks);
     const play = document.createElement("button");
     play.type = "button";
     play.className = "action";
@@ -261,6 +292,31 @@ export function timelineScreen({ stops, chapter, money, open = null, card, onCar
     }
     const target = road.querySelector(open === null ? '[aria-current="step"]' : `[data-month="${open}"]`);
     target?.scrollIntoView({ block: "center", inline: "center" });
+    if (walking) walk(target);
   };
+
+  function walk(target) {
+    road.inert = true;
+    const from = road.querySelector(`[data-month="${walkFrom}"] .road-track`).getBoundingClientRect();
+    const to = target.querySelector(".road-track").getBoundingClientRect();
+    const [dx, dy] = [from.left - to.left, from.top + from.height / 2 - (to.top + to.height / 2)];
+    const frames = Array.from({ length: WALK_FRAMES + 1 }, (_, i) => {
+      const p = i / WALK_FRAMES;
+      const hop = Math.abs(Math.sin(p * Math.PI * WALK_HOPS)) * WALK_BOUNCE_PX;
+      return { transform: `translate(${dx * (1 - p)}px, ${dy * (1 - p) - hop}px)` };
+    });
+    const step = target.querySelector(".road-figure").animate(frames, { duration: WALK_MS, easing: "linear" });
+    let gone = false;
+    let hold = null;
+    const leave = () => {
+      if (gone) return;
+      gone = true;
+      clearTimeout(hold);
+      step.cancel();
+      onWalked();
+    };
+    hold = setTimeout(leave, WALK_MS + WALK_HOLD_MS);
+    screen.addEventListener("click", leave);
+  }
   return screen;
 }

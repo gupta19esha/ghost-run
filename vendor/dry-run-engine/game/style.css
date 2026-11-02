@@ -781,6 +781,9 @@ html, body {
   animation: road-arrive 320ms cubic-bezier(0.2, 0.8, 0.2, 1) 400ms backwards;
 }
 .road-stop[aria-current] .road-tree { display: none; }
+/* The walk: the character crosses from one stop's strip to the next's, over everything */
+.walking .road-track { overflow: visible; }
+.walking .road-figure { z-index: 3; animation: none; }
 .road-stop[aria-current] .road-track { min-height: 64px; }
 @keyframes road-arrive { from { opacity: 0; transform: translateY(10px); } }
 /* The layoff: a barrier across the road, at its month */
@@ -1591,6 +1594,28 @@ body.progressed { --strip: 26px; }
 /* ---------- The road opening a chapter (UI.md rule 11) ---------- */
 
 /* The button stays in reach while the road scrolls, so the opening can be skipped at once */
+/* Who stands on the road: one is already chosen, so Play is all a player has to press */
+.road-picks { display: flex; gap: 10px; margin-bottom: 10px; }
+.road-pick {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 4px 12px 4px 4px;
+  background: var(--ink-raised);
+  border: 2px solid var(--rule);
+  border-radius: 14px;
+  color: var(--bone);
+  font-family: var(--body);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.road-pick[aria-pressed="true"] { border: 3px solid var(--deep); font-weight: 800; }
+.road-pick:focus-visible { outline: 2px solid var(--bone); outline-offset: 2px; }
+.road-pick-swatch { display: flex; flex: 0 0 40px; align-items: flex-end; justify-content: center; height: 44px; padding-top: 2px; background: var(--deep-raised); border-radius: 10px; overflow: hidden; }
+.road-pick-figure { width: 20px; height: 40px; }
 .start-foot {
   position: sticky;
   bottom: 0;

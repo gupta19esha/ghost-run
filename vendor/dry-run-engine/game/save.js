@@ -25,6 +25,7 @@ import {
   createState, applyDecision, advanceMonth, decisionsForMonth, getBars, compareBars, chapterComplete,
 } from "../engine/index.js";
 import { SAVE_KEY, FIRST_SITTING_MONTHS } from "./config.js";
+import { DEFAULT_CHARACTER } from "./character.js";
 
 const VERSION = 1;
 // Where a save that no longer reads or replays is kept instead of deleted
@@ -44,7 +45,7 @@ function yesterday() {
 export function newSave({ seed }) {
   return {
     version: VERSION, seed, choices: [], closed: 0, closedOn: null, streak: 0, explained: [],
-    startedOn: today(), chapterClosedOn: {}, chaptersOpened: [],
+    startedOn: today(), chapterClosedOn: {}, chaptersOpened: [], character: DEFAULT_CHARACTER,
   };
 }
 
@@ -52,7 +53,7 @@ export function newSave({ seed }) {
 // startedOn is unknown for a run begun before it was recorded, so null.
 export function upgrade(save) {
   return {
-    closed: 0, closedOn: null, streak: 0, explained: [], startedOn: null, chapterClosedOn: {}, chaptersOpened: [],
+    closed: 0, closedOn: null, streak: 0, explained: [], startedOn: null, chapterClosedOn: {}, chaptersOpened: [], character: DEFAULT_CHARACTER,
     ...save,
   };
 }

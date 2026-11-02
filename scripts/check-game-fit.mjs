@@ -142,6 +142,7 @@ try {
       const seen = new Map();
       let sideTrips = false;
       let roadTrip = false;
+      let walkTapped = false;
       let starts = 0;
       let month = 0;
       for (let step = 0; step < 600; step++) {
@@ -155,7 +156,7 @@ try {
         if (w >= 900 && ["month", "decision", "consequence", "callback", "close", "home", "timeline", "how"].includes(m.name) && !m.rail) problems.push(`${label}: no rail`);
         const inMonth = ["month", "decision", "consequence", "callback", "close", "home"].includes(m.name);
         if (inMonth && !m.progress) problems.push(`${label}: no chapter progress`);
-        if (!inMonth && m.progress && m.name !== "timeline" && m.name !== "how") problems.push(`${label}: shows the chapter progress`);
+        if (!inMonth && m.progress && !["timeline", "how", "walk"].includes(m.name)) problems.push(`${label}: shows the chapter progress`);
         if (m.name === "month" && month === 0 && !seen.has("start")) problems.push("month 1: no chapter start before it");
         if (!seen.has(m.name)) seen.set(m.name, m);
         const act = (expr) => run(expr);
@@ -188,6 +189,21 @@ try {
           await advance(1200);
         } else if (m.name === "consequence" || m.name === "turn") await advance(5200);
         else if (m.name === "callback") await advance(3600);
+        else if (m.name === "walk") {
+          // The character's walk to the next stop. It leaves by itself; the first is tapped, which
+          // must finish it at once
+          if (!walkTapped) {
+            walkTapped = true;
+            await act(`document.querySelector(".walking").click(); return 1`);
+            await advance(50);
+            if ((await measure()).name === "walk") problems.push("walk: a tap does not finish it");
+          } else {
+            const fig = await act(`const f = document.querySelector(".walking .road-figure"); return !!f && document.querySelectorAll(".walking .road-figure").length === 1`);
+            if (!fig) problems.push("walk: no character on the road");
+            await advance(1500);
+            if ((await measure()).name === "walk") problems.push("walk: it does not leave by itself");
+          }
+        }
         else if (m.name === "close") {
           month += 1;
           await act(`document.querySelector(".close-button").click(); return 1`);

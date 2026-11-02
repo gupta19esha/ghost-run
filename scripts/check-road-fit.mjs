@@ -140,7 +140,13 @@ try {
         sideways,
         scroll: [scrollY, road.scrollLeft],
         close: !!document.querySelector(".timeline .icon-button"),
+        picks: [...document.querySelectorAll(".road-pick")].map((p) => [p.dataset.character, p.getAttribute("aria-pressed"), p.getBoundingClientRect().height >= 44]),
       };`);
+    if (opening.picks.length !== 2 || opening.picks.filter((p) => p[1] === "true").length !== 1 || !opening.picks.every((p) => p[2])) say(size, "opening", `the character choice: ${JSON.stringify(opening.picks)}`);
+    await shot(`opening-girl-${size}`);
+    const picked = await js(`const before = document.querySelector(".road-figure").innerHTML; document.querySelector('.road-pick[data-character="boy"]').click(); const after = document.querySelector(".road-figure").innerHTML; return { changed: before !== after, saved: JSON.parse(localStorage.getItem(${JSON.stringify(SAVE_KEY)})).character };`);
+    if (!picked.changed) say(size, "opening", "choosing a character does not change the road's figure");
+    if (picked.saved !== "boy") say(size, "opening", `the choice is not in the save: ${picked.saved}`);
     if (opening.name !== "start") say(size, "opening", `showed ${opening.name}`);
     if (opening.stops !== 24 || opening.dark !== 24) say(size, "opening", `${opening.stops} stops, ${opening.dark} dark`);
     if (opening.here !== "1" || opening.figures !== 1) say(size, "opening", `figure at ${opening.here}`);
@@ -335,6 +341,8 @@ try {
           rings: document.querySelectorAll(".road-art .chart-mark").length,
           ringOpacity: [...document.querySelectorAll(".road-art .chart-mark")].map((r) => getComputedStyle(r).opacity),
           endOpacity: getComputedStyle(document.querySelector(".chart-ghost-end-g") ?? document.body).opacity,
+          walkers: [".road-art-you", ".road-art-pale"].map((c) => { const g = art.querySelector(c); const b = g?.getBoundingClientRect(); const a = art.getBoundingClientRect(); return !!b && b.width > 0 && b.left >= a.left - 0.5 && b.right <= a.right + 0.5 && b.top >= a.top - 0.5 && b.bottom <= a.bottom + 0.5; }),
+          walkersApart: (() => { const y = art.querySelector(".road-art-you").getBoundingClientRect(); const p = art.querySelector(".road-art-pale").getBoundingClientRect(); return p.left !== y.left || p.top !== y.top; })(),
           revealed: document.querySelector(".chart-reveal")?.getAttribute("stroke-dashoffset"),
           oldChart: document.querySelectorAll(".chart").length,
         };`);
@@ -349,6 +357,8 @@ try {
       if (m.sideways > 0) say(size, where, `scrolls sideways by ${m.sideways}px`);
       if (Number(m.revealed) > 0.5) say(size, where, `the ghost's road did not finish drawing (${m.revealed})`);
       if (m.endOpacity !== "1") say(size, where, "the ghost is not standing at the end of its road");
+      if (!m.walkers.every(Boolean)) say(size, where, `a walker is out of the drawing: ${m.walkers}`);
+      if (!m.walkersApart) say(size, where, "the two walkers stand in the same place");
       if (SUBSTITUTED.includes(option) && (m.rings !== 1 || m.ringOpacity[0] !== "1")) say(size, where, `substitution rings: ${m.rings} ${m.ringOpacity}`);
       if (!SUBSTITUTED.includes(option) && m.rings !== 0) say(size, where, `${m.rings} rings on a fork with no substitution`);
       if (m.noticeOver > 0.5) say(size, where, `the substitution notice ends ${m.noticeOver}px under the dock`);

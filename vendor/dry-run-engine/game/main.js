@@ -38,6 +38,7 @@ import { chapterCard, lockedChapterCard } from "./certificate.js";
 import { barLabels } from "./labels.js";
 import { createRail, ways } from "./rail.js";
 import { lifeSoFar, roadStops } from "./timeline.js";
+import { DEFAULT_CHARACTER } from "./character.js";
 import {
   newSave, readSave, writeSave, dropSave, setAsideSave, replay, waitsForTomorrow, recordClose, currentStreak, chapterDays,
   explainedAlready, recordExplained, jumpSave, introSeen, recordIntroSeen, chapterOpened, recordChapterOpened,
@@ -173,7 +174,24 @@ function roadOf(chapter, months) {
     chapter: { number: formatCount(chapter), title: info.name, span: `${info.ages.from} to ${info.ages.to} · ${info.months} months`, count: ideas.count },
     money: formatMoney,
     card: chapterComplete(state, chapter) ? chapterCard(state, save, chapter) : lockedChapterCard(chapter),
+    character: save.character ?? DEFAULT_CHARACTER,
   };
+}
+
+// A month has closed: the character walks to the next stop on the road, then the game goes on.
+// Under reduced motion, or for a screenshot script, it simply goes on
+function walkTo(closed, view, then) {
+  if (script.active || matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    then();
+    return;
+  }
+  const chapter = chapterPlace(closed)?.chapter ?? 1;
+  show(timelineScreen({
+    ...roadOf(chapter, lifeSoFar(save) ?? []),
+    onIdea: () => {},
+    walkFrom: closed,
+    onWalked: then,
+  }), view, null);
 }
 
 // The chapter opens on its road (UI.md rule 11), all of it ahead
@@ -182,6 +200,10 @@ function showChapterStart(chapter, onPlay) {
     ...roadOf(chapter, lifeSoFar(save) ?? []),
     onIdea: () => {},
     onPlay,
+    onCharacter: (id) => {
+      save.character = id;
+      writeSave(save);
+    },
   }));
 }
 
@@ -311,7 +333,7 @@ function closeMonth(closed, monthEnd) {
       writeSave(save);
       // The chapter's last month: the turn of the chapter, then its card, then the report
       if (chapterComplete(state)) closeChapter();
-      else goHome(compareBars(monthStart, monthEnd));
+      else walkTo(closed, board({ compared: compareBars(monthStart, monthEnd), month: closed }), () => goHome(compareBars(monthStart, monthEnd)));
     },
   });
   show(screen, board({

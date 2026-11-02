@@ -22,6 +22,7 @@ const {
 } = await import("../save.js");
 
 const { chapterComplete } = await import("../../engine/index.js");
+const { CHARACTERS, DEFAULT_CHARACTER, characterMarkup } = await import("../character.js");
 const demo = readFileSync(new URL("../../../../web/demo/save.json", import.meta.url), "utf8");
 const day = (offset) => {
   const d = new Date();
@@ -78,6 +79,17 @@ test("a save that does not read is set aside, not deleted", () => {
   setAsideSave();
   assert.equal(store.get(SAVE_KEY), undefined);
   assert.equal(store.get(SET_ASIDE_KEY), stale);
+});
+
+test("the character is the save's: one by default, and an older save gets it without losing one", () => {
+  assert.equal(newSave({ seed: 3 }).character, DEFAULT_CHARACTER);
+  const { character, ...older } = newSave({ seed: 3 });
+  assert.equal(upgrade(older).character, DEFAULT_CHARACTER);
+  assert.equal(upgrade({ ...older, character: "boy" }).character, "boy");
+  for (const { id } of CHARACTERS) assert.match(characterMarkup(id), /var\(--/);
+  assert.notEqual(characterMarkup("girl"), characterMarkup("boy"));
+  assert.notEqual(characterMarkup("boy"), characterMarkup("boy", { pale: true }));
+  assert.doesNotMatch(characterMarkup("boy") + characterMarkup("girl"), /#[0-9a-f]{3,6}/i, "tokens, not hex");
 });
 
 test("upgrade adds only what is missing", () => {

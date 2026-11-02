@@ -238,6 +238,7 @@
   .road-end-open { height: 100%; }
   .start-foot, .report-foot { margin: 0; padding-left: 0; padding-right: 0; }
   .start-foot .action { display: block; width: min(100%, 420px); margin: 0 auto; }
+  .road-picks { width: min(100%, 420px); margin: 0 auto 10px; }
 
   /* The road opening a chapter has no pictures yet, so no row kept for them: the month, the road,
      then what lies beside it. The card stands at the road's end, the height of the road's band, so
