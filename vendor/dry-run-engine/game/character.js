@@ -11,7 +11,7 @@ export const CHARACTERS = [
 export const DEFAULT_CHARACTER = "girl";
 export const CHARACTER_VIEWBOX = "529 224 38 76";
 
-const FULL = { head: "var(--ink)", hair: "var(--bone)", girl: "var(--marigold)", boy: "var(--teal)", legs: "var(--deep)" };
+const FULL = { head: "var(--ink)", hair: "var(--bone)", girl: "var(--marigold)", boy: "var(--teal)", legs: "var(--bone)" };
 const PALE = { head: "var(--ghost-fill, #E6EEF9)", hair: "var(--paper-line)", girl: "var(--ghost-fill, #E6EEF9)", boy: "var(--ghost-fill, #E6EEF9)", legs: "var(--paper-line)" };
 
 export function characterMarkup(id, { pale = false } = {}) {
