@@ -65,32 +65,41 @@ if (dryRun) {
 const env = { ...process.env, NARRATE_PROVIDER: provider, NARRATE_LIVE: "1" };
 const failed = [];
 let retried = 0;
-for (const [index, f] of forks.entries()) {
-  const key = forkKey(save, f.monthIndex, f.option);
-  const label = `${String(index + 1).padStart(2)}/${forks.length} ${f.option}`;
-  try {
-    const log = await narrateFork(f.fork, { provider, key, live: true, env });
-    // A shorter run than last time leaves later attempts behind, which answered nothing now
-    for (const file of filesOf(key)) {
-      if (Number(file.match(/attempt-(\d+)\.json$/)?.[1]) > log.attempts.length) rmSync(file);
-    }
-    if (log.attempts.length > 1) retried += 1;
-    if (log.accepted) console.log(`${label} accepted on attempt ${log.accepted.number}`);
-    else {
+// A few at a time: each call can take a minute. A bad key or an empty account fails the same way on
+// every fork, so the first such failure stops the rest
+const WORKERS = Number(arg("workers") ?? 4);
+let next = 0;
+let stopped = false;
+async function worker() {
+  while (next < forks.length && !stopped) {
+    const index = next++;
+    const f = forks[index];
+    const key = forkKey(save, f.monthIndex, f.option);
+    const label = `${String(index + 1).padStart(2)}/${forks.length} ${f.option}`;
+    try {
+      const log = await narrateFork(f.fork, { provider, key, live: true, env });
+      // A shorter run than last time leaves later attempts behind, which answered nothing now
+      for (const file of filesOf(key)) {
+        if (Number(file.match(/attempt-(\d+)\.json$/)?.[1]) > log.attempts.length) rmSync(file);
+      }
+      if (log.attempts.length > 1) retried += 1;
+      if (log.accepted) console.log(`${label} accepted on attempt ${log.accepted.number}`);
+      else {
+        failed.push(f.option);
+        console.log(`${label} NONE PASSED in ${log.attempts.length}: ${[...new Set(log.rejected.flatMap((a) => a.failures.map((x) => x.rule)))].join(", ")}`);
+      }
+    } catch (error) {
       failed.push(f.option);
-      console.log(`${label} NONE PASSED in ${log.attempts.length}: ${[...new Set(log.rejected.flatMap((a) => a.failures.map((x) => x.rule)))].join(", ")}`);
-    }
-  } catch (error) {
-    failed.push(f.option);
-    const message = scrub(error.message);
-    console.log(`${label} ERROR ${message}`);
-    // A bad key or an empty account fails the same way on every fork: stop at the first
-    if (/\b(401|402|403)\b/.test(message)) {
-      console.log("Stopping: this will fail the same way on every fork. Check the key and the account's credit.");
-      break;
+      const message = scrub(error.message);
+      console.log(`${label} ERROR ${message}`);
+      if (/\b(401|402|403)\b/.test(message)) {
+        stopped = true;
+        console.log("Stopping: this will fail the same way on every fork. Check the key and the account's credit.");
+      }
     }
   }
 }
+await Promise.all(Array.from({ length: Math.min(WORKERS, forks.length) }, worker));
 
 let [input, output, reasoning, files] = [0, 0, 0, 0];
 for (const f of forks) {
@@ -104,7 +113,7 @@ for (const f of forks) {
   }
 }
 const price = PRICES[model];
-console.log(`\n${forks.length - failed.length} of ${forks.length} accepted, ${retried} needed a retry, ${files} responses cached.`);
+console.log(`\n${forks.length - failed.length} of ${forks.length} accepted this run, ${retried} needed a retry, ${files} responses on disk for these forks.`);
 console.log(`Tokens across those responses: ${input} in, ${output} out (of which ${reasoning} reasoning).`);
 if (price) console.log(`About $${((input * price[0] + output * price[1]) / 1e6).toFixed(2)} at list price, counting cached responses as if paid again.`);
 if (failed.length) {

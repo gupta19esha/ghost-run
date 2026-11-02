@@ -18,7 +18,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { SYSTEM, brief, rejection } from "./prompt.js";
+import { SYSTEM, META_SYSTEM, brief, metaBrief, rejection } from "./prompt.js";
 import { plainNarration } from "./plain.js";
 import { resolveTokens } from "../verify/tokens.js";
 import { FORMATS } from "../verify/render.js";
@@ -28,21 +28,21 @@ export const CACHE_DIR = fileURLToPath(new URL("../cache/narrations/", import.me
 
 // Meta's Model API (dev.meta.ai/docs): chat completions at api.meta.ai. Muse Spark is the model
 // Meta recommends for high-volume, cost-sensitive work; standard mode, since contributor mode
-// lets Meta train on prompts and responses. Low reasoning, as Meta advises for direct tasks:
-// reasoning tokens count against max_completion_tokens and are billed as output
+// lets Meta train on prompts and responses. Low reasoning: medium cost three times as much and held to the
+// instructions no better. Reasoning tokens count against max_completion_tokens
 export const META = {
   url: "https://api.meta.ai/v1/chat/completions",
   model: "muse-spark-1.3",
   reasoning_effort: "low",
-  max_completion_tokens: 4000,
+  max_completion_tokens: 16000,
 };
 const CLAUDE = { model: "claude-opus-5-5", effort: "medium", max_tokens: 16000 };
 
 export class NarrationUnavailable extends Error {}
 
 // The conversation for this attempt: the brief, then each earlier attempt and why it was rejected
-export function conversation(forkResult, previous = []) {
-  const messages = [{ role: "user", content: brief(forkResult) }];
+export function conversation(forkResult, previous = [], provider = "claude") {
+  const messages = [{ role: "user", content: provider === "meta" ? metaBrief(forkResult) : brief(forkResult) }];
   for (const a of previous) {
     messages.push({ role: "assistant", content: a.narration });
     messages.push({ role: "user", content: rejection(a.failures) });
@@ -66,9 +66,10 @@ export async function narrate(forkResult, {
   if (!PROVIDERS.includes(provider)) throw new Error(`Unknown narration provider ${JSON.stringify(provider)}`);
   if (provider === "stub") return stub(forkResult, attempt, previous, env);
 
-  const messages = conversation(forkResult, previous);
+  const messages = conversation(forkResult, previous, provider);
+  const system = provider === "meta" ? META_SYSTEM : SYSTEM;
   const model = provider === "meta" ? env.NARRATE_META_MODEL || META.model : env.NARRATE_CLAUDE_MODEL || CLAUDE.model;
-  const request = sha({ provider, model, system: SYSTEM, messages });
+  const request = sha({ provider, model, system, messages });
   const file = key ? `${cacheDir}/${provider}/${key}/attempt-${attempt}.json` : null;
 
   if (file) {
@@ -101,7 +102,7 @@ async function callMeta({ model, messages, env, fetchFn }) {
   if (!apiKey) throw new NarrationUnavailable("MODEL_API_KEY is not set");
   const body = JSON.stringify({
     model,
-    messages: [{ role: "system", content: SYSTEM }, ...messages],
+    messages: [{ role: "developer", content: META_SYSTEM }, ...messages],
     reasoning_effort: META.reasoning_effort,
     max_completion_tokens: META.max_completion_tokens,
   });

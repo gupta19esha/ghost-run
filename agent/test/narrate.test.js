@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { narrate, conversation, NarrationUnavailable } from "../narrate.js";
 import { narrateFork } from "../narration-loop.js";
-import { SYSTEM, brief, rejection, sameMoney, wayIn, SAME_MONEY_LEAD } from "../prompt.js";
+import { SYSTEM, META_SYSTEM, brief, metaBrief, rejection, sameMoney, wayIn, SAME_MONEY_LEAD } from "../prompt.js";
 import { forksOf } from "../rank.js";
 import { fork } from "../../runner/fork.js";
 
@@ -107,6 +107,16 @@ test("the prompt says what each bar means, and the brief shows each label's exac
   assert.match(rejection([{ rule: "sentence_without_token", found: "It held." }]), /no token in it.*"It held\."/);
 });
 
+test("Meta's instructions are its own: the shared prompt and Claude's cached requests do not change", () => {
+  assert.ok(META_SYSTEM.startsWith(SYSTEM));
+  assert.doesNotMatch(SYSTEM, /Whose score/);
+  assert.doesNotMatch(META_SYSTEM, /\d/, "no digits to copy");
+  assert.equal(conversation(substituted)[0].content, brief(substituted));
+  assert.match(conversation(substituted, [], "meta")[0].content, /Whose score moved/);
+  // D16-B: the ghost's Freedom is the lower, in the engine's own figures
+  assert.match(metaBrief(substituted), /Freedom: the ghost's ended at 10 and yours at 25\. Gap 15 points, lower/);
+});
+
 // A Meta response, shaped as Meta's chat completions return one
 const metaReply = (text) => ({ ok: true, status: 200, json: async () => ({ choices: [{ message: { content: text }, finish_reason: "stop" }], usage: { completion_tokens: 50 } }) });
 
@@ -120,7 +130,7 @@ test("every response is cached by fork and attempt; the same fork again costs no
       assert.equal(init.headers.Authorization, "Bearer test-key");
       const body = JSON.parse(init.body);
       assert.equal(body.model, "muse-spark-1.3");
-      assert.equal(body.messages[0].role, "system");
+      assert.equal(body.messages[0].role, "developer");
       return metaReply(body.messages.length === 2 ? "By month 24 the ghost is ahead." : "By month {end_month} the ghost has {net_worth_gap}.");
     };
     const options = { provider: "meta", key: "fork-1", cacheDir, env: { MODEL_API_KEY: "test-key" }, fetch: fetchFn };

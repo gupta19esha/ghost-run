@@ -144,6 +144,75 @@ export function wayIn(option, values) {
   return { late, way: ways[[...option].reduce((sum, c) => sum + c.charCodeAt(0), 0) % ways.length] };
 }
 
+// What Meta's model is told beyond the shared prompt. Kept apart so that the shared prompt, and with
+// it the digest of every cached Claude response, stays as it is: Claude's cache is the fallback
+export const META_SYSTEM = `${SYSTEM}
+
+These rules come last and win over anything above.
+
+Grammar. Write complete sentences with a subject and a verb. Never join two sentences with a comma. Never drop an article. Always write "the ghost", or "it" once the ghost is plainly the subject, and never bare "ghost".
+
+Months. A month token prints a bare number, which reads as an age or a time on its own. Always write the word "month" directly before it: "in month {fork_month}", "by month {end_month}". This goes for every token whose name ends in month, and for {end_month} and {first_divergent_month}.
+
+How the phrases fit. A score gap prints a phrase such as "points lower": write "the ghost's Freedom ended {freedom_gap}", and never "with" before it. A money gap prints a phrase such as "more": write "the ghost had {net_worth_gap}" or "the ghost finished with {net_worth_gap}".
+
+Whose score. Every claim about a score must name whose score it is, and it must be true. Every gap compares the ghost with the player, from the ghost's side. If a gap says lower, it is the ghost's score that is lower. Never write "your" about a score that moved unless the brief's statement of whose score moved says so. Do this for a paraphrase too: "the ghost's cushion", never just "the cushion". A wrong owner is a false statement and the worst error you can make.
+
+What every narration must say. Say how long the two lives matched, with the words "for {identical_months} months" or "after {identical_months} months", in the sentence of the split, whatever else the brief suggests about the opening; leave it out only if that token prints zero. That same sentence names the month of the split, with "month {fork_month}". Say where the money ended, with {net_worth_gap}, and say it is at the last month.
+
+Prose. Write sentences that follow from one another and read as an account of two lives, not a list of figures. Say "the ghost" once in a sentence and "it" or "its" after that. Mention only the one or two scores that moved furthest. Say a score's meaning in plain words a person would say aloud; if a phrase would puzzle someone hearing it, leave it out. Never name anything the brief does not give: no bills, no rent, no people, unless the brief has them. Give a score's meaning in its own clause beside the score's name, never a phrase such as "in the ghost's Safety". Never use a word like "lived" or "kept on the table" about a score.`;
+
+// What a score's direction means for the ghost, true of the score's definition whatever the fork:
+// for a model that does not hold to a paraphrase of its own
+const SCORE_MEANS = {
+  safety: { lower: "it could last less long with no pay", higher: "it could last longer with no pay" },
+  freedom: { lower: "more of its pay was committed before each month began", higher: "less of its pay was committed before each month began" },
+  life: { lower: "it was nearer to only getting by", higher: "it was a little further from only getting by" },
+};
+
+// How the sentence of the split goes, in a shape that is true of this fork. Several, so that forks do
+// not all open alike; which one is taken from the option's id, so it is arbitrary but fixed
+const SPLIT_SHAPES = [
+  'After {identical_months} months as one life, you chose {real_choice} in month {fork_month}, and the ghost took {ghost_choice}.',
+  'The two lives ran together for {identical_months} months, until month {fork_month}, when you chose {real_choice} and the ghost took {ghost_choice}.',
+  'In month {fork_month}, after {identical_months} months that matched, you chose {real_choice} and the ghost took {ghost_choice}.',
+  'For {identical_months} months you and the ghost were the same life, and in month {fork_month} you chose {real_choice} while the ghost took {ghost_choice}.',
+];
+function splitShape(option, values) {
+  // The lives stayed alike past the choice itself, so "until the choice" would be false
+  if (values.first_divergent_month !== null && values.first_divergent_month > values.fork_month) {
+    return 'In month {fork_month} you chose {real_choice} and the ghost took {ghost_choice}, but the two lives stayed the same until month {first_divergent_month}.';
+  }
+  if (values.identical_months === 0) return 'In month {fork_month}, right at the start, you chose {real_choice} and the ghost took {ghost_choice}.';
+  return SPLIT_SHAPES[[...option].reduce((sum, c) => sum + c.charCodeAt(0), 0) % SPLIT_SHAPES.length];
+}
+
+// The brief for Meta's model: the shared brief, then whose scores moved in plain words from the
+// engine, then the shape of the narration
+export function metaBrief(result) {
+  const values = resolveTokens(result);
+  const printed = printTokens(values);
+  const lines = BAR_KEYS.map((k) => {
+    const [real, ghost] = [Math.round(values[`real_${k}`]), Math.round(values[`ghost_${k}`])];
+    const name = BAR_NAMES[k];
+    if (real === ghost) return `${name}: level, both at ${real}. Do not mention it.`;
+    const way = ghost > real ? "higher" : "lower";
+    return `${name}: the ghost's ended at ${ghost} and yours at ${real}. Gap ${Math.abs(ghost - real)} points, ${way}. True to say: "the ghost's ${name} ended {${k}_gap}, and ${SCORE_MEANS[k][way]}", or the same thing in your own plain words.`;
+  });
+  const option = result.ghost.choices.find((id, i) => id !== result.real.choices[i]);
+  const shape = values.fork_month === null ? null : splitShape(option, values);
+  const bar = sameMoney(result);
+  const parts = [
+    bar ? `First sentence, exactly: ${SAME_MONEY_LEAD}` : null,
+    shape ? `The sentence of the split, in exactly this shape: ${shape}` : null,
+    result.substitutions.length > 0 ? 'Then the required sentence: In month {substitution_month}, {withdrawn_choice} was not available on this path, so the ghost took {substitute_choice}.' : null,
+    "Then one sentence, if there is something worth saying, about one thing in between, from the layoff, the widest gap or the lead changing hands, with its month. It says when and what, never why.",
+    "Then one or two sentences on the scores that moved furthest, from the lines above.",
+    'Last, exactly: By month {end_month}, the ghost had {net_worth_gap}.',
+  ].filter(Boolean);
+  return `${brief(result)}\n\nWhose score moved, at the last month:\n${lines.join("\n")}\n\nThe shape of the narration, which wins over the way in above:\n${parts.map((p, i) => `${i + 1}. ${p}`).join("\n")}\n\nName nothing the brief does not give. Never bare "ghost". Every month number has the word "month" directly before it. Each sentence is one complete sentence.`;
+}
+
 // The brief for one fork: what happened, and every token with what it prints
 export function brief(result) {
   const values = resolveTokens(result);
