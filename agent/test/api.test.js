@@ -1,6 +1,6 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
-import { mkdtempSync, readFileSync, rmSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { isPlainNarration } from "../plain.js";
@@ -42,23 +42,39 @@ test("only the demo life, and only a real fork of it", async () => {
 const d16 = { seed: save.seed, choices: save.choices, monthIndex: 15, option: "D16-B" };
 const noNetwork = () => { throw new Error("called out"); };
 
+// A cache holding only Claude's answer for D16-B, whatever else is committed
+const claudeOnlyCache = () => {
+  const dir = mkdtempSync(join(tmpdir(), "route-"));
+  const name = "claude/7-e297f21a0571-15-D16-B";
+  mkdirSync(join(dir, name), { recursive: true });
+  const text = readFileSync(new URL(`../../cache/narrations/${name}/attempt-1.json`, import.meta.url), "utf8");
+  writeFileSync(join(dir, name, "attempt-1.json"), text);
+  return { dir, narration: JSON.parse(text).narration };
+};
+
 test("meta with nothing cached falls back to Claude's committed cache, without calling out", async () => {
   const real = globalThis.fetch;
   globalThis.fetch = noNetwork;
+  const { dir, narration } = claudeOnlyCache();
   try {
-    const reply = await call(d16, { NARRATE_PROVIDER: "meta" });
+    const reply = await call(d16, { NARRATE_PROVIDER: "meta" }, "POST", { cacheDir: dir });
     assert.equal(reply.status, 200);
-    const cached = JSON.parse(readFileSync(new URL("../../cache/narrations/claude/7-e297f21a0571-15-D16-B/attempt-1.json", import.meta.url), "utf8"));
-    assert.equal(reply.body.attempts.at(-1).narration, cached.narration);
+    assert.equal(reply.body.attempts.at(-1).narration, narration);
   } finally {
     globalThis.fetch = real;
+    rmSync(dir, { recursive: true });
   }
 });
 
 test("meta allowed to call out but with no key falls back too, and never a 503", async () => {
-  const reply = await call(d16, { NARRATE_PROVIDER: "meta", NARRATE_LIVE: "1" });
-  assert.equal(reply.status, 200);
-  assert.equal(isPlainNarration(reply.body.attempts.at(-1).narration), false, "Claude's cache, not the template");
+  const { dir, narration } = claudeOnlyCache();
+  try {
+    const reply = await call(d16, { NARRATE_PROVIDER: "meta", NARRATE_LIVE: "1" }, "POST", { cacheDir: dir });
+    assert.equal(reply.status, 200);
+    assert.equal(reply.body.attempts.at(-1).narration, narration);
+  } finally {
+    rmSync(dir, { recursive: true });
+  }
 });
 
 test("a provider that fails on the call falls back, and tells the page nothing of why", async () => {

@@ -158,9 +158,7 @@ How the phrases fit. A score gap prints a phrase such as "points lower": write "
 
 Whose score. Every claim about a score must name whose score it is, and it must be true. Every gap compares the ghost with the player, from the ghost's side. If a gap says lower, it is the ghost's score that is lower. Never write "your" about a score that moved unless the brief's statement of whose score moved says so. Do this for a paraphrase too: "the ghost's cushion", never just "the cushion". A wrong owner is a false statement and the worst error you can make.
 
-What every narration must say. Say how long the two lives matched, with the words "for {identical_months} months" or "after {identical_months} months", in the sentence of the split, whatever else the brief suggests about the opening; leave it out only if that token prints zero. That same sentence names the month of the split, with "month {fork_month}". Say where the money ended, with {net_worth_gap}, and say it is at the last month.
-
-Prose. Write sentences that follow from one another and read as an account of two lives, not a list of figures. Say "the ghost" once in a sentence and "it" or "its" after that. Mention only the one or two scores that moved furthest. Say a score's meaning in plain words a person would say aloud; if a phrase would puzzle someone hearing it, leave it out. Never name anything the brief does not give: no bills, no rent, no people, unless the brief has them. Give a score's meaning in its own clause beside the score's name, never a phrase such as "in the ghost's Safety". Never use a word like "lived" or "kept on the table" about a score.`;
+The brief ends with the shape of the narration. Follow it sentence by sentence and use its wording exactly. Add no other sentence, and put nothing between its sentences. Never write a count or a month in words where a token gives it: write the token.`;
 
 // What a score's direction means for the ghost, true of the score's definition whatever the fork:
 // for a model that does not hold to a paraphrase of its own
@@ -184,7 +182,8 @@ function splitShape(option, values) {
     return 'In month {fork_month} you chose {real_choice} and the ghost took {ghost_choice}, but the two lives stayed the same until month {first_divergent_month}.';
   }
   if (values.identical_months === 0) return 'In month {fork_month}, right at the start, you chose {real_choice} and the ghost took {ghost_choice}.';
-  return SPLIT_SHAPES[[...option].reduce((sum, c) => sum + c.charCodeAt(0), 0) % SPLIT_SHAPES.length];
+  const shape = SPLIT_SHAPES[[...option].reduce((sum, c) => sum + c.charCodeAt(0), 0) % SPLIT_SHAPES.length];
+  return values.identical_months === 1 ? shape.replace("{identical_months} months", "{identical_months} month") : shape;
 }
 
 // The brief for Meta's model: the shared brief, then whose scores moved in plain words from the
@@ -195,10 +194,23 @@ export function metaBrief(result) {
   const lines = BAR_KEYS.map((k) => {
     const [real, ghost] = [Math.round(values[`real_${k}`]), Math.round(values[`ghost_${k}`])];
     const name = BAR_NAMES[k];
-    if (real === ghost) return `${name}: level, both at ${real}. Do not mention it.`;
-    const way = ghost > real ? "higher" : "lower";
-    return `${name}: the ghost's ended at ${ghost} and yours at ${real}. Gap ${Math.abs(ghost - real)} points, ${way}. True to say: "the ghost's ${name} ended {${k}_gap}, and ${SCORE_MEANS[k][way]}", or the same thing in your own plain words.`;
+    return real === ghost ? `${name}: level, both at ${real}.` : `${name}: the ghost's ended at ${ghost} and yours at ${real}.`;
   });
+  // A sentence for each score that moved, from the score's definition; the two that moved furthest
+  const moved = BAR_KEYS
+    .map((k) => ({ k, gap: Math.round(values[`ghost_${k}`]) - Math.round(values[`real_${k}`]) }))
+    .filter(({ gap }) => gap !== 0)
+    .sort((a, b) => Math.abs(b.gap) - Math.abs(a.gap))
+    .slice(0, 2)
+    .map(({ k, gap }) => `The ghost's ${BAR_NAMES[k]} ended {${k}_gap}, and ${SCORE_MEANS[k][gap > 0 ? "higher" : "lower"]}.`);
+  // What happened between the split and the last month, only from after the split, and only what has
+  // a figure to give
+  const after = (month) => month !== null && month > values.fork_month && month < values.end_month;
+  const between = [
+    after(values.layoff_month) && values.layoff_net_worth_gap !== 0 ? "In month {layoff_month}, at the layoff, the ghost had {layoff_net_worth_gap}." : null,
+    after(values.widest_gap_month) && values.widest_gap_month !== values.layoff_month ? "The money was furthest apart in month {widest_gap_month}, when the ghost had {widest_gap}." : null,
+    after(values.crossover_month) ? "In month {crossover_month}, the lead between the two lives changed hands." : null,
+  ].filter(Boolean);
   const option = result.ghost.choices.find((id, i) => id !== result.real.choices[i]);
   const shape = values.fork_month === null ? null : splitShape(option, values);
   const bar = sameMoney(result);
@@ -206,11 +218,11 @@ export function metaBrief(result) {
     bar ? `First sentence, exactly: ${SAME_MONEY_LEAD}` : null,
     shape ? `The sentence of the split, in exactly this shape: ${shape}` : null,
     result.substitutions.length > 0 ? 'Then the required sentence: In month {substitution_month}, {withdrawn_choice} was not available on this path, so the ghost took {substitute_choice}.' : null,
-    "Then one sentence, if there is something worth saying, about one thing in between, from the layoff, the widest gap or the lead changing hands, with its month. It says when and what, never why.",
-    "Then one or two sentences on the scores that moved furthest, from the lines above.",
+    between.length > 0 ? `Then exactly one of these, whichever says most about this fork, word for word:\n${between.map((b) => `   - ${b}`).join("\n")}` : null,
+    moved.length > 0 ? `Then, word for word, the ${moved.length === 1 ? "sentence" : "sentences"} for the score${moved.length === 1 ? "" : "s"} that moved furthest:\n${moved.map((m) => `   - ${m}`).join("\n")}` : null,
     'Last, exactly: By month {end_month}, the ghost had {net_worth_gap}.',
   ].filter(Boolean);
-  return `${brief(result)}\n\nWhose score moved, at the last month:\n${lines.join("\n")}\n\nThe shape of the narration, which wins over the way in above:\n${parts.map((p, i) => `${i + 1}. ${p}`).join("\n")}\n\nName nothing the brief does not give. Never bare "ghost". Every month number has the word "month" directly before it. Each sentence is one complete sentence.`;
+  return `${brief(result)}\n\nWhose score moved, at the last month:\n${lines.join("\n")}\n\nThe shape of the narration, which wins over the way in above. Write these sentences, in this order, and nothing else:\n${parts.map((p, i) => `${i + 1}. ${p}`).join("\n")}`;
 }
 
 // The brief for one fork: what happened, and every token with what it prints
