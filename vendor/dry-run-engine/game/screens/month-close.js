@@ -142,7 +142,10 @@ export function monthCloseScreen({ month, compared, safetyDanger, hook, concept,
   close.textContent = CLOSE;
   close.addEventListener("click", onClose, { once: true });
   if (hook) foot.append(hookBlock(hook));
-  foot.append(close);
+  const action = document.createElement("div");
+  action.className = "close-action";
+  action.append(close);
+  foot.append(action);
 
   screen.append(head, bars);
   if (concept) screen.append(conceptCard(concept, ideas));

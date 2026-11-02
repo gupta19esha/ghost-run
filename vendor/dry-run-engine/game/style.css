@@ -1384,7 +1384,7 @@ html, body {
   .explaining .close-head { padding-top: 44px; }
   .explaining .net-worth { font-size: 58px; }
 }
-@media (max-height: 700px) {
+@media (max-height: 760px) {
   .explaining .close-head { padding-top: 8px; }
   .explaining .net-worth { font-size: 38px; }
   .explaining .chip-large { margin-top: 8px; }
@@ -1459,6 +1459,21 @@ html, body {
 /* The iPhone's home indicator: with the toolbar tucked away the page runs under it, so every
    screen keeps its last button or line above it. 0 everywhere else */
 .screen { padding-bottom: env(safe-area-inset-bottom, 0px); }
+
+/* A month close that cannot all fit on a short phone without taking type below its short-screen
+   sizes: Close stays on screen, and what does not fit scrolls above it. Only the button sticks, so
+   the hook scrolls with the rest. Where it all fits, this changes nothing but the foot's padding */
+@media (max-width: 899px) and (max-height: 760px) {
+  .close-foot { display: contents; }
+  .close-action {
+    position: sticky;
+    bottom: 0;
+    z-index: 1;
+    margin: 0 calc(-1 * var(--gutter));
+    padding: 10px var(--gutter) 14px;
+    background: var(--ink);
+  }
+}
 
 /* ---------- The chapter's progress ---------- */
 
