@@ -2,10 +2,10 @@
   "provider": "claude",
   "model": "claude-opus-5-5",
   "attempt": 1,
-  "request": "e28d38bc387299616490a1c2fc89eafcda95c372906db685d032ca4dfa055947",
-  "narration": "For {identical_months} months, the two lives were one life. In month {fork_month}, you chose {real_choice}, and the ghost chose {ghost_choice}. That same month, {first_bar_apart} was the first score to come apart, the one that tracks how the days actually felt. The ghost's money reached its lowest point in month {ghost_lowest_month}. The layoff in month {layoff_month} found you both holding {layoff_real_net_worth}. By month {end_month}, the ghost's net worth was {net_worth_gap}.",
+  "request": "da1488365f9d0d37c7b7a97c56053617d8e6ac26ddf5e69692dfa13f2af876e5",
+  "narration": "With payroll asking for proof of investments in month {fork_month}, you chose {real_choice} and the ghost chose {ghost_choice}. {first_bar_apart} was the first score to come apart that same month, the one that read whether a life was being lived or only managed. The ghost's money reached its lowest point after the split in month {ghost_lowest_month}. By month {end_month}, you finished with {real_net_worth}. The ghost finished with {ghost_net_worth}. Its sense of living ended {life_gap}.",
   "usage": {
-    "input_tokens": 3692,
+    "input_tokens": 4253,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 0,
     "cache_creation": {
@@ -14,8 +14,8 @@
     },
     "iterations": [
       {
-        "input_tokens": 3692,
-        "output_tokens": 1541,
+        "input_tokens": 4253,
+        "output_tokens": 1350,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
         "cache_creation": {
@@ -26,13 +26,13 @@
         "model": null
       }
     ],
-    "output_tokens": 1541,
+    "output_tokens": 1350,
     "output_tokens_details": {
-      "thinking_tokens": 1366
+      "thinking_tokens": 1180
     },
     "service_tier": "standard",
     "inference_geo": "global",
     "speed": "standard"
   },
-  "at": "2026-11-02T09:12:08.576Z"
+  "at": "2026-11-02T09:38:52.686Z"
 }

@@ -2,10 +2,10 @@
   "provider": "claude",
   "model": "claude-opus-5-5",
   "attempt": 1,
-  "request": "b748310ad823e4742ac313cc13ad90487177eb12a09c772291e9ab0835545850",
-  "narration": "For {identical_months} month the two lives were the same. In month {fork_month}, with payday still days off, you chose {real_choice} and the ghost took {ghost_choice}. That same month {first_bar_apart} was the first score to come apart, the cushion under each life no longer quite the same size. When the layoff came in month {layoff_month}, the money was as far apart as it would ever be, and the ghost had {layoff_net_worth_gap}. By month {end_month} the ghost finished with {net_worth_gap}. Its days held a fraction more living and a fraction less getting by, its Life {life_gap}.",
+  "request": "25d31a2bfd500c80c28fedceab9ea4f57220f37c1c339766c9efc5251d606cf2",
+  "narration": "In month {fork_month}, with rent gone and payday still days off, you chose {real_choice} and the ghost took {ghost_choice}. {first_bar_apart} was the first score to come apart, in month {first_bar_apart_month}. The ghost's money touched its lowest point in month {ghost_lowest_month}. When the layoff came in month {layoff_month}, the two lives were at their furthest apart, and the ghost had {layoff_net_worth_gap}. By month {end_month} the ghost finished with {net_worth_gap}. Its cushion against a lost salary ended {safety_gap}, while its days of actually living ended {life_gap}.",
   "usage": {
-    "input_tokens": 3772,
+    "input_tokens": 4341,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 0,
     "cache_creation": {
@@ -14,8 +14,8 @@
     },
     "iterations": [
       {
-        "input_tokens": 3772,
-        "output_tokens": 1292,
+        "input_tokens": 4341,
+        "output_tokens": 1152,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
         "cache_creation": {
@@ -26,13 +26,13 @@
         "model": null
       }
     ],
-    "output_tokens": 1292,
+    "output_tokens": 1152,
     "output_tokens_details": {
-      "thinking_tokens": 1093
+      "thinking_tokens": 936
     },
     "service_tier": "standard",
     "inference_geo": "global",
     "speed": "standard"
   },
-  "at": "2026-11-02T09:04:52.604Z"
+  "at": "2026-11-02T09:31:26.082Z"
 }

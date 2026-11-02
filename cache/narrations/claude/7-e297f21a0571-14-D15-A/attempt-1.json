@@ -2,10 +2,10 @@
   "provider": "claude",
   "model": "claude-opus-5-5",
   "attempt": 1,
-  "request": "ba9b6cf4a4c7c5f3f716188f061ab407cd64b10436686ac09297f9b982d4a284",
-  "narration": "For {identical_months} months the two lives were the same. In month {fork_month} your mother asked, and you chose {real_choice}, while the ghost took {ghost_choice}. That same month {first_bar_apart} was the first score to part, the cushion under each of you. The ghost's money sat above yours for {ghost_ahead_months} months. When the layoff came in month {layoff_month}, the ghost had {layoff_net_worth_gap}. By month {end_month} the ghost had {net_worth_gap}.",
+  "request": "dbe6de614db739ad39afaa8ddf907b010ad8d283b4ccaf379e73881158e2ebe9",
+  "narration": "In month {fork_month}, your mother wanted a share of your savings put away and called it security, with a wedding nobody named behind it. You chose {real_choice}, and the ghost chose {ghost_choice}. From then on the ghost's net worth stayed above yours, {ghost_ahead_months} months without a break. The layoff in month {layoff_month} found the ghost with {layoff_net_worth_gap}. By month {end_month}, the ghost finished with {net_worth_gap}. On Life, which by then read both of you as mostly getting by, the ghost was {life_gap}.",
   "usage": {
-    "input_tokens": 3804,
+    "input_tokens": 4371,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 0,
     "cache_creation": {
@@ -14,8 +14,8 @@
     },
     "iterations": [
       {
-        "input_tokens": 3804,
-        "output_tokens": 1089,
+        "input_tokens": 4371,
+        "output_tokens": 1186,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
         "cache_creation": {
@@ -26,13 +26,13 @@
         "model": null
       }
     ],
-    "output_tokens": 1089,
+    "output_tokens": 1186,
     "output_tokens_details": {
-      "thinking_tokens": 921
+      "thinking_tokens": 994
     },
     "service_tier": "standard",
     "inference_geo": "global",
     "speed": "standard"
   },
-  "at": "2026-11-02T09:10:30.948Z"
+  "at": "2026-11-02T09:37:06.644Z"
 }

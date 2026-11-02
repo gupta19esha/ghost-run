@@ -2,10 +2,10 @@
   "provider": "claude",
   "model": "claude-opus-5-5",
   "attempt": 1,
-  "request": "6e82fa2be80874550f51579755285d43480a7c8ab88469ff3e02f5ca3b0b71ac",
-  "narration": "For {identical_months} months the two lives ran exactly alike. In month {fork_month}, at the first appraisal, you chose {real_choice} and the ghost chose {ghost_choice}. In month {first_bar_apart_month}, {first_bar_apart} was the first score to come apart, the one that reads the days rather than the bank. When the layoff came in month {layoff_month}, the ghost's net worth and yours were {layoff_net_worth_gap}. At month {end_month}, the money was still {net_worth_gap}. The difference sat in how the days felt: the ghost's Life finished {life_gap}.",
+  "request": "25319b83025d62c8e79eb38ec5ef00d966d1233b0e20cfaf6d5b9b50bfa913e4",
+  "narration": "In month {fork_month}, the first appraisal barely cleared the year's rise in prices, and your manager held the budget fixed. You chose {real_choice}, and the ghost took {ghost_choice}. By month {first_bar_apart_month}, the ghost's {first_bar_apart} had begun to read differently from yours. The layoff landed in month {layoff_month}, and both lives held {layoff_real_net_worth} at its close. At month {end_month}, the ghost finished with {net_worth_gap}. Both lives sat nearer to getting by than to living, and the ghost's Life closed {life_gap}.",
   "usage": {
-    "input_tokens": 3693,
+    "input_tokens": 4260,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 0,
     "cache_creation": {
@@ -14,8 +14,8 @@
     },
     "iterations": [
       {
-        "input_tokens": 3693,
-        "output_tokens": 1384,
+        "input_tokens": 4260,
+        "output_tokens": 1469,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
         "cache_creation": {
@@ -26,13 +26,13 @@
         "model": null
       }
     ],
-    "output_tokens": 1384,
+    "output_tokens": 1469,
     "output_tokens_details": {
-      "thinking_tokens": 1182
+      "thinking_tokens": 1266
     },
     "service_tier": "standard",
     "inference_geo": "global",
     "speed": "standard"
   },
-  "at": "2026-11-02T09:09:41.070Z"
+  "at": "2026-11-02T09:36:16.730Z"
 }

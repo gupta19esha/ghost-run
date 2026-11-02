@@ -2,10 +2,10 @@
   "provider": "claude",
   "model": "claude-opus-5-5",
   "attempt": 1,
-  "request": "1bb775f56699243901f27c0ca694fdfd3dfe97d62fbd6fccc752a46957010c6a",
-  "narration": "For {identical_months} months the two lives ran exactly the same. In month {fork_month} you chose {real_choice}, and the ghost took {ghost_choice}. In month {first_bar_apart_month}, {first_bar_apart} was the first score to come apart, the one that measures how long each of you could last with nothing coming in. When the layoff came in month {layoff_month}, the ghost held {layoff_net_worth_gap}. By month {end_month} the ghost had {net_worth_gap}. Its room to last without a salary stood {safety_gap}.",
+  "request": "5913ff0a6c51a446badf852cd10e5526f4e0989d69d439fece826210527df305",
+  "narration": "In month {fork_month}, after {identical_months} months that matched exactly, an unasked-for card arrived and you chose {real_choice}. The ghost chose {ghost_choice}. {first_bar_apart} was the first score to part, that same month, and the ghost's money ran above yours for {ghost_ahead_months} months from then on. When the layoff came in month {layoff_month}, the ghost had {layoff_net_worth_gap}. By month {end_month}, the widest point of the whole run, the ghost finished with {net_worth_gap}. Against a stretch with no pay, the ghost's cushion ended {safety_gap}.",
   "usage": {
-    "input_tokens": 3807,
+    "input_tokens": 4376,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 0,
     "cache_creation": {
@@ -14,8 +14,8 @@
     },
     "iterations": [
       {
-        "input_tokens": 3807,
-        "output_tokens": 1235,
+        "input_tokens": 4376,
+        "output_tokens": 1124,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
         "cache_creation": {
@@ -26,13 +26,13 @@
         "model": null
       }
     ],
-    "output_tokens": 1235,
+    "output_tokens": 1124,
     "output_tokens_details": {
-      "thinking_tokens": 1052
+      "thinking_tokens": 914
     },
     "service_tier": "standard",
     "inference_geo": "global",
     "speed": "standard"
   },
-  "at": "2026-11-02T09:11:26.445Z"
+  "at": "2026-11-02T09:38:12.339Z"
 }

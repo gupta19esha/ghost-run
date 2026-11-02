@@ -2,10 +2,10 @@
   "provider": "claude",
   "model": "claude-opus-5-5",
   "attempt": 1,
-  "request": "73ec36767f1ae11dcf4e23b3b5d3c18d7a9ebf1c5e4ffe573c340b0ba4d47c2a",
-  "narration": "For {identical_months} months the two lives ran as one. In month {fork_month}, with the bonus in hand and your cousin's fee unmentioned on the table, you chose {real_choice} and the ghost took {ghost_choice}. The first score to come apart was {first_bar_apart}, in month {first_bar_apart_month}, the way the days themselves felt. The ghost's money reached its low point in month {ghost_lowest_month}. By month {end_month} the ghost's net worth was {net_worth_gap}. Its days had settled back to match yours, with Life {life_gap}.",
+  "request": "43d6c77edd2dfc06e7565b911e56f5e58e876a58ebaad8a84323233da6f78562",
+  "narration": "Your cousin's coaching fee came up at dinner in month {fork_month}, and you chose {real_choice}. The ghost took {ghost_choice}. In month {first_bar_apart_month}, {first_bar_apart} was the first score to come apart, the ghost's month a little fuller than yours. The ghost's money reached its lowest point in month {ghost_lowest_month}. When the layoff arrived in month {layoff_month}, the ghost held {layoff_net_worth_gap}. By month {end_month}, the ghost finished with {net_worth_gap}.",
   "usage": {
-    "input_tokens": 3719,
+    "input_tokens": 4282,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 0,
     "cache_creation": {
@@ -14,8 +14,8 @@
     },
     "iterations": [
       {
-        "input_tokens": 3719,
-        "output_tokens": 1438,
+        "input_tokens": 4282,
+        "output_tokens": 1004,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
         "cache_creation": {
@@ -26,13 +26,13 @@
         "model": null
       }
     ],
-    "output_tokens": 1438,
+    "output_tokens": 1004,
     "output_tokens_details": {
-      "thinking_tokens": 1246
+      "thinking_tokens": 815
     },
     "service_tier": "standard",
     "inference_geo": "global",
     "speed": "standard"
   },
-  "at": "2026-11-02T09:10:19.725Z"
+  "at": "2026-11-02T09:36:53.289Z"
 }

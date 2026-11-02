@@ -2,10 +2,10 @@
   "provider": "claude",
   "model": "claude-opus-5-5",
   "attempt": 1,
-  "request": "8d557c285c4edaf1fd97a4718481c4cb7a7b402783b36afff132f1ef009fc224",
-  "narration": "For {identical_months} months the two lives ran exactly the same. In month {fork_month}, you chose {real_choice}, and the ghost took {ghost_choice}. That same month, {widest_gap_month}, the money was as far apart as it would ever be, and the ghost had {widest_gap}. When the layoff came in month {layoff_month}, the ghost had {layoff_net_worth_gap}. By month {end_month}, the ghost had {net_worth_gap}. Its cushion for a stretch with no salary sat {safety_gap}.",
+  "request": "82508f7d77667ec9ab30ef9e483ba729a4c21b84a4213cff255a41da86de284c",
+  "narration": "Your bonus landed in month {fork_month}, and at dinner your father mentioned your cousin's missed deadline. You chose {real_choice}, and the ghost took {ghost_choice}. The money was furthest apart that same month, when the ghost held {widest_gap}. When the layoff came in month {layoff_month}, the ghost had {layoff_net_worth_gap}. At month {end_month} the ghost finished with {net_worth_gap}. The ghost's room to ride out a lost salary ended {safety_gap}.",
   "usage": {
-    "input_tokens": 3800,
+    "input_tokens": 4369,
     "cache_creation_input_tokens": 0,
     "cache_read_input_tokens": 0,
     "cache_creation": {
@@ -14,8 +14,8 @@
     },
     "iterations": [
       {
-        "input_tokens": 3800,
-        "output_tokens": 1136,
+        "input_tokens": 4369,
+        "output_tokens": 1304,
         "cache_read_input_tokens": 0,
         "cache_creation_input_tokens": 0,
         "cache_creation": {
@@ -26,13 +26,13 @@
         "model": null
       }
     ],
-    "output_tokens": 1136,
+    "output_tokens": 1304,
     "output_tokens_details": {
-      "thinking_tokens": 956
+      "thinking_tokens": 1129
     },
     "service_tier": "standard",
     "inference_geo": "global",
     "speed": "standard"
   },
-  "at": "2026-11-02T09:09:53.267Z"
+  "at": "2026-11-02T09:36:30.600Z"
 }
