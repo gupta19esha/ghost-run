@@ -141,7 +141,7 @@ export function road({ months, points, split, marks = [], layoff = null, height 
     block(bx, bw, bh, "var(--paper-dim)"),
     s("path", { d: `M${bx - 3} ${horizon - bh + 1} L${bx + bw / 2} ${horizon - bh - bw * 0.42} L${bx + bw + 3} ${horizon - bh + 1}Z`, fill: "var(--paper-shadow)" }),
     s("rect", { x: bx + bw * 0.34, y: horizon - bh * 0.72, width: bw * 0.32, height: bh * 0.34, fill: "var(--marigold)" }));
-  const tree = (tx, ty, r) => s("g", { fill: "var(--deep)" },
+  const tree = (tx, ty, r) => s("g", { fill: "var(--deep)", class: "road-art-tree" },
     s("rect", { x: tx - r * 0.15, y: ty - r, width: r * 0.3, height: r * 1.2 }),
     s("circle", { cx: tx, cy: ty - r * 1.25, r }));
   const unit = H * 0.1;
@@ -156,7 +156,10 @@ export function road({ months, points, split, marks = [], layoff = null, height 
     home(W * 0.88, W * 0.08, unit * 0.75),
     s("rect", { x: 0, y: horizon, width: W, height: H - horizon, fill: "var(--deep-raised)" }));
   // On the side of your road the ghost's does not take
-  for (const f of [0.08, 0.24, 0.47, 0.72]) svg.append(tree(W * f, up ? H - unit * 0.9 : mid - unit * 0.95, unit * 0.46));
+  // In the stretch between the labels, which sit at the left and towards the right
+  const treeSize = unit * 0.46;
+  const treeBase = up ? H - 12 - treeSize * 0.2 : mid - roadWidth * 0.5 - treeSize * 0.2 - 2;
+  for (const f of [0.22, 0.33, 0.44]) svg.append(tree(W * f, treeBase, treeSize));
 
   const line = (rows) => rows.map(([px, py], i) => `${i ? "L" : "M"}${px.toFixed(1)} ${py.toFixed(1)}`).join(" ");
   const pts = points.map((p) => [x(p.month), y(p.offset)]);

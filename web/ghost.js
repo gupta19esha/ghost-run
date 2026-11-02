@@ -60,6 +60,8 @@ function narrationOf(index, option) {
 const go = (hash) => { location.hash = hash; };
 // The chart's height for this phone: a short screen gives it less, so the step still fits
 const ROAD_MAX_WIDTH = 432;
+const NOTICE_ARRIVES_MS = 340;
+const NOTICE_CLEARANCE = 10;
 const chartHeight = () => (innerHeight < 600 ? 104 : innerHeight < 720 ? 146 : 214);
 
 const forkHash = (index, option, part = "") => `#fork/${index}/${option}${part ? `/${part}` : ""}`;
@@ -269,6 +271,14 @@ function splitStep(index, option) {
         buzz([8, 60, 8]);
         // A notice whose month the road never passed still arrives
         for (const el of notices.values()) if (el.style.opacity === "0") arrive(el, { distance: 8 });
+        // On a short phone the last notice lands under the dock: bring it clear, once it has arrived
+        later(NOTICE_ARRIVES_MS, () => {
+          const last = [...notices.values()].at(-1);
+          const dock = document.querySelector(".dock");
+          if (!last || !dock) return;
+          const over = last.getBoundingClientRect().bottom - dock.getBoundingClientRect().top + NOTICE_CLEARANCE;
+          if (over > 0) window.scrollBy({ top: over, behavior: reduced() ? "auto" : "smooth" });
+        });
       },
     }));
   };

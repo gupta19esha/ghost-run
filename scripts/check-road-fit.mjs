@@ -85,6 +85,13 @@ try {
     writeFileSync(join(SHOTS, `${name}.png`), Buffer.from(data, "base64"));
   };
 
+  const until = async (condition, what) => {
+    for (let i = 0; i < 100; i++) {
+      if (await js(`return !!(${condition})`)) return;
+      await wait(200);
+    }
+    throw new Error(`${what} never appeared`);
+  };
   // A run loads from a save, as a player coming back does: the demo life, whole or up to a month
   const demo = JSON.parse(readFileSync("web/demo/save.json", "utf8"));
   const choices = demo.choices;
@@ -93,6 +100,8 @@ try {
     await go(`${ORIGIN}/web/index.html`, 200);
     await js(`localStorage.setItem(${JSON.stringify(SAVE_KEY)}, ${JSON.stringify(JSON.stringify(run))}); return 1`);
     await go(`${ORIGIN}/game/`, 1200);
+    // Over a network the page takes its time
+    await until(`document.querySelector(".home-where, .report button")`, "Home or the report");
     await js(`(document.querySelector(".home-where") ?? [...document.querySelectorAll(".report button")].at(-1)).click(); return 1`);
     await wait(900);
   };
@@ -195,9 +204,11 @@ try {
     }
 
     // ---------- The split: a fork early, late, last, and the one with the substitution ----------
-    for (const [index, option] of [[0, "D01-A"], [15, "D16-B"], [22, "D23-A"], [choices.length - 1, "D30-A"]]) {
+    const SUBSTITUTED = ["D16-B", "D16-C"];
+    for (const [index, option] of [[0, "D01-A"], [15, "D16-B"], [15, "D16-C"], [22, "D23-A"], [choices.length - 1, "D30-A"]]) {
       await go(`${ORIGIN}/ghost/#fork/${index}/${option}`, 1500);
-      await wait(1600);
+      await until(`document.querySelector(".road-art")`, "The split's road");
+      await wait(2600);
       const m = await js(`${reachableBox}
         const art = document.querySelector(".road-art");
         return {
@@ -208,6 +219,9 @@ try {
           legendOneLine: (() => { const items = [...document.querySelectorAll(".road-card .legend-item")].map((i) => Math.round(i.getBoundingClientRect().top)); return new Set(items).size === 1; })(),
           legendFits: (() => { const l = document.querySelector(".road-card .legend"); return l.scrollWidth <= l.clientWidth; })(),
           dockInView: inView(document.querySelector(".dock .dock-next, .dock-next")),
+          noticeOver: (() => { const n = [...document.querySelectorAll(".notice")].at(-1); return n ? n.getBoundingClientRect().bottom - document.querySelector(".dock").getBoundingClientRect().top : 0; })(),
+          treesOut: (() => { const a = art.getBoundingClientRect(); return [...art.querySelectorAll(".road-art-tree")].filter((t) => { const b = t.getBoundingClientRect(); return b.top < a.top - 0.5 || b.bottom > a.bottom + 0.5 || b.left < a.left - 0.5 || b.right > a.right + 0.5; }).length; })(),
+          treesOnLabels: (() => { const labels = [...art.querySelectorAll(".road-art-label")].map((l) => l.getBoundingClientRect()); return [...art.querySelectorAll(".road-art-tree")].filter((t) => { const b = t.getBoundingClientRect(); return labels.some((l) => b.left < l.right && b.right > l.left && b.top < l.bottom && b.bottom > l.top); }).length; })(),
           contentBottom: Math.max(...[...document.querySelectorAll(".road-card, .notices")].map((e) => e.getBoundingClientRect().bottom)),
           dockTop: document.querySelector(".dock")?.getBoundingClientRect().top,
           sideways,
@@ -228,8 +242,11 @@ try {
       if (m.sideways > 0) say(size, where, `scrolls sideways by ${m.sideways}px`);
       if (Number(m.revealed) > 0.5) say(size, where, `the ghost's road did not finish drawing (${m.revealed})`);
       if (m.endOpacity !== "1") say(size, where, "the ghost is not standing at the end of its road");
-      if (option === "D16-B" && (m.rings !== 1 || m.ringOpacity[0] !== "1")) say(size, where, `substitution rings: ${m.rings} ${m.ringOpacity}`);
-      if (option !== "D16-B" && m.rings !== 0) say(size, where, `${m.rings} rings on a fork with no substitution`);
+      if (SUBSTITUTED.includes(option) && (m.rings !== 1 || m.ringOpacity[0] !== "1")) say(size, where, `substitution rings: ${m.rings} ${m.ringOpacity}`);
+      if (!SUBSTITUTED.includes(option) && m.rings !== 0) say(size, where, `${m.rings} rings on a fork with no substitution`);
+      if (m.noticeOver > 0.5) say(size, where, `the substitution notice ends ${m.noticeOver}px under the dock`);
+      if (m.treesOut) say(size, where, `${m.treesOut} trees clipped`);
+      if (m.treesOnLabels) say(size, where, `${m.treesOnLabels} trees on a label`);
       await shot(`split-${option}-${size}`);
     }
     console.log(`${size} done`);
