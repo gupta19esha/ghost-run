@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 
 import { forksOf } from "../../agent/rank.js";
 import { resolveTokens } from "../tokens.js";
-import { printTokens, exactMoneyGap } from "../render.js";
+import { printTokens, exactMoneyGap, ZERO_GAP } from "../render.js";
 import { forkView } from "../../web/ghost-model.js";
 import { formatMoney } from "../../vendor/dry-run-engine/text/render.js";
 
@@ -17,7 +17,7 @@ const save = JSON.parse(read("web/demo/save.json"));
 // Printed rupees back to a number, "−2,52,283" and "2,52,283" alike
 const rupees = (text) => Number(text.replace(/,/g, "").replace("−", "-"));
 function shownGap(text) {
-  if (text === "the same") return 0;
+  if (text === ZERO_GAP) return 0;
   const [, amount, way] = text.match(/^([\d,]+) (more|less)$/);
   return (way === "more" ? 1 : -1) * rupees(amount);
 }
@@ -71,6 +71,13 @@ test("D16-B reads the same everywhere: 2,52,283, 2,52,556 and 273 more", () => {
   assert.deepEqual([p.real_net_worth, p.ghost_net_worth, p.net_worth_gap], ["2,52,283", "2,52,556", "273 more"]);
   assert.equal(forkView(save, 15, "D16-B").compare[0].gap, "273 more");
   assert.equal(exactMoneyGap(252282.57, 252556.05), "273 more");
+});
+
+test("a zero gap reads as a phrase a sentence can end on", () => {
+  assert.equal(ZERO_GAP, "the same as you");
+  assert.equal(exactMoneyGap(252282.57, 252282.57), "the same as you");
+  const zero = forksOf(save).find((f) => f.option === "D05-C");
+  assert.equal(printTokens(resolveTokens(zero.fork)).net_worth_gap, "the same as you");
 });
 
 test("no screen of the ghost flow rounds money by another rule", () => {

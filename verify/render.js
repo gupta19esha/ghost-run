@@ -22,12 +22,13 @@ const label = (text) => `“${text}”`;
 // A bar, 0 to 100, as whole points
 const points = (n) => String(Math.round(n));
 
+export const ZERO_GAP = "the same as you";
 const gapWords = (text, gap) => {
-  if (text === "0") return "the same";
+  if (text === "0") return ZERO_GAP;
   return gap > 0 ? `${text} more` : `${text} less`;
 };
 
-// Ghost minus real, from the ghost's side: "16,000 less", "4,200 more", "the same"
+// Ghost minus real, from the ghost's side: "16,000 less", "4,200 more", "the same as you"
 const moneyGap = (gap) => gapWords(formatExactRupees(Math.abs(gap)), gap);
 
 // The difference of two net worths as displayed, a number and in words

@@ -6,7 +6,7 @@
 // it what each token will print, to write around, and forbids every digit.
 
 import { TOKENS, resolveTokens } from "../verify/tokens.js";
-import { printTokens } from "../verify/render.js";
+import { printTokens, ZERO_GAP } from "../verify/render.js";
 import { UNITS } from "./rank.js";
 import { getDecision } from "../vendor/dry-run-engine/engine/index.js";
 import { BAR_LINES } from "../vendor/dry-run-engine/game/screens/bar-lines.js";
@@ -88,17 +88,17 @@ export const SYSTEM = `You write the narration for Ghost Run, a game about money
 The game tracks four things. Net worth: ${BAR_LINES.netWorth} Safety: ${BAR_LINES.safety} Freedom: ${BAR_LINES.freedom} Life: ${BAR_LINES.life} In month twenty-two the player is laid off, at the bottom of a market fall.
 
 Safety, Freedom and Life are scores from zero to a hundred, measured in points. A point is not a rupee, so never state a score as an amount of money.
-- Safety is how long you would survive with zero income: the money you could reach, set against your essential costs each month, along with your health cover, and your term cover if anyone depends on you.
-- Freedom is how much of your income is already committed: rent, loan payments, premiums, debt minimums and locked saving commitments. With no commitments it is a hundred, and the more that is committed the lower it goes.
-- Life is the one score not worked out from money alone. It is moved by what your choices did to your days, and it drifts toward a baseline set by what you spend on yourself. With no salary, that baseline is at its floor.
+- Safety is how long you would survive with zero income, plus your cover. Seventy of its points are runway: the money you could reach against your essential costs, full at six months of runway. Eighteen are health cover, full at half a year's income. Twelve are term cover, which are full when nobody depends on you. At zero you have no reachable money, no health cover and dependants with no term cover. A hundred does not mean safe for good, and points are not months.
+- Freedom is how much of your income is already committed: rent, loan payments, premiums, debt minimums and locked saving commitments. Money saved or invested where it can stop any month is not committed. With nothing committed it is a hundred. It falls evenly and reaches zero at seventy per cent of income committed, and it stays zero beyond that. So zero means at least seventy per cent is committed: it does not mean all of it, and at zero there can still be pay left. Never say that all, none, every rupee or nearly all of the pay is claimed.
+- Life is the one score not worked out from money alone. Choices move it, and each month it drifts toward a baseline, which runs from forty to seventy. Forty is the floor, for a life with no salary or nothing spent beyond a normal month. Seventy is for spending well above a normal month. It starts at sixty. It reads whether you were living or only getting by, and it says nothing about being happy. The ends, zero and a hundred, are rarely near.
 
-Voice. Write like the game: short, plain, specific sentences, calm and a little dry, with no hedging. Call the player "you" and the other life "the ghost". These lines are the game's own:
+Voice. Write like the game: short, plain, specific sentences, calm and a little dry, with no hedging. Write in the past tense throughout, every sentence. Call the player "you" and the other life "the ghost". These lines are the game's own:
 ${VOICE.map((line) => `- ${line}`).join("\n")}
 No exclamation marks, no questions to the reader, no markdown, no headings, no lists. One paragraph of four to six sentences, counting any required sentence. Short ones. Stop at the last fact: no summing up at the end.
 
 At most one figure per sentence. A figure is an amount: money, scores, gaps and counts. A month that places the sentence in time and a choice token's label do not count.
 
-A gap token prints a complete phrase, its amount and its direction together, as the brief shows. Nothing may follow one in its clause: no word of direction, comparison or measure. End the clause or the sentence there, and write the words before it so that the phrase completes them.
+A gap token prints a complete phrase, its amount and its direction together, as the brief shows. Nothing may follow one in its clause: no word of direction, comparison or measure. End the clause or the sentence there, and write the words before it so that the phrase completes them. Before a money gap, use a verb of having, such as had, held or finished with, and never a form of "to be", stood or sat.
 
 Each choice token prints a label that already says its own amount and description. Introduce it with a plain verb such as chose or took, and never wrap it in a phrase that says what the label says, such as putting money into it, paying it, or naming what it buys.
 
@@ -106,7 +106,9 @@ Give each fact once. Never restate a gap as two scores, or two scores as a gap: 
 
 A sentence makes an observation anchored to a token. It does not report the token. Say what a score's level or move means for this life, in your own words. Paraphrasing what a score means is wanted, and it is what brings a sentence alive, so do not hold back from it and do not reuse the wording of the definitions above.
 
-Narrate in time order. First, how long the two lives were identical, unless that token prints zero. Next, the month they split and what each side chose. Then anything that happened after that. Last, where they ended. Never reach back to something earlier.
+The opening must suit this fork, not follow a pattern. Every narration of every fork is read side by side, so vary how yours begins. Never begin with "For" and a count of months, and never give the sameness a sentence of its own to open on. There are several ways in: the situation that brought the choice, in your own words; the two choices side by side; the person or thing the choice was about; or the month, with the months of sameness folded into a clause. The brief names one that suits this fork. Vary your wording too: never use "spoken for" or "a shade".
+
+Narrate in time order from wherever you begin: the split, then anything that happened after it, then where they ended. How long the two lives were identical is worth saying only if it adds something, and then inside the sentence of the split. Never reach back to something earlier. When the split comes late, or the lives stayed alike after the choice, lead with the split and not the sameness.
 
 Every narration must say where the money ended, with {net_worth_gap} or with both ends at the last month. A gap from the middle of the run does not count.
 
@@ -126,15 +128,38 @@ When the brief says the fork is the same money, a different life, your first sen
 
 Reply with the narration only.`;
 
+// A way in for this fork, so that independent calls do not all open alike. Which of the ways is
+// taken from the option's id, so it is arbitrary but fixed; a fork whose lives part late, or stay
+// alike after the choice, is never given the one that mentions the sameness
+const WAYS_IN = [
+  "the situation that brought the choice, in your own words",
+  "the two choices, side by side",
+  "the person or thing the choice was about",
+  "the month, with the months of sameness folded into a clause",
+];
+const LATE_MONTH = 13;
+export function wayIn(option, values) {
+  const late = values.fork_month >= LATE_MONTH || (values.first_divergent_month ?? 0) > values.fork_month;
+  const ways = late ? WAYS_IN.slice(0, 3) : WAYS_IN;
+  return { late, way: ways[[...option].reduce((sum, c) => sum + c.charCodeAt(0), 0) % ways.length] };
+}
+
 // The brief for one fork: what happened, and every token with what it prints
 export function brief(result) {
   const values = resolveTokens(result);
-  const printed = printTokens(values);
+  // The committed cache answers a request only if it is byte for byte the one it was written for,
+  // and those briefs say "the same" for a zero gap. Render says "the same as you". Drop this the
+  // next time the prompt changes and the cache is regenerated anyway
+  const printed = Object.fromEntries(Object.entries(printTokens(values)).map(([k, v]) => [k, v === ZERO_GAP ? "the same" : v]));
   const bar = sameMoney(result);
   const lines = [];
   const decision = values.fork_decision ? getDecision(values.fork_decision) : null;
   if (decision) {
     lines.push(`The changed choice was in month ${values.fork_month}. What the player read then, for context only, never to quote: "${decision.situation_text}"`);
+  }
+  if (values.fork_month !== null) {
+    const { late, way } = wayIn(result.ghost.choices.find((id, i) => id !== result.real.choices[i]), values);
+    lines.push(`${late ? "The lives part late or stay alike after the choice, so lead with the split. " : ""}A way in that suits this fork: ${way}. Take another if it plainly suits better, but never the sameness.`);
   }
   const labels = ["real_choice", "ghost_choice", "withdrawn_choice", "substitute_choice"].filter((token) => token in printed);
   if (labels.length > 0) {

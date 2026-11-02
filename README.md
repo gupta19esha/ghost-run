@@ -11,7 +11,8 @@ any choice to see the ghost, the life you would have had with the other option.
 - `verify/` checks a narration of a fork. Every figure must be a token resolved from the fork
   result, every sentence must hold a token and claim no cause, and `verify/render.js` is the only place figures are
   formatted. Each figure has one displayed value across the ghost flow: net worth to the rupee,
-  bars in whole points, and a gap is the difference of the two values shown.
+  bars in whole points, and a gap is the difference of the two values shown. A gap of nothing
+  reads "the same as you".
 - `verify/tokens.js` also gives a narration the middle of the run, each null where the run has
   none: when the money was furthest apart, the months the ghost led, the first bar to part, the
   ghost's lowest month after the split, the layoff and where each life stood, and whether the lead changed hands.

@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { narrate, conversation, NarrationUnavailable } from "../narrate.js";
 import { narrateFork } from "../narration-loop.js";
-import { SYSTEM, brief, rejection, sameMoney, SAME_MONEY_LEAD } from "../prompt.js";
+import { SYSTEM, brief, rejection, sameMoney, wayIn, SAME_MONEY_LEAD } from "../prompt.js";
 import { forksOf } from "../rank.js";
 import { fork } from "../../runner/fork.js";
 
@@ -56,6 +56,20 @@ test("the prompt: tokens, no digits, the substitution, the voice, no advice, the
 test("the prompt says what each bar means, and the brief shows each label's exact text", () => {
   assert.match(SYSTEM, /A point is not a rupee/);
   assert.match(SYSTEM, /Safety is how long you would survive with zero income/);
+  assert.match(SYSTEM, /reaches zero at seventy per cent of income committed/);
+  assert.match(SYSTEM, /Never say that all, none, every rupee or nearly all of the pay is claimed/);
+  assert.match(SYSTEM, /Write in the past tense throughout/);
+  assert.match(SYSTEM, /never a form of "to be", stood or sat/);
+  assert.match(SYSTEM, /Never begin with "For" and a count of months/);
+  assert.match(SYSTEM, /never use "spoken for" or "a shade"/);
+  assert.match(SYSTEM, /lead with the split and not the sameness/);
+  // The words in the prompt are the engine's values
+  const constants = readFileSync(new URL("../../vendor/dry-run-engine/engine/constants.js", import.meta.url), "utf8");
+  for (const [name, value] of [["FREEDOM_CEILING_RATIO", 0.7], ["SAFETY_RUNWAY_WEIGHT", 70], ["SAFETY_HEALTH_WEIGHT", 18], ["SAFETY_TERM_WEIGHT", 12], ["SAFETY_TARGET_MONTHS", 6], ["SAFETY_HEALTH_COVER_MULTIPLE", 0.5], ["LIFE_BASELINE_FLOOR", 40], ["LIFE_SCORE_START", 60]]) {
+    assert.match(constants, new RegExp(`"${name}": ${value},`), name);
+  }
+  assert.match(constants, /"LIFE_BASELINE_FLOOR": 40,/);
+  assert.match(constants, /"LIFE_DISCRETIONARY_WEIGHT": 30,/);
   assert.match(SYSTEM, /Freedom is how much of your income is already committed/);
   assert.match(SYSTEM, /Life is the one score not worked out from money alone/);
   assert.match(SYSTEM, /Every sentence must contain at least one token/);
@@ -77,6 +91,14 @@ test("the prompt says what each bar means, and the brief shows each label's exac
   assert.match(SYSTEM, /never say again, in any words, that the money is close/);
   assert.doesNotMatch(SYSTEM, /Reporting:|Observing:|\{freedom_gap\}/, "no example sentence to lift");
   assert.match(rejection([{ rule: "causal_claim", found: "led to" }]), /"led to" claims a cause/);
+  // A fork whose lives stay alike after the choice leads with the split, and is not offered the sameness
+  assert.equal(wayIn("D09-C", { fork_month: 5, first_divergent_month: 19 }).late, true);
+  for (const option of ["D09-A", "D09-B", "D09-C", "D09-D", "D09-E"]) {
+    assert.doesNotMatch(wayIn(option, { fork_month: 5, first_divergent_month: 19 }).way, /sameness/, option);
+  }
+  assert.match(brief(substituted), /A way in that suits this fork: /);
+  // The cache's briefs say "the same" for a zero gap, whatever the render says
+  assert.match(brief(fork(save, 4, "D05-C")), /\{net_worth_gap\}: .* nothing may follow it: the same\n/);
   const text = brief(substituted);
   assert.match(text, literal("{real_choice} prints “5,000 a month into a broad equity index”"));
   assert.match(text, literal("{ghost_choice} prints “5,000 a month into a recurring deposit”"));
