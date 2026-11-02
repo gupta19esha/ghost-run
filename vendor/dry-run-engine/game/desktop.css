@@ -249,7 +249,9 @@
   .opening .road-end .road-track { position: absolute; top: 44px; left: 0; width: 28px; }
   .opening .road-end .road-way { right: 0; }
   .opening .road-end .road-body { position: absolute; inset: 0 0 0 28px; display: flex; flex-direction: column; height: auto; padding: 8px 12px 12px; }
-  .opening .road-end .certificate-card { flex: 1 1 0; width: 100%; min-height: 0; max-height: none; max-width: none; margin-top: 6px; object-fit: contain; object-position: left top; }
+  /* Its label over it, and the canvas exactly the card's own shape, so no letterbox shows */
+  .opening .road-end .road-end-label { order: 0; }
+  .opening .road-end .certificate-card { flex: none; align-self: flex-start; order: 1; width: auto; height: calc(100% - 26px); max-height: none; max-width: 100%; aspect-ratio: 6 / 5; margin-top: 6px; }
 
   /* The chapter's progress is the rail's here (game/rail.js), so the phone's strip goes */
   .chapter-progress-strip { display: none; }
