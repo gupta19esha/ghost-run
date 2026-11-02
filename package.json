@@ -6,7 +6,9 @@
   "scripts": {
     "test": "node --test runner/test/ verify/test/ agent/test/ web/test/ vendor/dry-run-engine/game/test/",
     "measure": "node scripts/measure-forks.mjs",
-    "dev": "node scripts/dev.mjs"
+    "dev": "node scripts/dev.mjs",
+    "narrate:meta": "node --env-file=.env.local scripts/regenerate-narrations.mjs --provider=meta",
+    "narrate:claude": "node --env-file=.env.local scripts/regenerate-narrations.mjs --provider=claude"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "1.3.0"

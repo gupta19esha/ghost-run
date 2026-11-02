@@ -30,7 +30,7 @@ export const CACHE_DIR = fileURLToPath(new URL("../cache/narrations/", import.me
 // Meta recommends for high-volume, cost-sensitive work; standard mode, since contributor mode
 // lets Meta train on prompts and responses. Low reasoning, as Meta advises for direct tasks:
 // reasoning tokens count against max_completion_tokens and are billed as output
-const META = {
+export const META = {
   url: "https://api.meta.ai/v1/chat/completions",
   model: "muse-spark-1.3",
   reasoning_effort: "low",
@@ -115,6 +115,7 @@ async function callMeta({ model, messages, env, fetchFn }) {
     if (response.ok) {
       const data = await response.json();
       const choice = data.choices?.[0];
+      if (choice?.message?.refusal) throw new Error("Meta declined to narrate this fork");
       if (!choice?.message?.content) throw new Error(`Meta returned no text (finish_reason ${choice?.finish_reason ?? "none"})`);
       if (choice.finish_reason === "length") throw new Error("Meta's narration was cut off at the token limit");
       return { narration: choice.message.content.trim(), usage: data.usage ?? null };

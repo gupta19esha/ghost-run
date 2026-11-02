@@ -5,6 +5,11 @@
 // Reply: { attempts: [{ number, narration, ok }] }, every attempt in order, the accepted one last
 // when one passed. The browser checks each attempt again with verify() before showing it.
 //
+// It always answers. A provider that cannot answer for this fork, because nothing is cached yet or
+// it has no key, or its call fails, gives way to what is committed: Claude's cache, then the plain
+// narration built from the fork's figures with no model, which says so on the page. So switching
+// NARRATE_PROVIDER before a provider's cache exists changes nothing a player can break.
+//
 // The route forks the save itself, so what it narrates is the simulation's, never figures sent in.
 // Only the demo save is accepted: the screen shows nothing else, and it keeps the number of forks
 // a paid model can be asked about finite.
@@ -12,14 +17,14 @@
 // Environment, read per request, set in Vercel's settings or .env.local, never committed:
 //   NARRATE_PROVIDER  meta, claude or stub (the default). The browser cannot choose it
 //   NARRATE_LIVE      1 lets a paid provider make calls. Otherwise it answers from the committed
-//                     cache only, with no network, and a fork with no cached narration says so
+//                     cache only, with no network
 //   MODEL_API_KEY / ANTHROPIC_API_KEY  the provider's key
 
 import { readFile } from "node:fs/promises";
 import { createHash } from "node:crypto";
 import { fork } from "../runner/fork.js";
 import { narrateFork } from "../agent/narration-loop.js";
-import { NarrationUnavailable, PROVIDERS } from "../agent/narrate.js";
+import { CACHE_DIR, NarrationUnavailable, PROVIDERS } from "../agent/narrate.js";
 
 const DEMO = new URL("../web/demo/save.json", import.meta.url);
 
@@ -44,7 +49,7 @@ export function forkKey(save, monthIndex, option) {
   return `${save.seed}-${choices}-${monthIndex}-${option}`;
 }
 
-export default async function handler(req, res, { env = process.env } = {}) {
+export default async function handler(req, res, { env = process.env, cacheDir = CACHE_DIR } = {}) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
     return send(res, 405, { error: "POST a fork to narrate" });
@@ -73,13 +78,20 @@ export default async function handler(req, res, { env = process.env } = {}) {
 
   const provider = env.NARRATE_PROVIDER || "stub";
   if (!PROVIDERS.includes(provider)) return send(res, 500, { error: "The narration provider is misconfigured" });
-  try {
-    const log = await narrateFork(result, { provider, key: forkKey(demo, monthIndex, option), live: env.NARRATE_LIVE === "1", env });
-    return send(res, 200, { attempts: log.attempts.map(({ number, narration, ok }) => ({ number, narration, ok })) });
-  } catch (error) {
-    if (error instanceof NarrationUnavailable) return send(res, 503, { error: `No narration for this fork yet: ${error.message}` });
-    // A provider's own error message can carry request details: log it here, say less to the page
-    console.error("narrate:", error.message);
-    return send(res, 502, { error: "The narrator could not be reached" });
+  const key = forkKey(demo, monthIndex, option);
+  const reply = (log) => send(res, 200, { attempts: log.attempts.map(({ number, narration, ok }) => ({ number, narration, ok })) });
+  // The provider asked for, live if allowed; then Claude's committed cache, which never calls out
+  const asks = [{ provider, live: env.NARRATE_LIVE === "1" }];
+  if (provider !== "claude" && provider !== "stub") asks.push({ provider: "claude", live: false });
+  for (const ask of asks) {
+    try {
+      const log = await narrateFork(result, { ...ask, key, env, cacheDir });
+      if (log.accepted) return reply(log);
+    } catch (error) {
+      // A provider's own error message can carry request details: log it here, say nothing to the page
+      if (!(error instanceof NarrationUnavailable)) console.error("narrate:", error.message);
+    }
   }
+  // The last word: built from the fork's own figures, with no model and no network
+  return reply(await narrateFork(result, { provider: "stub", env: {} }));
 }

@@ -210,3 +210,27 @@ To lift it:
 
 Until then, a decision whose callbacks land after month 40 can't be written, in chapter two or
 later.
+
+## Switching the narration to Meta
+
+Checked against Meta's docs (dev.meta.ai/docs) on 3 November 2026. `agent/narrate.js` matches them: `POST https://api.meta.ai/v1/chat/completions`, `Authorization: Bearer` with `MODEL_API_KEY`, `muse-spark-1.3` (Meta's "recommended for new work"), `system` and `user` roles, `reasoning_effort: "low"`, `max_completion_tokens`, and backoff on 429, 500 and 503. It has never been run against the real API, because no key has existed yet, so step 3 is the first real test.
+
+Standard mode is deliberate: `muse-spark-1.3-contributor` is far cheaper, but lets Meta train on prompts and responses.
+
+**Cost.** Muse Spark 1.3 is $1.25 in and $4.25 out per million tokens. Claude's run of the same prompt was about 280,000 in and 78,000 out, which would be about $0.70 here. Treat that as an estimate: Spark's token counts will differ, and retries add to them. Meta's rate limit is 3,000 requests a minute, far above what this needs.
+
+**It is safe at every step.** Setting `NARRATE_PROVIDER=meta` before Meta's cache exists breaks nothing: each fork falls back to Claude's cache, then to the template.
+
+1. **Add the key.** In `.env.local` add a line `MODEL_API_KEY=...`. Git ignores that file.
+2. **Check the setup, free:** `npm run narrate:meta -- --dry-run`. It should say 64 forks with none cached.
+3. **Try two forks:** `npm run narrate:meta -- --only=D16-B,D19-A`. It stops at once on a bad key or an empty account.
+4. **Read those two.** The prompt was tuned on Claude, so Spark's voice may differ. They are in `cache/narrations/meta/`. If they are poor, stop here: production is still on Claude, and any prompt change means regenerating Claude's cache too before it can be served.
+5. **Run all of them:** `npm run narrate:meta`. Anything already cached costs nothing, so after a failure or a rate limit run the same command again. It exits 0 only when all 64 are accepted, and it prints the tokens used and an estimated cost.
+6. **Read all 64.** The verifier guarantees figures, not sentences. Look for claims that are not true of the scores: Freedom reaches zero at 70% committed, and a Life under 40 is getting by.
+7. **Test:** `npm test`.
+8. **Commit and push the cache:** `git add cache/narrations/meta && git commit -m "Narrate all 64 forks on Meta's model" && git push`. This changes nothing live yet.
+9. **Switch production.** In Vercel, under the project's Settings, Environment Variables, set `NARRATE_PROVIDER` to `meta` for Production. Leave `NARRATE_LIVE` and any key unset. Do not set `NARRATE_META_MODEL`. Then redeploy from Deployments, because a variable only applies to a new deployment.
+10. **Confirm it:** `node scripts/check-live-narrations.mjs --provider=meta`. It must end "Every fork matches the meta cache."
+11. **Correct the README.** "How the AI works" says the live narrations were written by Claude Opus 5.5, cost about $2.70, all passed first time, and that Meta's provider has never run. Replace those with what step 5 printed. The D09-A example under "The honest limit" is Claude's sentence, so replace it with what step 6 found.
+
+**To go back:** set `NARRATE_PROVIDER` to `claude` and redeploy. Claude's cache stays committed, and `node scripts/check-live-narrations.mjs` confirms it.
