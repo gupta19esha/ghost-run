@@ -10,6 +10,7 @@ import { fork } from "../runner/fork.js";
 import { order, SCORE } from "../agent/rank.js";
 import { judge } from "../verify/attempts.js";
 import { leadCheck } from "../agent/checks.js";
+import { isPlainNarration } from "../agent/plain.js";
 import { sameMoney, SAME_MONEY_LEAD } from "../agent/prompt.js";
 import { renderNarration, printTokens, exactMoneyGap } from "../verify/render.js";
 import { resolveTokens } from "../verify/tokens.js";
@@ -81,8 +82,9 @@ export { sameMoney, SAME_MONEY_LEAD };
 
 // The narrator's attempts for a fork, as api/narrate.js returned them, each checked again here:
 // verify() and the same-money lead, against the fork the screen shows.
-// served: [{ number, narration, ok }]. -> { attempts, accepted, rejected, rendered, agrees }
-// agrees is false if this check disagrees with the server's on any attempt
+// served: [{ number, narration, ok }]. -> { attempts, accepted, rejected, rendered, agrees, plain }
+// agrees is false if this check disagrees with the server's on any attempt. plain is true when no
+// model wrote it: agent/plain.js built it from the fork's figures
 export function checkAttempts(result, served) {
   const check = leadCheck(result);
   const attempts = served.map((a) => judge(a.narration, result, a.number, check));
@@ -93,6 +95,7 @@ export function checkAttempts(result, served) {
     rejected: attempts.filter((a) => !a.ok),
     rendered: accepted ? renderNarration(accepted.narration, accepted) : null,
     agrees: attempts.every((a, i) => a.ok === served[i].ok),
+    plain: attempts.length > 0 && attempts.every((a) => isPlainNarration(a.narration)),
   };
 }
 

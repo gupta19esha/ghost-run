@@ -207,6 +207,8 @@ try {
     const own = await js(`return { missing: !!document.querySelector(".is-missing, .ghost-error"), text: document.querySelector(".narration")?.textContent ?? "", label: document.querySelector(".step-label")?.textContent };`);
     if (own.missing) say(size, "own run", `no narration: ${own.text.slice(0, 120)}`);
     if (!/stand-in/.test(own.text)) say(size, "own run", "its narration does not say it was written without a model");
+    if (!/No model wrote this/.test(own.text)) say(size, "own run", "its panel does not say no model wrote it");
+    if (/narrator|attempt/i.test(own.text)) say(size, "own run", "its panel credits a narrator or its attempts");
     await go(`${ORIGIN}/ghost/?run=mine`, 800);
     await until(`document.querySelector(".step .dock")`, "The own run's first step");
     await wait(500);

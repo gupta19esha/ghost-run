@@ -350,7 +350,7 @@ function storyStep(index, option) {
   // The narration: asked of api/narrate.js, then every attempt it made checked here by verify()
   const card = h("div", { class: "card narration" },
     h("p", { class: "month-label" }, "Narration"),
-    h("p", { class: "narration-wait" }, ghostMark(18), "The narrator is writing, and every attempt is being checked…"));
+    h("p", { class: "narration-wait" }, ghostMark(18), mine ? "Building this account from the figures…" : "Fetching the narration, and checking every attempt…"));
   const screen = step(4, { back: { label: "Month 24", to: forkHash(index, option, "end") }, next: { label: "Fork another", to: "#choose" } },
     h("h1", { class: "ghost-title" }, "What happened"),
     h("p", { class: "section-lede" }, `You chose “${view.real.label}”. The ghost chose “${view.ghost.label}”.`),
@@ -404,8 +404,9 @@ function toggleFor(target, show, hide) {
 
 // The card's contents once the attempts are in and checked
 function narrationCard(view, checked) {
-  record(view, checked);
-  const { accepted, rejected, attempts } = checked;
+  const { accepted, rejected, attempts, plain } = checked;
+  // Not counted among what the narrator did, because no narrator did it
+  if (!plain) record(view, checked);
 
   // The accepted narration. A same-money fork's first sentence is its headline
   let lead = null;
@@ -431,12 +432,17 @@ function narrationCard(view, checked) {
   });
 
   return [
-    h("p", { class: "month-label" }, "Narration"),
+    h("p", { class: "month-label" }, plain ? "Built from the figures" : "Narration"),
     lead && h("p", { class: "narration-lead" }, lead),
     checked.rendered
       ? h("p", { class: "narration-text" }, body)
       : h("p", { class: "narration-text is-missing" }, `No attempt passed in ${plural(attempts.length, "try", "tries")}, so there is nothing to show.`),
-    h("div", { class: `verdict ${accepted ? "is-ok" : "is-bad"}` },
+    plain && accepted && h("div", { class: "verdict is-ok" },
+      h("p", { class: "verdict-line" }, h("b", {}, "✓"), ` ${plural(accepted.figures.length, "figure", "figures")} checked against the simulation.`),
+      h("p", { class: "verdict-note" }, "No model wrote this. It is a fixed template filled with this fork's figures, and verify() checked each of them in this browser."),
+      figures && toggleFor(figures, "Show the figures", "Hide the figures"),
+      figures),
+    !(plain && accepted) && h("div", { class: `verdict ${accepted ? "is-ok" : "is-bad"}` },
       accepted
         ? h("p", { class: "verdict-line" }, h("b", {}, "✓"),
           ` Accepted on attempt ${accepted.number} of ${attempts.length}. ${plural(accepted.figures.length, "figure", "figures")} checked against the simulation.`)
@@ -446,8 +452,8 @@ function narrationCard(view, checked) {
       rejectedList.length > 0 && h("ol", { class: "attempts" }, rejectedList),
       !checked.agrees && h("p", { class: "verdict-warning" }, "This browser's check disagrees with the server's on at least one attempt. The browser's verdict is shown."),
       h("p", { class: "verdict-note" },
-        "Every attempt the narrator made is checked again by verify() in this browser, against this fork, and kept, passed or not. ",
-        "A rejected attempt's reasons went back to the narrator before it tried again."),
+        "A model wrote this narration. Every attempt it made is checked again by verify() in this browser, against this fork, and kept, passed or not. ",
+        "A rejected attempt's reasons went back to the model before it tried again."),
       h("p", { class: "verdict-tally" }, tallyLine()),
       figures && toggleFor(figures, "Show the figures", "Hide the figures"),
       figures),

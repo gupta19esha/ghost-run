@@ -5,6 +5,10 @@
 import { sameMoney, SAME_MONEY_LEAD } from "./prompt.js";
 import { resolveTokens } from "../verify/tokens.js";
 
+const STAND_IN = "is a stand-in, written without a model.";
+// True of a narration this file built, so that nothing shown beside it credits a model
+export const isPlainNarration = (narration) => narration.trim().endsWith(STAND_IN);
+
 export function plainNarration(forkResult) {
   const bar = sameMoney(forkResult);
   const values = resolveTokens(forkResult);
@@ -28,6 +32,6 @@ export function plainNarration(forkResult) {
   if (forkResult.substitutions.length > 0) {
     sentences.splice(bar ? 3 : 1, 0, "In month {substitution_month}, {withdrawn_choice} was not available on this path, so the ghost took {substitute_choice}.");
   }
-  sentences.push("This account of month {fork_month} is a stand-in, written without a model.");
+  sentences.push(`This account of month {fork_month} ${STAND_IN}`);
   return sentences.join(" ");
 }

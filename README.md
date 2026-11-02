@@ -1,207 +1,87 @@
 # Ghost Run
 
-Ghost Run takes a finished life from the Chapter 1 simulation and replays it. You can fork it at
-any choice to see the ghost, the life you would have had with the other option.
+Ghost Run is a money game set in India: you play the first two years of a working life, one month at a time, in a simulator. Then you pick any choice you made, and the ghost run replays those two years with the other option and shows you how the life you did not live came out.
 
-## Layout
+**Live:** https://ghost-run.vercel.app. The game is at `/game/`. The ghost run on a finished demo life, with nothing to play first, is at `/ghost/`.
 
-- `runner/` replays a save (`replay.js`) and forks it at a choice (`fork.js`). Both timelines run
-  through the same engine code, so a fork that takes the player's own option is byte-identical
-  to the real run.
-- `verify/` checks a narration of a fork. Every figure must be a token resolved from the fork
-  result, every sentence must hold a token and claim no cause, and `verify/render.js` is the only place figures are
-  formatted. Each figure has one displayed value across the ghost flow: net worth to the rupee,
-  bars in whole points, and a gap is the difference of the two values shown. A gap of nothing
-  reads "the same as you".
-- `verify/tokens.js` also gives a narration the middle of the run, each null where the run has
-  none: when the money was furthest apart, the months the ghost led, the first bar to part, the
-  ghost's lowest month after the split, the layoff and where each life stood, and whether the lead changed hands.
-- `agent/rank.js` forks a save at every choice and orders the forks by a score, `surprise` as
-  ruled; `scripts/measure-rank.mjs` measures the candidates.
-- `web/demo/save.json` is a finished 24-month save for the UI to load (see `web/demo/README.md`).
-- `scripts/measure-forks.mjs` measures how often a fork's ghost cannot take a later real choice.
-  `reports/` holds the measurements.
-- `web/daylight.css` is the game's visual direction, Daylight, laid over the vendored game.
-- `web/index.html` is the landing page, served at the site root (`web/landing.js`,
-  `web/landing.css`): what this is and its two ways in, "Start at month 1" and "Try it on a finished
-  life", how a month works with month 7 of the demo life to
-  try (with one line giving a reader outside India the scale of its rupees, in the game's
-  figures, never converted), the six chapters from 22 to 42, the ghost run, and "Start at month 1", which goes straight into the
-  game. Two designs sharing a palette, a typeface and a voice: a phone's single column with a
-  sticky Play bar, and from 900px a desktop layout of its own, with a header carrying Play, a
-  two-column hero, the month inside a phone frame and the chapters across the width. Its figures
-  come from `web/landing-model.js`, and its written words are checked against the engine and the
-  chapter plan by `web/test/landing-model.test.js`. Chapter one is open; chapters two to six say
-  Locked. The chapter two sign-up is connected to nothing yet, and says so.
-- `web/ghost.html` is the ghost flow, served at `/ghost/`: the finished demo life, and any choice
-  in it forked in the browser and drawn against the real run, with its narration and every attempt
-  at it checked by `verify()`. Five steps, one screen each (`web/ghost.js`): your run, choose a
-  moment, the split (the landing hero's road, the ghost's branching off it), where it ended, what happened. `web/ui.js` is the drawing both pages share.
-  `/game/` serves the playable game from `vendor/` (see `vercel.json`).
-- `agent/narrate.js` asks a model for one candidate narration of a fork, `agent/prompt.js` is what
-  the model is told, and `agent/narration-loop.js` retries with the failures, up to four attempts.
-  `api/narrate.js` is the Vercel function the browser calls. Responses are cached in
-  `cache/narrations/`.
+## What was built during the hackathon (October 26 to November 4)
 
-`npm test` runs every test. `npm run dev` serves the site locally with the narration route, as
-Vercel does. The one dependency, the Anthropic SDK, is used only by the narration function.
+| Piece | What it does | Where |
+|---|---|---|
+| Fork runner | Replays a save, then replays it again with one choice changed. Both go through the same engine, so a fork that takes your own option is byte-identical to the real run | `runner/` |
+| Verifier and tokens | Checks a narration before anyone reads it. Every figure must be a token resolved from the fork | `verify/` |
+| Ranking | Forks a save at every choice and orders the forks by how surprising they are | `agent/rank.js` |
+| Ghost flow | The five steps at `/ghost/`: the run, choose a moment, the split, where it ended, what happened | `web/ghost.js` |
+| Daylight theme | The game's visual direction, laid over its original look | `web/daylight.css` |
+| The road | The timeline as a road with a stop for each month. It opens each chapter, and the ghost's road branches off it at the split | `vendor/dry-run-engine/game/screens/timeline.js`, `web/ui.js` |
+| Landing page | What this is, a month to try, the chapters, a ghost run | `web/index.html` |
+| Certificate | The chapter card, drawn in the browser from the save | `vendor/dry-run-engine/game/certificate.js` |
+| Ideas collection | The chapter's twenty concept cards, collected as they are earned | `vendor/dry-run-engine/game/ideas.js` |
+| Model layer | The prompt, the retry loop, the cache and the API route | `agent/`, `api/narrate.js`, `cache/narrations/` |
 
-## Narration
+Only chapter one is playable. Chapters two to six are named on the landing page and locked.
 
-The browser posts a fork of the demo life to `/api/narrate`. The function forks the save itself,
-asks the narrator, checks each answer with `verify()` and the same-money lead, and on a rejection
-sends the reasons back and asks again, up to four attempts. It returns every attempt; the browser
-checks each one again before the panel shows it.
+## What it is built on
 
-Settings are environment variables, in Vercel's project settings or a local `.env.local`, which
-git ignores. Keys never go in the repo, the browser or a commit.
+`vendor/dry-run-engine/` is Dry Run, a finance simulation written before the hackathon. It holds the engine (the ledger, the market, the scores), 30 authored decisions with their copy, and the original game UI. **The simulator and its content are not hackathon work.**
 
-| Variable | What it does |
-|---|---|
-| `NARRATE_PROVIDER` | `meta`, `claude` or `stub` (default). Only the server chooses |
-| `NARRATE_LIVE` | `1` lets a paid provider make calls. Otherwise it answers only from `cache/narrations/`, with no network |
-| `MODEL_API_KEY` | Meta's Model API key (Meta's own name for it) |
-| `ANTHROPIC_API_KEY` | Claude's key |
-| `NARRATE_META_MODEL`, `NARRATE_CLAUDE_MODEL` | Override the model: `muse-spark-1.3` and `claude-opus-5-5` by default |
-| `NARRATE_STUB_MISTAKES` | `1` makes the stub type a figure on its first attempt, to see a rejection and a retry |
+The repository's first commit, on October 29, is that code as it stood, so `git diff b6e2e30 HEAD -- vendor/` shows every change since:
 
-Every paid response is cached on disk by fork and attempt, so running a fork again costs nothing,
-and the committed cache lets the demo narrate with no network. Only the demo save is accepted, so
-the forks a paid model can be asked about are finite.
+- **The simulation:** no change to how it calculates. `engine/` gained 38 lines, mostly read-only helpers that report a chapter's months and concept cards, and a test. `text/` is unchanged. The sheet of decisions is unchanged.
+- **The game UI:** changed a lot. `game/` has 27 files changed and about 2,900 lines added. Those are the road, the certificate, the ideas, the desktop layout and the rest of the table above that lives in `vendor/`.
 
-## Motion and sound
+## How the AI works
 
-`web/motion.js` runs the ghost screen's motion with `requestAnimationFrame` and the Web
-Animations API, no libraries. The fork screen's hero is the ghost line drawing itself from the
-split month, ringing each month where the ghost could not take the real choice as it passes.
-Figures count instead of cutting, and bars move from their old value to their new one: a rise
-overshoots and settles, a fall is flatter and quicker. The run's 24 month ticks fill. Moving
-between steps is a cut, as every change of screen in the game is (`vendor/dry-run-engine/UI.md`,
-"Motion, as built"): the motion is inside a step, and plays the first time the step is reached.
-The landing page uses the game's landing motion, its title rising and its mark's ticks drawing,
-and each section rises in as it comes on screen. It makes no sound.
+A model writes one thing: the narration on the last step of the ghost run, telling you how the two lives came apart. It decides no numbers, no outcomes and no ranking. Those all come from the simulator.
 
-- Under `prefers-reduced-motion`, everything lands on its finished state at once.
-- A tap or key press anywhere finishes every running animation and waiting step first.
-- Motion moves transforms, opacity, stroke offsets and widths inside fixed tracks, never layout,
-  so it cannot change whether a screen fits.
-- Leaving a screen drops its motion where it is, so nothing of it plays over the next one.
+The model is forbidden from writing a number. It writes tokens such as `{net_worth_gap}`. The simulator resolves each token for that fork, and only then does the text get its figures.
 
-`web/sound.js` synthesizes every sound with Web Audio: a tap, a choice, the chapter closing, a bar
-rising or falling, and the ghost line landing. The audio context starts on the first tap. Sound is
-on by default; the mute control, in the dock at the foot of every step beside Back and Next, is
-remembered in `localStorage`.
-Choosing a fork and the ghost line landing give a short vibration where `navigator.vibrate`
-exists. The mute control is about sound only, so it doesn't turn vibration off.
+`verify/verify.js` and `agent/checks.js` reject an attempt that:
 
-## vendor/
+- types a digit
+- invents a token, or uses one this fork has no value for
+- leaves out a later choice the ghost could not take, when the fork has one
+- asserts a cause, which the engine never records: a month's change is the sum of every choice, salary, costs, returns and shocks, with no attribution to any one of them
+- has a sentence with no token in it (the one exception is the fixed opening line on a fork that ends with the same money)
+- omits that fixed opening line on such a fork
 
-`vendor/dry-run-engine/` is the prior work Ghost Run is built on: the engine, the sheet's
-content, the copy and the game. The folder keeps its original name. For Daylight, two changes
-were made to it, and only these:
+A rejected attempt's reasons go back to the model, and it tries again, up to four attempts. The browser checks every attempt again before showing it.
 
-- The displayed product name, now "Ghost Run" in the game's page title, its favicon title and
-  `PRODUCT_NAME` in `game/config.js`.
-- One added line in `game/index.html`, `<link rel="stylesheet" href="/web/daylight.css">`, after
-  the game's own stylesheets. It loads the Daylight look (`web/daylight.css`, with Baloo 2 in
-  `web/fonts/`) as an override: every token in `game/tokens.css` is redefined there, and nothing
-  in `tokens.css` or `style.css` is edited. The path is absolute, so a server that does not
-  serve `web/` at the root, such as `scripts/screenshot_ui.py`, shows the original dark game.
-- One changed line in `game/index.html`: the `theme-color` meta is the Daylight paper ground,
-  `#FBF4E6`, so a phone's browser bar matches the page. Together with the link above, these are
-  the only two lines of `vendor/` changed for Daylight.
+The narrations on the live site were written by Claude Opus 5.5 (`claude-opus-5-5`), for all 64 forks of the demo life, at about $2.70 in API cost. In that final run all 64 passed on the first attempt. The retry has fired on real output in earlier runs, but not in this set. A provider for Meta's model is wired in and has never been run.
 
-Those changed no engine logic, content, copy or numbers.
+**Where no model is involved:** the charts, figures and ranking anywhere, and the ghost run on a player's own finished chapter (the report's "Meet your ghost"). The narrator only takes the demo life, because its forks are finite and can be cached. A player's own fork gets a fixed template filled with its figures, and the page says no model wrote it.
 
-Separately, the end of chapter one has been added to the game, in `game/` only. Nothing in
-`engine/`, `text/` or the sheet changed:
+## The honest limit
 
-- When month 24 closes, the turn of the chapter plays first (`game/screens/chapter-turn.js`): the
-  mark's 24 ticks, the last one lighting, the light running once round the ring, the mark
-  settling, and "Chapter one closed", the chapter's title and "22 to 24" rising in, in the
-  landing's motion language. It leaves by itself after 4.2 seconds (`CHAPTER_TURN_MS`). A tap
-  while it moves finishes the motion; a tap once it is still leaves. Under reduced motion it
-  stands still. The same screen opens a chapter (`way: "open"`), for when there is a next one to
-  open. Its keyframes are in `game/style.css`, and UI.md's "Motion, as built" records it.
-- Then the chapter card (`game/certificate.js` for the figures, `game/screens/certificate.js`
-  for the drawing): net worth and its move over the two years, Safety, Freedom and Life with
-  the line beside each, the shape of the two years as net worth month by month, one line of
-  the run's own figures, and the twenty ideas the chapter taught, numbered, in order (UI.md rule
-  10). It is drawn on a canvas in the browser from the save, with no server, 1200 by 1000 px,
-  and "Save the card" downloads it as a PNG. Every figure
-  comes from the engine and every amount is formatted by `text/`; `game/test/certificate.test.js`
-  checks them against the demo life. The chapter report opens the card again ("Your chapter
-  card"). The words on the card, its screen and the link are Ghost Run's, not the product owner's
-  REPORT-COPY.md.
-- `game/labels.js` holds the line beside Safety and Freedom, which `game/main.js` had, so the
-  card and the report share it.
+**The verifier guarantees every figure, not every sentence.** A claim with no number in it can still be wrong.
 
-The game also has a desktop layout of its own, from 900 px wide (`game/desktop.css`, linked in
-`game/index.html` after Daylight, and `game/rail.js`). Below 900 px nothing changes: screenshots
-of the same screens before and after are identical at 360, 390 and 899 px wide.
+- **The token rule can be got round.** It requires a token somewhere in each sentence and does not check what the rest of the sentence says. "In month {fork_month} your investment held its value" would pass.
+- **The cause rule is a list of phrases:** because, caused, led to, meant that, which is why, as a result, resulted in, due to. A cause claimed in other words passes. The prompt forbids those too, but nothing enforces it.
+- **Four false narrations got past the checker and were caught by reading.** They said things like "every rupee of any next salary claimed". Freedom reaches zero at 70% of income committed, not 100%. The fix was to give the model the score's real scale and regenerate all 64.
+- **At least one wrong sentence is still live.** D09-A says the ghost's days "read as living" at a Life score of about 38, which other narrations rightly call getting by.
+- **Style rules are not enforced.** The limits on length and figures per sentence are prompt instructions only.
 
-- **The rail** holds where the player is, net worth and Safety, Freedom and Life, and stays put
-  while the screens change beside it. From 1200 px it runs down the left; from 900 to 1199 px it
-  is a band across the top, because a column there would leave the illustration about 220 px
-  wide. Bars move in it as they do on the result screen, net worth counts in it as the month
-  close counts, and the first-time line under a bar shows under the rail's bar. `game/main.js`
-  says what it holds on each screen (`board()`), from the engine.
-- **UI.md rule 1 holds:** during a decision the rail shows where the player is and net worth (the
-  rule's one exception) and its bars stand down; they come back with the result.
-- **The decision and the result split:** the illustration large on the left, in the shape it was
-  drawn in, and the month, situation and options, or the chosen card and the result, on the
-  right at a reading width. The month close splits the same way, net worth counting on the left
-  in place of the drawing. The landing splits its pictures from its words, the chapter report
-  reads in two columns, and Home, the timeline and How it works sit in a column of their own.
+## Run it locally
 
-The timeline is a road, the landing hero's, in `game/` only (`game/screens/timeline.js`,
-`game/timeline.js`'s `roadStops`, its styles in `game/style.css` and `game/desktop.css`). It runs
-down a phone and across a desktop window. It opens each chapter, all dark, in place of a separate
-screen (UI.md rule 11), and the chapter's progress opens it from Home, a decision and a month's close.
-UI.md, "the timeline's own artboard", says what it holds.
+You need Node 20 or later.
 
-After the chapter report, the one primary action is "Meet your ghost": `/ghost/?run=mine` runs the ghost
-flow on the player's own save. The narrator takes only the demo life, so an own run's narration is
-`agent/plain.js`, built from the fork's tokens with no model, checked by `verify()` in the browser and
-saying that it is a stand-in. Bare `/ghost/` is the demo life, and says so in its first line.
-`scripts/check-road-fit.mjs` checks it and the split step's road at every size.
+```
+npm install
+npm run dev
+```
 
-`scripts/check-game-fit.mjs` is the fit check for every screen at any size: it plays chapter one
-through the real game in headless Chrome on virtual time, on two paths (each decision's first
-option and its last), and fails if anything scrolls sideways, if a screen's button, timer or
-last option ends below the window, or if the rail overflows. Desktop sizes by default (900 by
-600 to 1920 by 1080), `--phone` for 320 by 568, 360 by 640 and 390 by 844.
-`node --experimental-websocket scripts/check-game-fit.mjs` on Node 20.
+Then open http://127.0.0.1:3000. This runs with no key, but narration comes from a stub that says it was written without a model. To see the real narrations, still with no key and no network, create `.env.local` containing one line:
 
-## Chapters three to six: the blocker
+```
+NARRATE_PROVIDER=claude
+```
 
-Chapters three to six are not started. They can't be, because the market isn't written that far.
+`npm test` runs every test. `scripts/check-road-fit.mjs` and `scripts/check-game-fit.mjs` check the screens at phone and desktop sizes in headless Chrome.
 
-Broad equity's script runs to month 240, the end of chapter six. Small caps' script stops at
-month 40 (`SIMULATION-MATHS.md` section 7: "41 to 240, not yet authored"). The engine refuses to
-guess past that point: `engine/market.js` throws "The small_cap script is authored through month
-40, not month 41" when a run that holds small caps reaches month 41. Any run that took D20-A, B
-or D can hold small caps, and a run still holding them at month 40 stops there.
+### How the narration cache works
 
-Chapter three starts at month 61, but the wall is earlier: it falls at month 41, inside chapter
-two (months 25 to 60). Chapter two can be written to month 40. Nothing after month 40 can run
-for every player until the script is extended.
+Every model response is committed in `cache/narrations/claude/<fork>/attempt-<n>.json`, with the model, its token usage, and a digest of the exact request it answered. The route answers from there, with no key and no network, as long as the request still matches. The live site runs this way.
 
-To lift it:
+Paid calls happen only with `NARRATE_LIVE=1` and a key. Changing the prompt or the model changes the request, so the old answers stop matching and every fork has to be generated again.
 
-1. Author small caps from month 41 to month 240 in the section 7 table, regime by regime. The
-   broad equity regimes are recovery from 41 to 60, a long rise from 61 to 120, a correction
-   from 121 to 132, then mixed. Small caps should take the same events, rougher and with a
-   higher long-run drift (about 13% a year against equity's 11%).
-2. Regenerate with `python scripts/export_market_script.py`. That writes `data/market-script.json`
-   and `engine/market-script.js`. Neither is edited by hand.
-3. If a later chapter's copy depends on the market's direction, add a lesson window for it in
-   the same section, then run `engine/test/market.test.js`. It checks every window's direction
-   over 200 seeds.
-4. Measure it: extend the calibration harness past month 30, with targets that section 13 doesn't
-   set yet, and rule on the small cap figures that section 14 still lists as uncalibrated.
-5. Only then write content past month 40. A callback that lands after month 40 is safe once
-   steps 1 to 4 are done.
-
-Until then, a decision whose callbacks land after month 40 can't be written, in chapter two or
-later.
+More detail, including why chapters three to six cannot start yet, is in [docs/BUILD-NOTES.md](docs/BUILD-NOTES.md).

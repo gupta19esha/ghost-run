@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs";
 import { readRun, forkView, checkAttempts, costList, surpriseList, reasons, markedDraft, ghostRoad } from "../ghost-model.js";
 import { narrateFork } from "../../agent/narration-loop.js";
 import { forksOf } from "../../agent/rank.js";
+import { plainNarration } from "../../agent/plain.js";
 import { fork } from "../../runner/fork.js";
 
 const save = JSON.parse(readFileSync(new URL("../demo/save.json", import.meta.url), "utf8"));
@@ -68,6 +69,17 @@ test("the lists: one alternative per choice, cost by money gained, surprise by i
   assert.ok(cost.every((f, i) => f.features.end.netWorth > 0 && (i === 0 || cost[i - 1].score >= f.score)));
   assert.equal(cost[0].option, "D02-C");
   assert.ok(surprise.every((f, i) => i === 0 || surprise[i - 1].score >= f.score));
+});
+
+test("a narration built without a model says so, and one from a model does not", async () => {
+  const f = forkView(save, 15, "D16-B");
+  const built = checkAttempts(f.result, [{ number: 1, narration: plainNarration(f.result), ok: true }]);
+  assert.equal(built.plain, true);
+  assert.ok(built.rendered.includes("written without a model"));
+  const cached = JSON.parse(readFileSync(new URL("../../cache/narrations/claude/7-e297f21a0571-15-D16-B/attempt-1.json", import.meta.url), "utf8"));
+  const written = checkAttempts(f.result, [{ number: 1, narration: cached.narration, ok: true }]);
+  assert.equal(written.plain, false);
+  assert.ok(written.accepted);
 });
 
 test("the ghost's road leaves yours at the fork, and ends on the side the money did", () => {
