@@ -172,7 +172,7 @@ export function createRail() {
     }, COUNT_MS);
   }
 
-  return { element: rail, show };
+  return { element: rail, show, setOpen: progress.setOpen };
 }
 
 // The way each bar moved between two getBars readings, as compareBars has it

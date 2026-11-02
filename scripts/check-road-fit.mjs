@@ -112,11 +112,100 @@ try {
     const size = `${w}x${h}`;
     await page("Emulation.setDeviceMetricsOverride", { width: w, height: h, deviceScaleFactor: 1, mobile: w < 900 });
 
+    // ---------- The road opening the chapter, from a new run ----------
+    await go(`${ORIGIN}/web/index.html`, 200);
+    await js(`localStorage.clear(); return 1`);
+    await go(`${ORIGIN}/game/`, 800);
+    await until(`document.querySelector(".screen .action")`, "The game's landing");
+    await js(`document.querySelector(".screen .action").click(); return 1`);
+    await until(`document.querySelector(".road")`, "The opening road");
+    await wait(1000);
+    const opening = await js(`${reachableBox}
+      const road = document.querySelector(".road");
+      const stops = [...document.querySelectorAll(".road-stop:not(.road-end)")];
+      const here = document.querySelector(".road-stop[aria-current]");
+      const b = document.querySelector(".start-foot .action");
+      return {
+        name: document.querySelector(".screen").dataset.screen,
+        stops: stops.length,
+        dark: stops.filter((s) => s.classList.contains("is-ahead")).length,
+        here: here && here.dataset.month,
+        figures: document.querySelectorAll(".road-figure").length,
+        locked: document.querySelectorAll(".road-idea.is-locked").length,
+        open: document.querySelectorAll("button.road-idea").length,
+        title: document.querySelector(".chapter-title")?.textContent,
+        span: document.querySelector(".road-span")?.textContent,
+        card: road.lastElementChild.classList.contains("road-end") && !!road.lastElementChild.querySelector("canvas"),
+        playInView: inView(b),
+        sideways,
+        scroll: [scrollY, road.scrollLeft],
+        close: !!document.querySelector(".timeline .icon-button"),
+      };`);
+    if (opening.name !== "start") say(size, "opening", `showed ${opening.name}`);
+    if (opening.stops !== 24 || opening.dark !== 24) say(size, "opening", `${opening.stops} stops, ${opening.dark} dark`);
+    if (opening.here !== "1" || opening.figures !== 1) say(size, "opening", `figure at ${opening.here}`);
+    if (opening.locked !== 20 || opening.open !== 0) say(size, "opening", `${opening.locked} locked markers, ${opening.open} open`);
+    if (!opening.card) say(size, "opening", "no chapter card at the road's end");
+    if (!opening.playInView) say(size, "opening", "Play the month is not on screen");
+    if (opening.sideways > 0) say(size, "opening", `scrolls sideways by ${opening.sideways}px`);
+    if (opening.scroll[0] !== 0 || opening.scroll[1] !== 0) say(size, "opening", `does not open at the start: ${opening.scroll}`);
+    if (opening.close) say(size, "opening", "has a close button as well as Play");
+    if (!opening.span?.includes("22 to 24") || !opening.span?.includes("0 of 20 ideas")) say(size, "opening", `says "${opening.span}"`);
+    await shot(`opening-${size}`);
+    await js(`window.scrollTo(0, document.documentElement.scrollHeight); document.querySelector(".road").scrollLeft = 99999; return 1`);
+    await wait(250);
+    await shot(`opening-end-${size}`);
+
+    // ---------- The landing's two ways in ----------
+    await go(`${ORIGIN}/`, 1200);
+    const landing = await js(`${reachableBox}
+      const texts = [...document.querySelectorAll("a.action, a.close-button")].map((a) => [a.textContent.trim(), a.getAttribute("href")]);
+      const hero = [...document.querySelectorAll(".lp-hero-play a")];
+      return { texts, hero: hero.map((a) => a.textContent.trim()), heroInView: hero.every((a) => { const b = a.getBoundingClientRect(); return b.width > 0 && b.left >= 0 && b.right <= innerWidth + 0.5; }), sideways };`);
+    for (const [text, href] of landing.texts) {
+      if (href === "/game/" && text !== "Start at month 1") say(size, "landing", `the game's button says "${text}"`);
+      if (href === "/ghost/" && text !== "Try it on a finished life") say(size, "landing", `the ghost's button says "${text}"`);
+    }
+    if (landing.hero.join("|") !== "Start at month 1|Try it on a finished life" || !landing.heroInView) say(size, "landing", `the hero's buttons: ${landing.hero}`);
+    if (landing.sideways > 0) say(size, "landing", `scrolls sideways by ${landing.sideways}px`);
+    await shot(`landing-${size}`);
+
+    // ---------- The ghost's first line, on the demo life, then a player's own run ----------
+    await go(`${ORIGIN}/ghost/`, 800);
+    await until(`document.querySelector(".step .dock")`, "The ghost's first step");
+    await wait(1400);
+    const first = await js(`${reachableBox}
+      const h1 = document.querySelector("h1");
+      // The step scrolls by design: what has to be on screen is what it says it is, and the figure
+      const worth = document.querySelector(".home-net-worth").getBoundingClientRect();
+      return { line: h1.textContent, next: inView(document.querySelector(".dock-next")), over: worth.bottom - document.querySelector(".dock").getBoundingClientRect().top, lineTop: h1.getBoundingClientRect().top, sideways };`);
+    if (!/^A demo player's two years/.test(first.line)) say(size, "ghost", `first line: "${first.line}"`);
+    if (!first.next) say(size, "ghost", "Next is not on screen");
+    if (first.over > 0.5) say(size, "ghost", `its net worth ends ${first.over}px under the dock`);
+    if (first.lineTop < 0) say(size, "ghost", "its first line starts above the screen");
+    if (first.sideways > 0) say(size, "ghost", `scrolls sideways by ${first.sideways}px`);
+    await shot(`ghost-first-${size}`);
+
+    // A life that is not the demo's: another seed, so the narrator could not take it
+    await go(`${ORIGIN}/web/index.html`, 200);
+    await js(`localStorage.setItem(${JSON.stringify(SAVE_KEY)}, ${JSON.stringify(JSON.stringify({ ...demo, seed: demo.seed + 1, closed: 24 }))}); return 1`);
+    await go(`${ORIGIN}/ghost/?run=mine#fork/15/D16-B/story`, 800);
+    await until(`document.querySelector(".narration-text:not(.is-missing), .narration .is-missing, .ghost-error")`, "A narration of the player's own run");
+    const own = await js(`return { missing: !!document.querySelector(".is-missing, .ghost-error"), text: document.querySelector(".narration")?.textContent ?? "", label: document.querySelector(".step-label")?.textContent };`);
+    if (own.missing) say(size, "own run", `no narration: ${own.text.slice(0, 120)}`);
+    if (!/stand-in/.test(own.text)) say(size, "own run", "its narration does not say it was written without a model");
+    await go(`${ORIGIN}/ghost/?run=mine`, 800);
+    await until(`document.querySelector(".step .dock")`, "The own run's first step");
+    await wait(500);
+    const ownFirst = await js(`return { title: document.querySelector("h1").textContent, step: document.querySelector(".step-label").textContent };`);
+    if (ownFirst.title !== "Two years. You are 24." || !/Your run/.test(ownFirst.step)) say(size, "own run", `says "${ownFirst.title}", "${ownFirst.step}"`);
+    await js(`localStorage.clear(); return 1`);
+
     // ---------- The timeline, part way, then finished ----------
     for (const [state, through, reached] of [["partway", 10, 11], ["finished", 24, 24]]) {
       await openRoad(through);
       const m = await js(`${reachableBox}
-        const stops = [...document.querySelectorAll(".road-stop")];
+        const stops = [...document.querySelectorAll(".road-stop:not(.road-end)")];
         const here = document.querySelector('.road-stop[aria-current]');
         const ahead = stops.filter((s) => s.classList.contains("is-ahead"));
         const road = document.querySelector(".road");
@@ -129,17 +218,19 @@ try {
           herePlayed: here?.classList.contains("is-played"),
           hereInView: here ? (() => { const b = here.querySelector(".road-track").getBoundingClientRect(); return b.left < innerWidth && b.right > 0 && b.top < innerHeight && b.bottom > 0; })() : false,
           played: stops.length - ahead.length,
-          aheadWords: ahead.map((s) => s.querySelector(".road-body").textContent).filter((t) => !/^Month \\d+$/.test(t)),
-          aheadExtra: ahead.filter((s) => s.querySelector(".road-idea, .road-row, .road-barrier, .road-thumb")).length,
+          aheadWords: ahead.map((s) => s.querySelector(".road-ahead-month").textContent).filter((t) => !/^Month \\d+$/.test(t)),
+          aheadExtra: ahead.filter((s) => s.querySelector("button.road-idea, .road-row, .road-barrier, .road-thumb")).length,
+          lockedAhead: ahead.filter((s) => s.querySelector(".road-idea.is-locked")).length,
+          cardAtEnd: road.lastElementChild.classList.contains("road-end") && !!road.lastElementChild.querySelector("canvas"),
           events: [...document.querySelectorAll(".road-stop.has-event")].map((s) => s.dataset.month),
           barriers: document.querySelectorAll(".road-barrier").length,
-          ideas: document.querySelectorAll(".road-idea").length,
+          ideas: document.querySelectorAll("button.road-idea").length,
           sideways,
           closeInView: inView(document.querySelector(".timeline .icon-button")),
           across: getComputedStyle(road).display === "flex",
           oneRowBand: new Set(stops.map((s) => Math.round(s.querySelector(".road-track").getBoundingClientRect().top))).size,
           rail: !!document.querySelector(".rail") && getComputedStyle(document.querySelector(".rail")).display !== "none",
-          tooSmallRows: [...document.querySelectorAll(".road-row, .road-idea")].filter((b) => b.getBoundingClientRect().height < 44).length,
+          tooSmallRows: [...document.querySelectorAll(".road-row, button.road-idea")].filter((b) => b.getBoundingClientRect().height < 44).length,
           emptyThumbs: [...document.querySelectorAll(".road-thumb .illo")].filter((i) => !i.querySelector("svg *")).length,
           figureClipped: (() => { const f = document.querySelector(".road-figure")?.getBoundingClientRect(); const t = here?.querySelector(".road-track").getBoundingClientRect(); return !f || !t || f.top < t.top - 0.5 || f.bottom > t.bottom + 0.5; })(),
         };`);
@@ -150,7 +241,8 @@ try {
       if (m.sideways > 0) say(size, where, `scrolls sideways by ${m.sideways}px`);
       if (!m.closeInView) say(size, where, "Close is not on screen");
       if (m.aheadWords.length) say(size, where, `says more than its month ahead: ${m.aheadWords[0]}`);
-      if (m.aheadExtra) say(size, where, `${m.aheadExtra} stops ahead carry a picture, an idea or an event`);
+      if (m.aheadExtra) say(size, where, `${m.aheadExtra} stops ahead carry a picture, an open idea or an event`);
+      if (!m.cardAtEnd) say(size, where, "no chapter card at the road's end");
       if (m.tooSmallRows) say(size, where, `${m.tooSmallRows} tap targets under 44px`);
       if (m.emptyThumbs) say(size, where, `${m.emptyThumbs} empty illustrations`);
       if (m.figureClipped) say(size, where, "the figure is clipped by its stop");
@@ -171,10 +263,10 @@ try {
 
       // A played stop opens, one at a time, and an idea opens that idea and comes back
       const opened = await js(`
-        const stop = document.querySelector(".road-stop.is-played .road-idea")?.closest(".road-stop") ?? document.querySelector(".road-stop.is-played");
+        const stop = document.querySelector(".road-stop.is-played button.road-idea")?.closest(".road-stop") ?? document.querySelector(".road-stop.is-played");
         stop.querySelector(".road-row").click();
         const detail = stop.querySelector(".timeline-detail");
-        const second = [...document.querySelectorAll(".road-stop.is-played")].find((s) => s !== stop);
+        const second = [...document.querySelectorAll(".road-stop.is-played:not(.road-end)")].find((s) => s !== stop);
         const before = !detail.hidden && detail.children.length > 0;
         second?.querySelector(".road-row").click();
         return { before, oneOpen: document.querySelectorAll(".road-stop.open").length, sideways: document.documentElement.scrollWidth - innerWidth };`);
@@ -184,7 +276,7 @@ try {
       await wait(120);
       await shot(`timeline-${state}-open-${size}`);
       const idea = await js(`
-        const button = document.querySelector(".road-idea");
+        const button = document.querySelector("button.road-idea");
         const month = button.closest(".road-stop").dataset.month;
         const title = button.textContent;
         button.click();

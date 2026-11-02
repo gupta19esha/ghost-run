@@ -1,19 +1,25 @@
-// The progress timeline as a road (UI.md step 6; HANDOFF section 4, Progress): the landing hero's
-// road carrying the chapter's months, one stop a month, running down a phone and across a desktop
-// window (game/desktop.css). The player's figure stands at the month they have reached.
+// The road (UI.md step 6 and rule 11; HANDOFF section 4, Progress): the landing hero's road carrying
+// the chapter's months, one stop a month, running down a phone and across a desktop window
+// (game/desktop.css). The player's figure stands at the month they have reached. It opens the
+// chapter, all dark, and it is the timeline from then on. At its far end stands the chapter card.
 //
 // A played stop carries its month summary, its decision's illustration small, and how net worth
 // moved (UI.md rule 4). Tap it to see what you chose and the result each choice showed. An idea the
 // month taught sits beside it, and opens that idea. The layoff is marked on the road once it has
-// happened, by the sheet's own summary for that month. Stops ahead are dark and say only their
-// month, so nothing ahead is told before it comes.
+// happened, by the sheet's own summary for that month. Stops ahead are dark, and say only their
+// month and, locked, the title of the idea it will teach: the chapter's promise, with the body kept
+// for the month that earns it. The card is drawn locked until the chapter is finished.
 //
-// It adds no words of its own; the close button's label is month close's "Close".
+// It adds no words of its own. The close button's label is month close's "Close", the card's
+// heading the card screen's, and the button that opens the chapter Home's "Play the month".
 
 import { direction, arrow } from "./moves.js";
 import { illustration } from "./illustrations.js";
+import { cardCanvas } from "./certificate.js";
 
 const CLOSE = "Close";
+const CARD = "Your chapter card";
+const PLAY = "Play the month";
 const SVG = "http://www.w3.org/2000/svg";
 // The hero's trees, one stop in every so many, on the side of the road the figure does not stand
 const TREE_EVERY = 3;
@@ -44,6 +50,17 @@ function drawn(className, viewBox, inner) {
   return svg;
 }
 
+function lockIcon() {
+  return drawn("road-lock", "0 0 15 18",
+    `<rect x="1" y="7" width="13" height="10" rx="2" fill="currentColor"/><path d="M4 7V4.5a3.5 3.5 0 0 1 7 0V7" stroke="currentColor" stroke-width="2" fill="none"/>`);
+}
+
+function lockedIdea(idea) {
+  const marker = span("road-idea is-locked");
+  marker.append(lockIcon(), span("road-idea-title", idea.title));
+  return marker;
+}
+
 // You, from the hero
 const figure = () => drawn("road-figure", "529 224 38 76",
   `<circle cx="548" cy="238" r="12" fill="var(--ink)"/><path d="M531 300v-30a17 17 0 0 1 34 0v30Z" fill="var(--ink)"/>`);
@@ -63,12 +80,16 @@ function track(stop, index) {
   return el;
 }
 
-// stops: game/timeline.js's roadStops. chapter: { number in words, title } or null. money: text/'s
-// formatter. open: a month to show opened. onIdea(month): opens that month's idea
-export function timelineScreen({ stops, chapter, money, open = null, onIdea, onClose }) {
+// stops: game/timeline.js's roadStops. chapter: { number in words, title, span, count }. money:
+// text/'s formatter. open: a month to show opened. onIdea(month): opens that month's idea. card:
+// chapterCard's figures or lockedChapterCard's, the far end of the road. onCard: opens it, once it
+// is the player's own. onPlay: this is the chapter opening, and its button plays the first month.
+// onClose otherwise: the close button
+export function timelineScreen({ stops, chapter, money, open = null, card, onCard = null, onIdea, onPlay = null, onClose = null }) {
+  const opening = Boolean(onPlay);
   const screen = document.createElement("section");
-  screen.className = "screen timeline";
-  screen.dataset.screen = "timeline";
+  screen.className = `screen timeline${opening ? " opening" : ""}`;
+  screen.dataset.screen = opening ? "start" : "timeline";
 
   const top = document.createElement("div");
   top.className = "timeline-top";
@@ -80,15 +101,21 @@ export function timelineScreen({ stops, chapter, money, open = null, onIdea, onC
     const title = document.createElement("div");
     title.className = "chapter-title";
     title.textContent = chapter.title;
-    heading.append(label, title);
+    const line = document.createElement("div");
+    line.className = "road-span";
+    line.textContent = `${chapter.span} · ${chapter.count}`;
+    heading.append(label, title, line);
   }
-  const close = document.createElement("button");
-  close.type = "button";
-  close.className = "icon-button";
-  close.setAttribute("aria-label", CLOSE);
-  close.append(closeIcon());
-  close.addEventListener("click", onClose, { once: true });
-  top.append(heading, close);
+  top.append(heading);
+  if (!opening) {
+    const close = document.createElement("button");
+    close.type = "button";
+    close.className = "icon-button";
+    close.setAttribute("aria-label", CLOSE);
+    close.append(closeIcon());
+    close.addEventListener("click", onClose, { once: true });
+    top.append(close);
+  }
 
   const road = document.createElement("ol");
   road.className = "road";
@@ -106,6 +133,7 @@ export function timelineScreen({ stops, chapter, money, open = null, onIdea, onC
 
     if (!stop.played) {
       body.append(span("road-ahead-month", `Month ${stop.month}`));
+      if (stop.lockedIdea) body.append(lockedIdea(stop.lockedIdea));
       road.append(item);
       return;
     }
@@ -138,6 +166,8 @@ export function timelineScreen({ stops, chapter, money, open = null, onIdea, onC
       idea.append(span("road-idea-mark"), span("road-idea-title", stop.idea.title));
       idea.addEventListener("click", () => onIdea(stop.month), { once: true });
       body.append(idea);
+    } else if (stop.lockedIdea) {
+      body.append(lockedIdea(stop.lockedIdea));
     }
 
     const detail = document.createElement("div");
@@ -177,6 +207,28 @@ export function timelineScreen({ stops, chapter, money, open = null, onIdea, onC
     if (stop.month === open) toggle(true);
   });
 
+  // The far end: the road stops at the card
+  const end = document.createElement("li");
+  end.className = `road-stop road-end ${onCard ? "is-played" : "is-ahead"}`;
+  const endTrack = span("road-track");
+  endTrack.append(span("road-way"));
+  const endBody = document.createElement("div");
+  endBody.className = "road-body";
+  const { canvas, start: drawCard } = cardCanvas(card);
+  const endHead = span("road-end-label", CARD);
+  if (onCard) {
+    const open = document.createElement("button");
+    open.type = "button";
+    open.className = "road-end-open";
+    open.append(endHead, canvas);
+    open.addEventListener("click", onCard, { once: true });
+    endBody.append(open);
+  } else {
+    endBody.append(endHead, canvas);
+  }
+  end.append(endTrack, endBody);
+  road.append(end);
+
   // Across a desktop window a mouse wheel moves along the road, unless the page itself has to scroll
   road.addEventListener("wheel", (event) => {
     const across = road.scrollWidth > road.clientWidth;
@@ -187,9 +239,26 @@ export function timelineScreen({ stops, chapter, money, open = null, onIdea, onC
   }, { passive: false });
 
   screen.append(top, road);
+  if (opening) {
+    const foot = document.createElement("div");
+    foot.className = "start-foot";
+    const play = document.createElement("button");
+    play.type = "button";
+    play.className = "action";
+    play.textContent = PLAY;
+    play.addEventListener("click", onPlay, { once: true });
+    foot.append(play);
+    screen.append(foot);
+  }
 
-  // Start where the player is, or at the month that was asked for
+  // Start where the player is, or at the month that was asked for. The chapter opens from the top
   screen.start = () => {
+    drawCard();
+    if (opening) {
+      window.scrollTo(0, 0);
+      road.scrollLeft = 0;
+      return;
+    }
     const target = road.querySelector(open === null ? '[aria-current="step"]' : `[data-month="${open}"]`);
     target?.scrollIntoView({ block: "center", inline: "center" });
   };

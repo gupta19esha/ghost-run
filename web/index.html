@@ -20,9 +20,9 @@
 </head>
 <body>
   <!-- One page, two designs that share a palette, a typeface and a voice (landing.css): a phone's
-       single column with a sticky Play bar, and from 900px a desktop layout of its own, with a
-       header carrying Play. The order is the same in both: what this is, how a month works, the
-       chapters, the ghost run, Play. The words are in here, so the page reads before any script
+       single column with a sticky bar, and from 900px a desktop layout of its own, with a header
+       carrying "Start at month 1". The order is the same in both: what this is, how a month works,
+       the chapters, the ghost run, and the way in again. The words are in here, so the page reads before any script
        runs; the month's and the chapters' are the engine's and the plan's, checked by
        web/test/landing-model.test.js -->
 
@@ -41,7 +41,7 @@
         <a href="#chapters">Chapters</a>
         <a href="#ghost">The ghost run</a>
       </nav>
-      <a class="action lp-header-play" href="/game/">Play</a>
+      <a class="action lp-header-play" href="/game/">Start at month 1</a>
     </div>
   </header>
 
@@ -53,13 +53,13 @@
           <svg class="ghost-mark" width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c-4.7 0-8 3.4-8 8.1v10.2c0 .6.7.9 1.1.5l1.9-1.6 2 1.7c.4.3.9.3 1.3 0l1.7-1.5 1.7 1.5c.4.3.9.3 1.3 0l2-1.7 1.9 1.6c.4.4 1.1.1 1.1-.5V10.6c0-4.7-3.3-8.1-8-8.1z" fill="var(--ghost-fill)" stroke="var(--ghost-fill)" stroke-width="1.6" stroke-linejoin="round"/><circle cx="9.2" cy="10.5" r="1.4" fill="var(--deep)"/><circle cx="14.8" cy="10.5" r="1.4" fill="var(--deep)"/></svg>
           Ghost Run
         </a>
-        <a class="lp-top-link" href="/ghost/">Meet a ghost</a>
       </div>
       <div class="lp-hero-copy">
         <h1 class="lp-title"><span class="lp-title-line">Your first salary is in.</span> <span class="lp-title-line">Now play it out.</span></h1>
         <p class="lp-lede">A money game set in India. Four minutes a day, one month at a time, from age 22.</p>
         <div class="lp-hero-play">
-          <a class="action lp-hero-button" href="/game/">Play</a>
+          <a class="action lp-hero-button" href="/game/">Start at month 1</a>
+          <a class="close-button lp-hero-ghost" href="/ghost/">Try it on a finished life</a>
           <p class="lp-hero-note">Free. No account. No real money.</p>
         </div>
       </div>
@@ -272,7 +272,7 @@
           <p class="lp-chapter-ages">22 to 24</p>
           <p class="lp-chapter-name">First Salary</p>
           <p class="lp-chapter-days">24 days</p>
-          <a class="lp-chapter-state" href="/game/">Live · Play</a>
+          <a class="lp-chapter-state" href="/game/">Live · Start at month 1</a>
         </li>
         <li class="lp-chapter is-locked" data-days="36">
           <p class="lp-chapter-num">Chapter 2</p>
@@ -326,28 +326,28 @@
       <p class="lp-body lp-ghost-lede">Pick any choice you made. Your ghost takes the other one and lives the same two years. Nothing else shows you the life you didn't live.</p>
       <div class="lp-ghost" data-ghost></div>
       <div class="lp-ghost-result" data-ghost-result></div>
-      <a class="close-button lp-see" href="/ghost/">Meet your ghost</a>
+      <a class="close-button lp-see" href="/ghost/">Try it on a finished life</a>
     </section>
 
     <!-- e. Play -->
     <section class="lp-section lp-play-section" data-section>
       <h2 class="lp-h2 lp-play-title">Month 1 is waiting.</h2>
       <p class="lp-body">You are 22. The salary is in. Four minutes.</p>
-      <a class="action lp-play-button" href="/game/">Play</a>
+      <a class="action lp-play-button" href="/game/">Start at month 1</a>
       <p class="lp-hero-note">Free. No account. No real money.</p>
     </section>
 
     <footer class="lp-foot">
       <p>Ghost Run. Educational simulation. Not investment advice. No real money.</p>
-      <p><a href="/game/">Play</a> · <a href="/ghost/">Meet a ghost</a></p>
+      <p><a href="/game/">Start at month 1</a> · <a href="/ghost/">Try it on a finished life</a></p>
     </footer>
   </main>
 
   <!-- Phones only: always on screen, at thumb height. Play goes straight into the game -->
-  <nav class="lp-dock" aria-label="Play">
+  <nav class="lp-dock" aria-label="Start at month 1">
     <div class="lp-dock-inner">
       <p class="lp-dock-note">Free.<br>No account.</p>
-      <a class="action lp-play" href="/game/">Play</a>
+      <a class="action lp-play" href="/game/">Start at month 1</a>
     </div>
   </nav>
 </body>

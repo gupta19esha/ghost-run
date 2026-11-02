@@ -15,8 +15,10 @@
 // The chapter's progress (UI.md rule 10) must show on every screen of a month and Home, as the
 // strip on a phone or in the rail on a desktop window, and on no other screen. The ideas open
 // once from Home and once from the report; they scroll by design, so only their width is checked.
-// The chapter start (UI.md rule 11) must come between the landing and month 1, exactly once, with
-// its button in reach while it scrolls, and open again from the ideas.
+// The road opening the chapter (UI.md rule 11) must come between the landing and month 1, exactly
+// once, with its button in reach while it scrolls. The chapter's name on the ideas opens the road.
+// The chapter's progress opens the road from a decision, and Close comes back to that decision. The
+// report's one primary action is the ghost run, on screen without scrolling.
 //
 // node --experimental-websocket scripts/check-game-fit.mjs [--phone] [--sizes=1440x900,900x600]
 // (Node 22 and later need no flag.) Chrome: CHROME, or the usual install path.
@@ -139,6 +141,7 @@ try {
       const problems = [];
       const seen = new Map();
       let sideTrips = false;
+      let roadTrip = false;
       let starts = 0;
       let month = 0;
       for (let step = 0; step < 600; step++) {
@@ -165,6 +168,22 @@ try {
         }
         else if (m.name === "month") await advance(2100);
         else if (m.name === "decision") {
+          // Once, early: the road from the chapter's progress, and back to this same decision
+          if (!roadTrip && month >= 1) {
+            roadTrip = true;
+            const opened = await act(`const b = [...document.querySelectorAll(".chapter-progress-open")].find((e) => e.offsetParent !== null); if (!b) return false; b.click(); return true`);
+            if (!opened) problems.push("decision: the chapter's progress does not open the road");
+            else {
+              await advance(300);
+              const road = await measure();
+              if (road.name !== "timeline") problems.push(`decision: the chapter's progress opened ${road.name}`);
+              if (road.sideways > 0) problems.push(`road from a decision: scrolls sideways by ${road.sideways}px`);
+              await act(`document.querySelector(".timeline .icon-button").click(); return 1`);
+              await advance(300);
+              const back = await measure();
+              if (back.name !== "decision" || back.id !== m.id) problems.push(`road from a decision: Close came back to ${back.name} ${back.id ?? ""}`);
+            }
+          }
           await act(`const o = [...document.querySelectorAll(".option")]; o[${path === "first" ? 0 : "o.length - 1"}].click(); return 1`);
           await advance(1200);
         } else if (m.name === "consequence" || m.name === "turn") await advance(5200);
@@ -202,12 +221,11 @@ try {
             await act(`document.querySelector(".ideas-chapter").click(); return 1`);
             await advance(300);
             const again = await measure();
-            if (again.name !== "start") problems.push("ideas: the chapter's name does not open the chapter start");
-            if (again.sideways > 0) problems.push(`start, again: scrolls sideways by ${again.sideways}px`);
-            if (again.keyOver > 0) problems.push(`start, again: its button ends ${again.keyOver}px below the window`);
-            await act(`document.querySelector(".start-foot button").click(); return 1`);
+            if (again.name !== "timeline") problems.push("ideas: the chapter's name does not open the road");
+            if (again.sideways > 0) problems.push(`road from the ideas: scrolls sideways by ${again.sideways}px`);
+            await act(`document.querySelector(".timeline .icon-button").click(); return 1`);
             await advance(300);
-            if ((await measure()).name !== "ideas") problems.push("start, again: Close does not go back to the ideas");
+            if ((await measure()).name !== "ideas") problems.push("road from the ideas: Close does not go back to the ideas");
             await act(`document.querySelector(".ideas .icon-button").click(); return 1`);
             await advance(300);
           }
@@ -220,6 +238,7 @@ try {
           await act(`document.querySelector(".certificate-foot .close-button").click(); return 1`);
           await advance(300);
         } else if (m.name === "report") {
+          if (!(await act(`const a = document.querySelector(".report .action"); const b = a?.getBoundingClientRect(); return !!a && a.getAttribute("href") === "/ghost/?run=mine" && document.querySelectorAll(".report .action").length === 1 && b.top >= 0 && b.bottom <= innerHeight + 0.5`))) problems.push("report: the ghost run is not its one primary action, in reach");
           await act(`document.querySelector(".report-ideas").click(); return 1`);
           await advance(300);
           const ideas = await measure();

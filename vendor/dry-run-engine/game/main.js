@@ -31,7 +31,6 @@ import { reportScreen } from "./screens/report.js";
 import { chapterTurnScreen } from "./screens/chapter-turn.js";
 import { certificateScreen } from "./screens/certificate.js";
 import { ideasScreen } from "./screens/ideas.js";
-import { chapterStartScreen } from "./screens/chapter-start.js";
 import { chapterInfo } from "./chapters.js";
 import { ideasSoFar } from "./ideas.js";
 import { chapterProgress, createStrip } from "./progress.js";
@@ -79,10 +78,18 @@ const holding = (screen) => script.stop === screen && script.play.length === 0;
 export function show(screen, view = null, progress = view?.progress ?? null) {
   rail.show(view);
   strip.set(progress);
+  // The road, from a screen that waits for the player. Close brings this same screen back
+  const toRoad = ROAD_FROM.has(screen.dataset.screen) ? () => openTimeline(() => show(screen, view, progress), view) : null;
+  strip.setOpen(toRoad);
+  rail.setOpen(toRoad);
   app.replaceChildren(screen);
   testing?.shown(screen);
   screen.start?.();
 }
+
+// The screens the chapter's progress opens the road from. The month card, the result and the
+// callback are on timers, and move on by themselves
+const ROAD_FROM = new Set(["home", "decision", "close"]);
 
 // The rail, on a desktop window: net worth and the bars, beside every screen of a month, Home,
 // the timeline and How it works (game/rail.js)
@@ -149,23 +156,32 @@ function startMonth() {
   if (first && !(script.active && !holding("start"))) {
     recordChapterOpened(save, place.chapter);
     writeSave(save);
-    showChapterStart(place.chapter, { onDone: startMonth });
+    showChapterStart(place.chapter, startMonth);
     return;
   }
   monthStart = getBars(state);
   showMonthCard();
 }
 
-// The chapter start: on the way into the chapter, or again from the ideas, when its button
-// closes it. Once the chapter is finished its card is the player's own; before, it is locked
-function showChapterStart(chapter, { again = false, onDone }) {
+// The road for a chapter, from the save. Once the chapter is finished its card is the player's
+// own; before, it is locked
+function roadOf(chapter, months) {
   const info = chapterInfo(chapter);
-  show(chapterStartScreen({
-    chapter: { number: formatCount(chapter), name: info.name, ages: info.ages, months: info.months },
-    ideas: ideasSoFar(save.closed, chapter),
+  const ideas = ideasSoFar(save.closed, chapter);
+  return {
+    stops: roadStops(months.filter((m) => m.chapter === chapter), { chapter, cards: ideas.cards, reached: state.month }),
+    chapter: { number: formatCount(chapter), title: info.name, span: `${info.ages.from} to ${info.ages.to} · ${info.months} months`, count: ideas.count },
+    money: formatMoney,
     card: chapterComplete(state, chapter) ? chapterCard(state, save, chapter) : lockedChapterCard(chapter),
-    again,
-    onDone,
+  };
+}
+
+// The chapter opens on its road (UI.md rule 11), all of it ahead
+function showChapterStart(chapter, onPlay) {
+  show(timelineScreen({
+    ...roadOf(chapter, lifeSoFar(save) ?? []),
+    onIdea: () => {},
+    onPlay,
   }));
 }
 
@@ -345,6 +361,7 @@ function closeChapter() {
 // The button under the card, after the turn and from the report
 const CARD_TO_REPORT = "See the chapter report";
 const CARD_BACK = "Back to the report";
+const CLOSE_CARD = "Close";
 
 function showCard(card, back, onBack) {
   show(certificateScreen({ card, back, onBack }));
@@ -383,9 +400,13 @@ function showReport() {
     // played over. A run begun before the save recorded its first day has no count of days
     played: { months: formatCount(months.length), days: optionalCount(chapterDays(save, 1)) },
     onTimeline: () => openTimeline(showReport, null),
+    ghostHref: GHOST_RUN,
     onCard: () => showCard(chapterCard(state, save), CARD_BACK, showReport),
   }));
 }
+
+// The ghost run, on the player's own finished chapter
+const GHOST_RUN = "/ghost/?run=mine";
 
 // The report names this many concepts, then counts the rest (design/ChapterReport.html)
 const REPORT_CONCEPTS_LISTED = 8;
@@ -454,11 +475,11 @@ function openTimeline(back = () => goHome(homeLastMonth, homeContinuing), view =
   const [first] = months;
   const open = at ?? (holding("timeline") && query.get("month") ? Number(query.get("month")) : null);
   const chapter = first?.chapter ?? chapterPlace(state.month)?.chapter ?? 1;
+  const reopen = () => openTimeline(back, view);
   show(timelineScreen({
-    stops: roadStops(months.filter((m) => m.chapter === chapter), { chapter, cards: ideasSoFar(save.closed, chapter).cards, reached: state.month }),
-    chapter: first?.chapterTitle ? { number: formatCount(first.chapter), title: first.chapterTitle } : null,
-    money: formatMoney,
+    ...roadOf(chapter, months),
     open,
+    onCard: chapterComplete(state, chapter) ? () => showCard(chapterCard(state, save, chapter), CLOSE_CARD, reopen) : null,
     // That idea, from the road. Its Close comes back to the road, at the month it was opened from
     onIdea: (month) => openIdeas(() => openTimeline(back, view, month), view, month),
     onClose: back,
@@ -475,7 +496,7 @@ function openIdeas(back = () => goHome(homeLastMonth, homeContinuing), view = ho
     chapter: { number: formatCount(chapter), name: chapterInfo(chapter).name },
     ideas: ideasSoFar(save.closed, chapter),
     at,
-    onChapter: () => showChapterStart(chapter, { again: true, onDone: () => openIdeas(back, view, at) }),
+    onChapter: () => openTimeline(() => openIdeas(back, view, at), view),
     onClose: back,
   }), view, null);
 }

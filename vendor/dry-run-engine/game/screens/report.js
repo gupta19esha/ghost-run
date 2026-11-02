@@ -21,6 +21,7 @@ const CLOSED = "closed";
 const NET_WORTH = "Net worth";
 const MOVED_MOST = "The months that moved most";
 const LIFE_SO_FAR = "See your life so far";
+const MEET_GHOST = "Meet your ghost";
 // The way back to the chapter card, under the bars
 const YOUR_CARD = "Your chapter card";
 // Chapter 2 has no decisions yet. Replace with its real hook the moment it has
@@ -55,10 +56,11 @@ function playedLine({ months, days }) {
 // the titles unlocked, in month order, with their count and the rest in words.
 // played: { months, days } in words, days null when the save does not know them.
 // ideas: the count collected, in words. onIdeas: opens them.
-// money: text/'s formatMoney. onTimeline: the button at the end. onCard: opens the chapter card.
+// money: text/'s formatMoney. ghostHref: the way into the ghost run on this run, the screen's one
+// primary action, pinned in reach. onTimeline: the button under it. onCard: opens the chapter card.
 export function reportScreen({
   chapter, years, age, bars, labels, compared, safetyDanger, best, worst, concepts, played, ideas, onIdeas, money, onTimeline,
-  onCard,
+  ghostHref, onCard,
 }) {
   const screen = document.createElement("section");
   screen.className = "screen report";
@@ -185,10 +187,14 @@ export function reportScreen({
   foot.className = "report-foot";
   const lifeSoFar = document.createElement("button");
   lifeSoFar.type = "button";
-  lifeSoFar.className = "action";
+  lifeSoFar.className = "home-how report-life";
   lifeSoFar.textContent = LIFE_SO_FAR;
   lifeSoFar.addEventListener("click", onTimeline);
-  foot.append(lifeSoFar);
+  const ghost = document.createElement("a");
+  ghost.className = "action report-ghost";
+  ghost.href = ghostHref;
+  ghost.textContent = MEET_GHOST;
+  foot.append(ghost, lifeSoFar);
 
   const grow = document.createElement("div");
   grow.className = "grow";

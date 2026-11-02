@@ -45,6 +45,7 @@ input, select, textarea { font-size: max(16px, 1em); }
   font-weight: 800;
   line-height: 1.05;
 }
+.ghost-first { margin: 8px 0 0; font-family: var(--display); font-size: 20px; font-weight: 700; line-height: 1.25; color: var(--bone); }
 .section-lede {
   margin: 10px 0 0;
   font-size: 16px;
@@ -438,6 +439,7 @@ input, select, textarea { font-size: max(16px, 1em); }
 /* Short phones: the same content, tighter */
 @media (max-height: 700px) {
   .ghost-title { font-size: 26px; }
+  .ghost-first { margin-top: 4px; font-size: 17px; }
   .step-label { margin-top: 12px; }
   .step .home-net-worth { font-size: 40px; }
   .ghost-worth { margin-top: 8px; }

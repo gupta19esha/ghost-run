@@ -23,9 +23,10 @@ any choice to see the ghost, the life you would have had with the other option.
   `reports/` holds the measurements.
 - `web/daylight.css` is the game's visual direction, Daylight, laid over the vendored game.
 - `web/index.html` is the landing page, served at the site root (`web/landing.js`,
-  `web/landing.css`): what this is and Play, how a month works with month 7 of the demo life to
+  `web/landing.css`): what this is and its two ways in, "Start at month 1" and "Try it on a finished
+  life", how a month works with month 7 of the demo life to
   try (with one line giving a reader outside India the scale of its rupees, in the game's
-  figures, never converted), the six chapters from 22 to 42, the ghost run, and Play, which goes straight into the
+  figures, never converted), the six chapters from 22 to 42, the ghost run, and "Start at month 1", which goes straight into the
   game. Two designs sharing a palette, a typeface and a voice: a phone's single column with a
   sticky Play bar, and from 900px a desktop layout of its own, with a header carrying Play, a
   two-column hero, the month inside a phone frame and the chapters across the width. Its figures
@@ -155,7 +156,14 @@ of the same screens before and after are identical at 360, 390 and 899 px wide.
 
 The timeline is a road, the landing hero's, in `game/` only (`game/screens/timeline.js`,
 `game/timeline.js`'s `roadStops`, its styles in `game/style.css` and `game/desktop.css`). It runs
-down a phone and across a desktop window. UI.md, "the timeline's own artboard", says what it holds.
+down a phone and across a desktop window. It opens each chapter, all dark, in place of a separate
+screen (UI.md rule 11), and the chapter's progress opens it from Home, a decision and a month's close.
+UI.md, "the timeline's own artboard", says what it holds.
+
+After the chapter report, the one primary action is "Meet your ghost": `/ghost/?run=mine` runs the ghost
+flow on the player's own save. The narrator takes only the demo life, so an own run's narration is
+`agent/plain.js`, built from the fork's tokens with no model, checked by `verify()` in the browser and
+saying that it is a stand-in. Bare `/ghost/` is the demo life, and says so in its first line.
 `scripts/check-road-fit.mjs` checks it and the split step's road at every size.
 
 `scripts/check-game-fit.mjs` is the fit check for every screen at any size: it plays chapter one

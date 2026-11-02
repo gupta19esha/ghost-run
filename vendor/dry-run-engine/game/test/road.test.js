@@ -27,12 +27,22 @@ test("after the chapter the figure stands at its last month", () => {
   assert.deepEqual(road(24, 24, 25).filter((s) => s.here).map((s) => s.month), [24]);
 });
 
-test("nothing ahead is told: no layoff before it happens, no locked idea, no words", () => {
+test("the road's opening: every stop dark, the figure at the start, every idea a locked marker", () => {
+  const stops = roadStops([], { chapter: 1, cards: ideasSoFar(0, 1).cards, reached: 1 });
+  assert.equal(stops.length, 24);
+  assert.equal(stops.some((s) => s.played), false);
+  assert.deepEqual(stops.filter((s) => s.here).map((s) => s.month), [1]);
+  assert.equal(stops.filter((s) => s.lockedIdea).length, 20);
+  for (const stop of stops.filter((s) => s.lockedIdea)) assert.equal(stop.lockedIdea.month, stop.month);
+});
+
+test("nothing ahead is told but its locked idea: no layoff before it happens, no summary", () => {
   const stops = road(12, 11, 12);
   assert.equal(stops.some((s) => s.event), false);
   for (const stop of stops.filter((s) => !s.played)) {
-    assert.deepEqual(Object.keys(stop).sort(), ["event", "here", "idea", "month", "played"]);
+    assert.deepEqual(Object.keys(stop).sort(), ["event", "here", "idea", "lockedIdea", "month", "played"]);
     assert.equal(stop.idea, null);
+    if (stop.lockedIdea) assert.equal(stop.lockedIdea.collected, false);
   }
 });
 
@@ -45,6 +55,7 @@ test("a played stop carries its summary, and an idea only once its month has clo
   assert.ok(open[0].summary);
   assert.equal(open[3].idea.month, 4);
   assert.equal(open[4].idea, null, "month 5 is played but has not closed");
+  assert.equal(open[4].lockedIdea.month, 5);
   // Twenty ideas over the whole chapter, each beside the month that taught it
   const done = road(24, 24, 25).filter((s) => s.idea);
   assert.equal(done.length, 20);

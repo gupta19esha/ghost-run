@@ -208,7 +208,7 @@
 
   .how,
   .ideas,
-  .chapter-start { width: min(100%, 680px); margin: 0 auto; padding-top: 24px; }
+
 
   /* The road runs across. A stop is a column: its picture and words, the road, then its idea and
      what opened under it. An opened stop widens, and the road makes room along itself */
@@ -229,6 +229,21 @@
   .timeline-detail { order: 4; padding: 12px; }
   .is-ahead .road-body { display: contents; }
   .road-ahead-month { order: 1; display: block; height: 216px; padding: 12px; }
+  .road-idea.is-locked { order: 3; align-self: flex-start; margin: 10px 12px 0; max-width: calc(100% - 24px); }
+  .road-stop.road-end { flex-basis: 320px; }
+  .road-end .road-way { right: 50%; bottom: auto; }
+  .road-end-label, .road-end-open { order: 1; }
+  .road-end .road-body { display: block; order: 1; height: 216px; padding: 8px 12px; }
+  .road-end .certificate-card { max-height: 176px; width: auto; max-width: 100%; }
+  .road-end-open { height: 100%; }
+  .start-foot, .report-foot { margin: 0; padding-left: 0; padding-right: 0; }
+  .start-foot .action { display: block; width: min(100%, 420px); margin: 0 auto; }
+
+  /* The road opening a chapter has no pictures yet, so no row kept for them: the month, the road,
+     then what lies beside it, with the card standing below the road's end */
+  .opening .road-ahead-month { height: 44px; }
+  .opening .road-end .road-body { order: 3; height: auto; padding-top: 10px; }
+  .opening .road-end .certificate-card { max-height: none; width: 100%; }
 
   /* The chapter's progress is the rail's here (game/rail.js), so the phone's strip goes */
   .chapter-progress-strip { display: none; }

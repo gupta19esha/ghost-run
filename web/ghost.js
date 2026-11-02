@@ -19,6 +19,8 @@ import { FORMATS, exactMoneyGap, shownMoneyGap } from "../verify/render.js";
 import { animate, count, later, tween, reduced, stopAll } from "./motion.js";
 import { h, ghostMark, chart, road, hideGhost, drawGhost, legend, track, moveBar, arrive } from "./ui.js";
 import { sound, buzz, isMuted, setMuted } from "./sound.js";
+import { plainNarration } from "../agent/plain.js";
+import { readSave } from "../vendor/dry-run-engine/game/save.js";
 
 const app = document.getElementById("app");
 const money = (n) => formatMoney(n);
@@ -27,6 +29,7 @@ const money = (n) => formatMoney(n);
 
 let save = null;
 let run = null;
+let mine = false;       // the player's own finished chapter, from the game's save, not the demo life
 let ranked = null;      // rank summaries, once the worker is done
 let progress = null;    // { done, total } while it works
 const listeners = new Set();
@@ -59,6 +62,7 @@ function narrationOf(index, option) {
 
 const go = (hash) => { location.hash = hash; };
 // The chart's height for this phone: a short screen gives it less, so the step still fits
+const FINISHED_MONTHS = 24;
 const ROAD_MAX_WIDTH = 432;
 const NOTICE_ARRIVES_MS = 340;
 const NOTICE_CLEARANCE = 10;
@@ -68,7 +72,7 @@ const forkHash = (index, option, part = "") => `#fork/${index}/${option}${part ?
 
 // ---------- The frame every step shares ----------
 
-const STEPS = ["Your run", "Choose a moment", "The split", "Where it ended", "What happened"];
+const STEPS = ["The run", "Choose a moment", "The split", "Where it ended", "What happened"];
 
 // A step: the brand and where you are in the five at the top, the content, and the dock at the
 // foot with Back, the sound control and Next. back and next are { label, to }, an address in
@@ -79,7 +83,7 @@ function step(n, { back, next = null, hint = null }, ...content) {
       h("a", { class: "brand", href: "/" }, ghostMark(20), "Ghost Run"),
       h("ol", { class: "step-ticks", "aria-label": `Step ${n + 1} of ${STEPS.length}` },
         STEPS.map((_, i) => h("li", { class: `step-tick${i <= n ? " is-on" : ""}` })))),
-    h("p", { class: "month-label step-label" }, `${n + 1} of ${STEPS.length} · ${STEPS[n]}`),
+    h("p", { class: "month-label step-label" }, `${n + 1} of ${STEPS.length} · ${n === 0 && mine ? "Your run" : STEPS[n]}`),
     ...content,
     dock(back, next, hint));
 }
@@ -128,8 +132,10 @@ function runStep() {
   const gainText = h("span", { class: "tabular" }, money(Math.abs(gain)));
   const bars = BAR_KEYS.map((k) => h("div", { class: "gbar" }, h("span", { class: "gbar-name" }, BAR_NAMES[k]), track(end[k])));
 
-  const screen = step(0, { back: { label: "Home", to: "/" }, next: { label: "Choose a moment", to: "#choose" } },
-    h("h1", { class: "ghost-title" }, "Two years. You are 24."),
+  const screen = step(0, { back: mine ? { label: "Report", to: "/game/" } : { label: "Home", to: "/" }, next: { label: "Choose a moment", to: "#choose" } },
+    mine
+      ? h("h1", { class: "ghost-title" }, "Two years. You are 24.")
+      : h("h1", { class: "ghost-first" }, "A demo player's two years, finished and loaded, so you can fork a life without playing twenty-four months first."),
     ticks,
     h("div", { class: "ghost-worth" },
       h("p", { class: "month-label" }, "Net worth"),
@@ -365,8 +371,11 @@ function storyStep(index, option) {
   return { screen, cleanup: () => { gone = true; } };
 }
 
-// Asks the server to narrate a fork of the demo life: every attempt it made, in order
+// Asks the server to narrate a fork of the demo life: every attempt it made, in order. The narrator
+// takes only the demo life, so a player's own run has its narration built here from the fork's
+// tokens, and checked here like any other
 async function requestNarration(index, option) {
+  if (mine) return [{ number: 1, narration: plainNarration(viewOf(index, option).result), ok: true }];
   let response;
   try {
     response = await fetch("/api/narrate", {
@@ -506,8 +515,20 @@ document.addEventListener("click", (event) => {
 
 async function main() {
   try {
-    save = await (await fetch(new URL("./demo/save.json", import.meta.url))).json();
-    run = readRun(save);
+    const own = new URLSearchParams(location.search).get("run") === "mine" ? readSave() : null;
+    if (own?.closed >= FINISHED_MONTHS) {
+      try {
+        run = readRun(own);
+        save = own;
+        mine = true;
+      } catch {
+        run = null;
+      }
+    }
+    if (!mine) {
+      save = await (await fetch(new URL("./demo/save.json", import.meta.url))).json();
+      run = readRun(save);
+    }
   } catch (error) {
     app.replaceChildren(h("p", { class: "ghost-error" }, `The demo life could not load: ${error.message}`));
     return;

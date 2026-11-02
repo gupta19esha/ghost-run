@@ -49,6 +49,7 @@ body { background: var(--ink); }
 .lp-hero { margin: 0 calc(-1 * var(--gutter)); padding: 14px var(--gutter) 0; color: var(--ink); overflow: hidden; }
 .lp-top { display: flex; justify-content: space-between; align-items: center; }
 .lp-top .brand { color: var(--ink); text-decoration: none; }
+.lp-hero-ghost { display: flex; align-items: center; justify-content: center; width: 100%; min-height: 52px; margin-top: 10px; text-decoration: none; }
 .lp-top-link { padding: 10px 0; font-size: 15px; font-weight: 600; color: var(--ghost-fill); text-decoration: none; }
 .lp-title { margin: 26px 0 0; font-family: var(--display); font-size: 34px; font-weight: 800; line-height: 1.06; letter-spacing: -0.01em; }
 .lp-lede { margin: 10px 0 0; font-size: 17px; line-height: 1.45; color: color-mix(in srgb, var(--ink) 84%, var(--deep)); }

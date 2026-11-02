@@ -42,8 +42,9 @@ export function lifeSoFar(save) {
 
 // Every month of the chapter, oldest first. months: lifeSoFar. cards: game/ideas.js's cards.
 // reached: the month the player is at, which may be past the chapter's last, or not yet begun. A
-// month is played once it has a choice in it. What lies ahead carries nothing but its month, so
-// the road tells nothing before it comes: not the layoff, and not an idea still locked
+// month is played once it has a choice in it. What lies ahead carries only its month and that, so
+// the road tells nothing of what will happen: not the layoff. An idea still locked shows as a
+// locked marker, its title and not its body: that is the chapter's promise (UI.md rule 11)
 export function roadStops(months, { chapter, cards, reached }) {
   const inChapter = [];
   for (let month = 1; chapterPlace(month); month++) if (chapterPlace(month).chapter === chapter) inChapter.push(month);
@@ -51,7 +52,9 @@ export function roadStops(months, { chapter, cards, reached }) {
   const here = Math.min(reached, last);
   return inChapter.map((month) => {
     const record = months.find((m) => m.month === month) ?? null;
-    if (!record) return { month, played: false, here: month === here, event: false, idea: null };
+    const card = cards.find((c) => c.month === month) ?? null;
+    const lockedIdea = card && !card.collected ? card : null;
+    if (!record) return { month, played: false, here: month === here, event: false, idea: null, lockedIdea };
     return {
       month,
       played: true,
@@ -62,7 +65,8 @@ export function roadStops(months, { chapter, cards, reached }) {
       change: record.change,
       choices: record.choices,
       event: record.shock !== null,
-      idea: cards.find((card) => card.month === month && card.collected) ?? null,
+      idea: card?.collected ? card : null,
+      lockedIdea,
     };
   });
 }

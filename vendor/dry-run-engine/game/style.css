@@ -798,7 +798,8 @@ html, body {
 .has-event .road-summary { color: var(--vermilion); font-weight: 800; }
 
 .road-body { min-width: 0; padding: 8px var(--gutter) 8px 14px; }
-.is-ahead .road-body { display: flex; align-items: center; }
+.is-ahead .road-body { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; }
+.road-span { margin-top: 4px; font-family: var(--body); font-size: 13px; font-weight: 600; color: var(--slate); }
 .road-ahead-month { font-family: var(--body); font-size: 13px; font-weight: 600; color: var(--muted-paper); }
 
 .road-row {
@@ -843,6 +844,18 @@ html, body {
   cursor: pointer;
 }
 .road-idea:focus-visible { outline: 2px solid var(--bone); outline-offset: 2px; }
+.road-idea.is-locked { min-height: 0; margin-top: 4px; padding: 4px 10px; background: none; border: 2px dashed var(--rule); color: var(--slate); cursor: default; }
+.is-ahead .road-idea.is-locked { border-color: var(--deep-muted); color: var(--muted-paper); }
+.road-lock { flex: 0 0 11px; width: 11px; height: 14px; }
+
+/* The far end: the road stops, and the chapter card stands there */
+.road-end .road-way { bottom: 50%; }
+.road-end .road-body { padding-top: 16px; padding-bottom: 24px; }
+.road-end-label { display: block; font-family: var(--body); font-size: 13px; font-weight: 600; color: var(--muted-paper); }
+.road-end.is-played .road-end-label { color: var(--slate); }
+.road-end .certificate-card { display: block; width: 100%; height: auto; margin-top: 8px; border-radius: 10px; }
+.road-end-open { display: block; width: 100%; padding: 0; background: none; border: 0; text-align: left; cursor: pointer; }
+.road-end-open:focus-visible { outline: 2px solid var(--bone); outline-offset: 2px; border-radius: 10px; }
 .road-idea-mark { flex: 0 0 16px; width: 16px; height: 16px; border-radius: 50%; background: var(--marigold); box-shadow: inset 0 0 0 3px var(--marigold-hover); }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1156,7 +1169,19 @@ html, body {
   line-height: 1.34;
   color: var(--bone);
 }
-.report-foot { padding: 24px 0 40px; }
+/* The way into the ghost run is the screen's one primary action, in reach however far down it is
+   read. Everything else on the screen is a link */
+.report-foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  margin: 0 calc(-1 * var(--gutter));
+  padding: 12px var(--gutter) 14px;
+  background: var(--ink);
+  text-align: center;
+}
+.report-ghost { display: flex; align-items: center; justify-content: center; text-decoration: none; }
+.report-life { margin-top: 6px; min-height: 44px; }
 
 @media (max-width: 380px) {
   .report-head { padding-top: 40px; }
@@ -1505,6 +1530,26 @@ html, body {
 .chapter-progress-now { background: var(--progress); }
 .chapter-progress-now[hidden] { display: none; }
 
+/* The way onto the road: all of the progress is the button, and it reaches past the strip's thin
+   height to a thumb's, over what is under it, with the road's mark at its end */
+.chapter-progress { position: relative; }
+.chapter-progress.is-open-able { padding-right: 22px; }
+.chapter-progress-open {
+  position: absolute;
+  inset: -8px 0 -4px;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--bone-dim);
+  cursor: pointer;
+}
+.chapter-progress-open[hidden] { display: none; }
+.chapter-progress-open:focus-visible { outline: 2px solid var(--bone); outline-offset: -2px; border-radius: 6px; }
+.chapter-progress-road { width: 14px; height: 14px; }
+
 /* On a phone, a strip across the top, above every screen of a month and Home. It takes its
    height from the screens under it (--strip), and the top of each closes up by about as much,
    so the screen is barely taller than it was */
@@ -1543,78 +1588,17 @@ body.progressed { --strip: 26px; }
   .progressed .home.locked .home-foot { gap: 6px; }
 }
 
-/* ---------- The chapter start ---------- */
+/* ---------- The road opening a chapter (UI.md rule 11) ---------- */
 
-/* What the chapter is, what it teaches and the card it gives (UI.md rule 11, ruled 31 October
-   2026; game/screens/chapter-start.js). The turn's mark, small and unlit; the ideas as locked
-   titles, outlined as a locked idea is; the card, locked. It scrolls, and its one button stays
-   pinned in reach, so it can be skipped at once. Its pieces rise in as the landing's do, the
-   mark's ticks drawing round as the opening turn's */
-.chapter-start { padding: 0 var(--gutter); }
-.start-head { padding-top: 40px; }
-.chapter-start .turn-mark { display: block; width: 72px; height: 72px; margin-bottom: 20px; }
-.start-title {
-  margin: 6px 0 0;
-  font-family: var(--display);
-  font-size: 38px;
-  font-weight: 800;
-  line-height: 1.08;
-  color: var(--bone);
-}
-.start-span {
-  margin: 8px 0 0;
-  font-family: var(--display);
-  font-size: 20px;
-  font-weight: 700;
-  color: var(--slate);
-  font-variant-numeric: tabular-nums;
-}
-.start-section { margin-top: 30px; padding-top: 22px; border-top: 1px solid var(--rule); }
-.start-section > .month-label { font-variant-numeric: tabular-nums; }
-.start-ideas {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin: 14px 0 0;
-  padding: 0;
-  list-style: none;
-}
-.start-idea {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-height: 44px;
-  padding: 8px 14px;
-  border: 1px dashed var(--rule);
-  border-radius: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--slate);
-}
-.start-idea svg { flex-shrink: 0; }
-.start-idea.collected { background: var(--concept-ground); border: 1px solid var(--deep-raised); color: var(--bone); }
-.chapter-start .certificate-card { margin-top: 14px; }
+/* The button stays in reach while the road scrolls, so the opening can be skipped at once */
 .start-foot {
   position: sticky;
   bottom: 0;
-  margin-top: 24px;
-  padding: 14px 0 24px;
+  z-index: 2;
+  margin: 0 calc(-1 * var(--gutter));
+  padding: 12px var(--gutter) 20px;
   background: var(--ink);
 }
-.chapter-start.intro .start-rise {
-  animation: landing-rise 420ms cubic-bezier(0.2, 0.7, 0.2, 1) both;
-  animation-delay: calc(250ms + min(var(--n), 12) * 70ms);
-}
-.chapter-start.intro .turn-tick {
-  stroke-dasharray: 1;
-  animation: landing-tick-draw 240ms ease-out both;
-  animation-delay: calc(var(--i) * 20ms);
-}
-@media (prefers-reduced-motion: reduce) {
-  .chapter-start * { animation: none !important; }
-}
 @media (max-height: 700px) {
-  .start-head { padding-top: 24px; }
-  .start-title { font-size: 32px; }
-  .start-foot { padding-bottom: 16px; }
+  .start-foot { padding-bottom: 14px; }
 }
