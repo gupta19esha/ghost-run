@@ -26,8 +26,8 @@ function lock() {
 }
 
 // chapter: { number in words, name } or null. ideas: game/ideas.js's ideasSoFar. onChapter:
-// opens the chapter start. onClose: back to where it opened from
-export function ideasScreen({ chapter, ideas, onChapter = null, onClose }) {
+// opens the chapter start. onClose: back to where it opened from. at: a month whose card to open on
+export function ideasScreen({ chapter, ideas, at = null, onChapter = null, onClose }) {
   const screen = document.createElement("section");
   screen.className = "screen ideas";
   screen.dataset.screen = "ideas";
@@ -87,6 +87,10 @@ export function ideasScreen({ chapter, ideas, onChapter = null, onClose }) {
   }
 
   screen.append(top, list);
-  screen.start = () => window.scrollTo(0, 0);
+  screen.start = () => {
+    const card = at === null ? null : list.querySelector(`[data-month="${at}"]`);
+    if (card) card.scrollIntoView({ block: "center" });
+    else window.scrollTo(0, 0);
+  };
   return screen;
 }

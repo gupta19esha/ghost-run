@@ -708,10 +708,15 @@ html, body {
 .timeline { padding: 0 var(--gutter); }
 
 .timeline-top {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--ink);
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  padding: 28px 0 8px;
+  margin: 0 calc(-1 * var(--gutter));
+  padding: 28px var(--gutter) 8px;
 }
 
 .icon-button {
@@ -730,61 +735,125 @@ html, body {
 .icon-button:hover { color: var(--bone); }
 .icon-button:focus-visible { outline: 2px solid var(--bone); outline-offset: 0; }
 
-/* The rail runs down the left through every dot */
-.timeline-list {
-  position: relative;
-  margin: 12px 0 0;
-  padding: 0 0 40px;
+/* The road: the landing hero's, one stop a month, down a phone. Ground, road and month as the hero
+   draws them; ahead of the player the same three, dark */
+.road {
+  margin: 0 calc(-1 * var(--gutter)) 0;
+  padding: 0;
   list-style: none;
 }
-.timeline-list::before {
-  content: "";
-  position: absolute;
-  top: 26px;
-  bottom: 66px;
-  left: 5px;
-  width: 1px;
-  background: var(--rule);
+.road-stop {
+  display: grid;
+  grid-template-columns: 84px minmax(0, 1fr);
+  --ground: var(--deep-raised);
+  --way: var(--paper-side);
+  --dash: var(--marigold);
 }
+.road-stop.is-ahead {
+  --ground: var(--deep);
+  --way: var(--deep-raised);
+  --dash: var(--deep-muted);
+  background: var(--deep);
+}
+.road-track { position: relative; display: block; min-height: 40px; background: var(--ground); overflow: hidden; }
+.road-way { position: absolute; top: 0; bottom: 0; left: 14px; width: 28px; background: var(--way); }
+.road-dash {
+  position: absolute;
+  top: 50%;
+  left: 24px;
+  width: 8px;
+  height: 22px;
+  margin-top: -11px;
+  border-radius: 4px;
+  background: var(--dash);
+}
+.is-played .road-dash { animation: road-light 240ms ease-out calc(var(--i) * 18ms) backwards; }
+@keyframes road-light { from { background: var(--deep-muted); } }
+.road-tree { position: absolute; bottom: 4px; right: 4px; width: 24px; height: 32px; }
+.is-ahead .road-tree { opacity: 0.5; }
+.road-figure {
+  position: absolute;
+  top: 50%;
+  left: 44px;
+  width: 26px;
+  height: 52px;
+  margin-top: -26px;
+  animation: road-arrive 320ms cubic-bezier(0.2, 0.8, 0.2, 1) 400ms backwards;
+}
+.road-stop[aria-current] .road-tree { display: none; }
+.road-stop[aria-current] .road-track { min-height: 64px; }
+@keyframes road-arrive { from { opacity: 0; transform: translateY(10px); } }
+/* The layoff: a barrier across the road, at its month */
+.road-barrier {
+  position: absolute;
+  top: 50%;
+  left: 6px;
+  width: 44px;
+  height: 10px;
+  margin-top: -5px;
+  border-radius: 3px;
+  background: var(--vermilion);
+}
+.road-stop.has-event .road-dash { display: none; }
+.has-event .road-summary { color: var(--vermilion); font-weight: 800; }
 
-.timeline-month { position: relative; }
+.road-body { min-width: 0; padding: 8px var(--gutter) 8px 14px; }
+.is-ahead .road-body { display: flex; align-items: center; }
+.road-ahead-month { font-family: var(--body); font-size: 13px; font-weight: 600; color: var(--muted-paper); }
 
-.timeline-row {
+.road-row {
   display: flex;
-  align-items: center;
-  gap: 14px;
+  align-items: flex-start;
+  gap: 10px;
   width: 100%;
-  min-height: 52px;
-  padding: 0;
+  min-height: 56px;
+  padding: 2px 0;
   background: none;
   border: 0;
-  color: var(--bone-dim);
+  color: inherit;
   font-family: var(--body);
-  font-size: 15px;
-  font-weight: 600;
   text-align: left;
   cursor: pointer;
 }
-.timeline-row:focus-visible { outline: 2px solid var(--bone); outline-offset: 2px; border-radius: 4px; }
-.timeline-month.open .timeline-when { color: var(--bone); }
+.road-row:focus-visible { outline: 2px solid var(--bone); outline-offset: 2px; border-radius: 8px; }
+.road-thumb { flex: 0 0 64px; width: 64px; height: 56px; border-radius: 8px; overflow: hidden; background: var(--deep); }
+.road-thumb .illo { width: 100%; height: 100%; max-height: none; margin: 0; border-radius: 0; }
+.road-words { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; min-width: 0; }
+.road-when { font-size: 13px; font-weight: 600; color: var(--slate); }
+.road-summary { font-family: var(--display); font-size: 16px; font-weight: 600; line-height: 1.25; color: var(--bone); }
 
-.timeline-dot {
-  position: relative;
-  flex-shrink: 0;
-  width: 11px;
-  height: 11px;
+/* An idea the month taught, beside it */
+.road-idea {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  min-height: 44px;
+  margin-top: 6px;
+  padding: 6px 12px 6px 8px;
+  background: var(--concept-ground);
+  border: 0;
   border-radius: 999px;
-  background: var(--move);
-  box-shadow: 0 0 0 4px var(--ink);
+  color: var(--deep);
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: left;
+  cursor: pointer;
 }
+.road-idea:focus-visible { outline: 2px solid var(--bone); outline-offset: 2px; }
+.road-idea-mark { flex: 0 0 16px; width: 16px; height: 16px; border-radius: 50%; background: var(--marigold); box-shadow: inset 0 0 0 3px var(--marigold-hover); }
 
-.timeline-when { flex-grow: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .is-played .road-dash, .road-figure { animation: none; }
+}
 
 .timeline-detail {
   display: flex;
   flex-direction: column;
   gap: 8px;
-  padding: 2px 0 18px 25px;
+  padding: 10px 0 8px;
 }
 
 /* A closed month shows only its row. hidden needs saying, because display: flex above wins */

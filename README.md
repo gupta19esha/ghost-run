@@ -35,7 +35,7 @@ any choice to see the ghost, the life you would have had with the other option.
 - `web/ghost.html` is the ghost flow, served at `/ghost/`: the finished demo life, and any choice
   in it forked in the browser and drawn against the real run, with its narration and every attempt
   at it checked by `verify()`. Five steps, one screen each (`web/ghost.js`): your run, choose a
-  moment, the split, where it ended, what happened. `web/ui.js` is the drawing both pages share.
+  moment, the split (the landing hero's road, the ghost's branching off it), where it ended, what happened. `web/ui.js` is the drawing both pages share.
   `/game/` serves the playable game from `vendor/` (see `vercel.json`).
 - `agent/narrate.js` asks a model for one candidate narration of a fork, `agent/prompt.js` is what
   the model is told, and `agent/narration-loop.js` retries with the failures, up to four attempts.
@@ -152,6 +152,11 @@ of the same screens before and after are identical at 360, 390 and 899 px wide.
   right at a reading width. The month close splits the same way, net worth counting on the left
   in place of the drawing. The landing splits its pictures from its words, the chapter report
   reads in two columns, and Home, the timeline and How it works sit in a column of their own.
+
+The timeline is a road, the landing hero's, in `game/` only (`game/screens/timeline.js`,
+`game/timeline.js`'s `roadStops`, its styles in `game/style.css` and `game/desktop.css`). It runs
+down a phone and across a desktop window. UI.md, "the timeline's own artboard", says what it holds.
+`scripts/check-road-fit.mjs` checks it and the split step's road at every size.
 
 `scripts/check-game-fit.mjs` is the fit check for every screen at any size: it plays chapter one
 through the real game in headless Chrome on virtual time, on two paths (each decision's first

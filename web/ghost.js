@@ -17,7 +17,7 @@ import { readRun, forkView, checkAttempts, costList, surpriseList, surpriseWords
 import { formatMoney } from "../vendor/dry-run-engine/text/render.js";
 import { FORMATS, exactMoneyGap, shownMoneyGap } from "../verify/render.js";
 import { animate, count, later, tween, reduced, stopAll } from "./motion.js";
-import { h, ghostMark, chart, hideGhost, drawGhost, legend, track, moveBar, arrive } from "./ui.js";
+import { h, ghostMark, chart, road, hideGhost, drawGhost, legend, track, moveBar, arrive } from "./ui.js";
 import { sound, buzz, isMuted, setMuted } from "./sound.js";
 
 const app = document.getElementById("app");
@@ -59,6 +59,7 @@ function narrationOf(index, option) {
 
 const go = (hash) => { location.hash = hash; };
 // The chart's height for this phone: a short screen gives it less, so the step still fits
+const ROAD_MAX_WIDTH = 432;
 const chartHeight = () => (innerHeight < 600 ? 104 : innerHeight < 720 ? 146 : 214);
 
 const forkHash = (index, option, part = "") => `#fork/${index}/${option}${part ? `/${part}` : ""}`;
@@ -236,7 +237,8 @@ function splitStep(index, option) {
   const { result } = view;
   narrationOf(index, option);
   const nw = view.compare[0];
-  const forkChart = chart({ real: result.real.bars, ghost: result.ghost.bars, split: view.month, marks: view.notices.map((n) => n.month), height: chartHeight() });
+  // Drawn at the card's own width, so its labels stay the size they are written at
+  const forkRoad = road({ ...view.road, height: chartHeight(), width: Math.min(innerWidth - 48, ROAD_MAX_WIDTH) });
   const chartLegend = legend(nw.real, nw.ghost);
   const legendGhost = chartLegend.querySelectorAll("b")[1];
   const notices = new Map(view.notices.map((n) => [n.month,
@@ -249,23 +251,23 @@ function splitStep(index, option) {
       h("div", { class: "chosen" }, view.real.label),
       h("p", { class: "pair-label is-ghost" }, ghostMark(16), "The ghost chose"),
       h("div", { class: "ghost-card" }, view.ghost.label)),
-    h("div", { class: "card chart-card" }, forkChart, chartLegend),
+    h("div", { class: "card chart-card road-card" }, forkRoad, chartLegend),
     notices.size > 0 && h("div", { class: "notices" }, [...notices.values()]));
 
-  // The moment the feature exists for: the ghost line draws itself from the split month, the
-  // legend's ghost figure keeping pace, each substitution notice arriving as the line passes its
+  // The moment the feature exists for: the ghost's road draws itself from the split month, the
+  // legend's ghost figure keeping pace, each substitution notice arriving as the road passes its
   // month. A tap lands on the end of it
   const play = () => {
-    hideGhost(forkChart);
+    hideGhost(forkRoad);
     legendGhost.textContent = money(nw.real);
     for (const el of notices.values()) el.style.opacity = reduced() ? "" : "0";
-    later(300, () => drawGhost(forkChart, {
+    later(300, () => drawGhost(forkRoad, {
       progress: (p) => { legendGhost.textContent = money(nw.real + (nw.ghost - nw.real) * p); },
       onRing: (ring) => { const el = notices.get(ring.month); if (el) arrive(el, { distance: 8 }); },
       done: () => {
         sound.ghost();
         buzz([8, 60, 8]);
-        // A notice whose month the line never passed still arrives
+        // A notice whose month the road never passed still arrives
         for (const el of notices.values()) if (el.style.opacity === "0") arrive(el, { distance: 8 });
       },
     }));

@@ -1,7 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
-import { readRun, forkView, checkAttempts, costList, surpriseList, reasons, markedDraft } from "../ghost-model.js";
+import { readRun, forkView, checkAttempts, costList, surpriseList, reasons, markedDraft, ghostRoad } from "../ghost-model.js";
 import { narrateFork } from "../../agent/narration-loop.js";
 import { forksOf } from "../../agent/rank.js";
 import { fork } from "../../runner/fork.js";
@@ -68,4 +68,28 @@ test("the lists: one alternative per choice, cost by money gained, surprise by i
   assert.ok(cost.every((f, i) => f.features.end.netWorth > 0 && (i === 0 || cost[i - 1].score >= f.score)));
   assert.equal(cost[0].option, "D02-C");
   assert.ok(surprise.every((f, i) => i === 0 || surprise[i - 1].score >= f.score));
+});
+
+test("the ghost's road leaves yours at the fork, and ends on the side the money did", () => {
+  const months = Array.from({ length: 24 }, (_, i) => i + 1);
+  for (const f of forksOf(save)) {
+    const view = forkView(save, f.monthIndex, f.option);
+    const { points, split } = view.road;
+    assert.equal(points[0].offset, 0, f.option);
+    assert.equal(points.at(-1).month, 24, f.option);
+    assert.ok(points.length >= 2, f.option);
+    assert.ok(points[0].month === split || split === 24, f.option);
+    const gap = view.compare[0].ghost - view.compare[0].real;
+    assert.ok(Math.abs(points.at(-1).offset) >= 0.45, `${f.option} ends alongside`);
+    if (gap !== 0) assert.equal(Math.sign(points.at(-1).offset), Math.sign(gap), f.option);
+  }
+  // Further apart in money, further apart on the ground
+  assert.ok(Math.abs(ghostRoad(months, 5, 200000).at(-1).offset) > Math.abs(ghostRoad(months, 5, 2000).at(-1).offset));
+});
+
+test("the split's road marks the substitution and the layoff where they fall", () => {
+  const { road } = forkView(save, 15, "D16-B");
+  assert.deepEqual(road.marks, [14]);
+  assert.equal(road.layoff.month, 22);
+  assert.ok(road.layoff.label);
 });

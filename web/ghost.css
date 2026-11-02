@@ -403,7 +403,15 @@ input, select, textarea { font-size: max(16px, 1em); }
 .choose-body { margin-top: 14px; }
 .choose-body .months { margin-top: 0; }
 
-/* The split: the two choices side by side when there is room, so the chart keeps the screen */
+/* The split's road: the hero's drawing, edge to edge in its card, the legend under it */
+.chart-card.road-card { padding: 0; overflow: hidden; }
+.road-art { display: block; width: 100%; height: auto; }
+.road-card .legend { flex-wrap: nowrap; gap: 12px; margin: 0; padding: 10px 12px; font-size: 13px; white-space: nowrap; }
+.road-card .swatch-real { border-top-color: var(--marigold); border-top-style: dashed; }
+.road-art-label { font-family: var(--body); font-size: 11px; font-weight: 600; fill: var(--paper-dim); }
+.chart-ghost-end-g { transform-box: fill-box; transform-origin: center bottom; }
+
+/* The split: the two choices side by side when there is room, so the road keeps the screen */
 .step .pair { margin-top: 6px; }
 .step .pair-label { margin: 12px 0 6px; }
 .step .pair .chosen, .step .ghost-card { min-height: 0; padding-top: 12px; padding-bottom: 12px; font-size: 15px; }

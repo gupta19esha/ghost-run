@@ -13,7 +13,7 @@ import { leadCheck } from "../agent/checks.js";
 import { sameMoney, SAME_MONEY_LEAD } from "../agent/prompt.js";
 import { renderNarration, printTokens, exactMoneyGap } from "../verify/render.js";
 import { resolveTokens } from "../verify/tokens.js";
-import { createState, getBars, getDecision, tokenValues } from "../vendor/dry-run-engine/engine/index.js";
+import { createState, getBars, getDecision, monthSummary, tokenValues } from "../vendor/dry-run-engine/engine/index.js";
 import { renderText } from "../vendor/dry-run-engine/text/render.js";
 
 export const BAR_KEYS = ["safety", "freedom", "life"];
@@ -143,7 +143,28 @@ export function markedDraft(narration, failures) {
   return narration.split(pattern).filter(Boolean).map((text) => ({ text, mark: caught.includes(text) }));
 }
 
-// One sentence per substitution, in plain words, for the notice on the chart
+// The ghost's road, for the split step (web/ui.js road): a point for each month from the fork to
+// the last, its offset sideways from your road, 0 on it. It leaves yours at the fork and is
+// alongside within BRANCH_MONTHS. It ends up on the side it finished the money on, further the
+// further apart the money ended, on a root scale so that a small gap is still a different place;
+// level money goes to the far side at the least distance. A fork in the last month leaves from the
+// month before, or there would be no road to draw.
+const BRANCH_MONTHS = 3;
+const ROAD_NEAR = 0.45;
+const ROAD_GAP = 230000;
+export function ghostRoad(months, split, gap) {
+  const last = months.at(-1);
+  const from = split < last ? split : months.at(-2);
+  const side = gap < 0 ? -1 : 1;
+  const far = ROAD_NEAR + (1 - ROAD_NEAR) * Math.min(1, Math.sqrt(Math.abs(gap) / ROAD_GAP));
+  const steps = Math.min(BRANCH_MONTHS, last - from);
+  return months.filter((m) => m >= from).map((month) => {
+    const t = Math.min(1, (month - from) / steps);
+    return { month, offset: t === 0 ? 0 : side * far * t * t * (3 - 2 * t) };
+  });
+}
+
+// One sentence per substitution, in plain words, for the notice on the road
 export function substitutionNotices(result) {
   return result.substitutions.map((s) => {
     const month = getDecision(s.decisionId).month;
@@ -182,6 +203,14 @@ export function forkView(save, monthIndex, option) {
       gap: key === "netWorth" ? exactMoneyGap(realEnd[key], ghostEnd[key]) : printed[`${key}_gap`],
     })),
     endMonth: end.month,
+    road: {
+      months: result.real.bars.map((b) => b.month),
+      points: ghostRoad(result.real.bars.map((b) => b.month), month, ghostEnd.netWorth - realEnd.netWorth),
+      split: month,
+      marks: result.substitutions.map((s) => getDecision(s.decisionId).month),
+      // The layoff, with the sheet's words for its month
+      layoff: printed.layoff_month ? { month: Number(printed.layoff_month), label: monthSummary(Number(printed.layoff_month)) } : null,
+    },
     sameMoney: sameMoney(result),
   };
 }

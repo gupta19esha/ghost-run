@@ -396,9 +396,12 @@ Stop after each. Screenshot at all three widths.
   has "Come back tomorrow" and "One month a day. Month {n} is waiting."; the hook sits
   with them. Since 31 October 2026 "Play the next month now" sits under them (rule 9).
 
-- **The timeline's own artboard.** Step 6 built the progress timeline from other screens'
-  parts: Home's heading and month line, the consequence's chosen card, month close's chip.
-  It is the share screen, the one players screenshot, and it deserves a design of its own.
+- **The timeline's own artboard.** Closed 2 November 2026: the timeline is the landing hero's
+  road (`game/screens/timeline.js`), one stop a month, down a phone and across a desktop window.
+  The figure stands at the month reached. A played stop carries the month's summary, its
+  illustration small and its chip, and opens what was chosen; the idea it taught sits beside it and
+  opens that idea; the layoff is a barrier across the road, in the sheet's words for the month.
+  Stops ahead are dark and say only their month, so nothing ahead is told. No artboard draws it yet.
 - **Words for a continued month.** Closed 28 September 2026: "Carry on with the month" on
   the button and "This month so far" over the list, the product owner's copy. Drawn in
   `design/HomeContinue.html`.

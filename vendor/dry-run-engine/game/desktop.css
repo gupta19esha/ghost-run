@@ -206,10 +206,29 @@
   .home-foot { padding-top: 40px; }
   .home.continuing .home-foot { position: static; }
 
-  .timeline,
   .how,
   .ideas,
   .chapter-start { width: min(100%, 680px); margin: 0 auto; padding-top: 24px; }
+
+  /* The road runs across. A stop is a column: its picture and words, the road, then its idea and
+     what opened under it. An opened stop widens, and the road makes room along itself */
+  .timeline { width: 100%; padding-top: 24px; }
+  .road { display: flex; align-items: stretch; overflow-x: auto; margin-bottom: 24px; }
+  .road-stop { display: flex; flex: 0 0 176px; flex-direction: column; }
+  .road-stop.open { flex-basis: 380px; }
+  .road-body { display: contents; }
+  .road-row { order: 1; flex-direction: column; gap: 8px; height: 216px; padding: 8px 12px; }
+  .road-thumb { flex: 0 0 96px; width: 100%; height: 96px; }
+  .road-track { order: 2; flex: 0 0 84px; min-height: 84px; }
+  .road-way { top: 28px; bottom: auto; left: 0; right: 0; width: auto; height: 28px; }
+  .road-dash { top: 42px; left: 50%; width: 30px; height: 8px; margin: -4px 0 0 -15px; }
+  .road-tree { top: 0; bottom: auto; right: 18px; width: 18px; height: 26px; }
+  .road-figure { top: 2px; left: calc(50% - 13px); margin-top: 0; width: 22px; height: 44px; }
+  .road-barrier { top: 22px; left: 50%; width: 10px; height: 40px; margin: 0 0 0 -5px; }
+  .road-idea { order: 3; align-self: flex-start; margin: 10px 12px 0; max-width: calc(100% - 24px); }
+  .timeline-detail { order: 4; padding: 12px; }
+  .is-ahead .road-body { display: contents; }
+  .road-ahead-month { order: 1; display: block; height: 216px; padding: 12px; }
 
   /* The chapter's progress is the rail's here (game/rail.js), so the phone's strip goes */
   .chapter-progress-strip { display: none; }

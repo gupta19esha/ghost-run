@@ -38,7 +38,7 @@ import { chapterProgress, createStrip } from "./progress.js";
 import { chapterCard, lockedChapterCard } from "./certificate.js";
 import { barLabels } from "./labels.js";
 import { createRail, ways } from "./rail.js";
-import { lifeSoFar } from "./timeline.js";
+import { lifeSoFar, roadStops } from "./timeline.js";
 import {
   newSave, readSave, writeSave, dropSave, setAsideSave, replay, waitsForTomorrow, recordClose, currentStreak, chapterDays,
   explainedAlready, recordExplained, jumpSave, introSeen, recordIntroSeen, chapterOpened, recordChapterOpened,
@@ -448,16 +448,19 @@ function goHome(lastMonth, continuing = false) {
 // The life so far, from the save. Close goes back where it came from: Home as it was, or
 // the chapter report.
 // view: the rail beside it, Home's when it opens from Home
-function openTimeline(back = () => goHome(homeLastMonth, homeContinuing), view = homeBoard) {
+function openTimeline(back = () => goHome(homeLastMonth, homeContinuing), view = homeBoard, at = null) {
   const months = lifeSoFar(save);
   if (!months) return;
   const [first] = months;
-  const open = holding("timeline") && query.get("month") ? Number(query.get("month")) : null;
+  const open = at ?? (holding("timeline") && query.get("month") ? Number(query.get("month")) : null);
+  const chapter = first?.chapter ?? chapterPlace(state.month)?.chapter ?? 1;
   show(timelineScreen({
-    months,
+    stops: roadStops(months.filter((m) => m.chapter === chapter), { chapter, cards: ideasSoFar(save.closed, chapter).cards, reached: state.month }),
     chapter: first?.chapterTitle ? { number: formatCount(first.chapter), title: first.chapterTitle } : null,
     money: formatMoney,
     open,
+    // That idea, from the road. Its Close comes back to the road, at the month it was opened from
+    onIdea: (month) => openIdeas(() => openTimeline(back, view, month), view, month),
     onClose: back,
   }), view, null);
 }
@@ -465,12 +468,14 @@ function openTimeline(back = () => goHome(homeLastMonth, homeContinuing), view =
 // The ideas: every concept card of the chapter, collected or still locked (UI.md rule 10).
 // Close goes back where it came from, as the timeline's does
 // The chapter's name over them opens the chapter start again, whose Close comes back here
-function openIdeas(back = () => goHome(homeLastMonth, homeContinuing), view = homeBoard) {
+// at: the month whose idea to open at, when it comes from the road
+function openIdeas(back = () => goHome(homeLastMonth, homeContinuing), view = homeBoard, at = null) {
   const chapter = chapterPlace(state.month)?.chapter ?? 1;
   show(ideasScreen({
     chapter: { number: formatCount(chapter), name: chapterInfo(chapter).name },
     ideas: ideasSoFar(save.closed, chapter),
-    onChapter: () => showChapterStart(chapter, { again: true, onDone: () => openIdeas(back, view) }),
+    at,
+    onChapter: () => showChapterStart(chapter, { again: true, onDone: () => openIdeas(back, view, at) }),
     onClose: back,
   }), view, null);
 }

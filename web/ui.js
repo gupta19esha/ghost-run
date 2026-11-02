@@ -120,6 +120,115 @@ export function chart({ real, ghost = null, split = null, marks = [], height = 2
   return svg;
 }
 
+// The split as the landing hero's road: yours carrying the chapter's months, and the ghost's leaving
+// it at the fork and running alongside to the last month. Flat shapes, the hero's palette. points:
+// web/ghost-model.js's ghostRoad, in months and a sideways offset from your road. layoff: { month,
+// label }, marked across both. Carries svg.ghost, as chart does, so hideGhost and drawGhost draw it
+export function road({ months, points, split, marks = [], layoff = null, height = 214, width = 342 }) {
+  const W = width, H = height, L = 14, R = 52;
+  const mid = H * 0.62, reach = H * 0.26;
+  const x = (m) => L + ((m - months[0]) / (months.at(-1) - months[0])) * (W - L - R);
+  const y = (offset) => mid - offset * reach;
+  const roadWidth = Math.max(12, H * 0.09);
+
+  const svg = s("svg", { viewBox: `0 0 ${W} ${H}`, class: "road-art", role: "img" });
+  svg.setAttribute("aria-label", "Your road and the ghost's, split at the month of the fork");
+  // The hero's scene: sky and clouds, the offices one way and the homes the other, the ground, trees
+  const horizon = H * 0.3;
+  const up = points.at(-1).offset >= 0;
+  const block = (bx, bw, bh, fill) => s("rect", { x: bx, y: horizon - bh, width: bw, height: bh, fill });
+  const home = (bx, bw, bh) => s("g", {},
+    block(bx, bw, bh, "var(--paper-dim)"),
+    s("path", { d: `M${bx - 3} ${horizon - bh + 1} L${bx + bw / 2} ${horizon - bh - bw * 0.42} L${bx + bw + 3} ${horizon - bh + 1}Z`, fill: "var(--paper-shadow)" }),
+    s("rect", { x: bx + bw * 0.34, y: horizon - bh * 0.72, width: bw * 0.32, height: bh * 0.34, fill: "var(--marigold)" }));
+  const tree = (tx, ty, r) => s("g", { fill: "var(--deep)" },
+    s("rect", { x: tx - r * 0.15, y: ty - r, width: r * 0.3, height: r * 1.2 }),
+    s("circle", { cx: tx, cy: ty - r * 1.25, r }));
+  const unit = H * 0.1;
+  svg.append(
+    s("rect", { x: 0, y: 0, width: W, height: H, fill: "var(--deep)" }),
+    s("rect", { x: W * 0.36, y: horizon * 0.22, width: W * 0.16, height: unit * 0.4, rx: unit * 0.2, fill: "var(--deep-raised)" }),
+    s("rect", { x: W * 0.62, y: horizon * 0.42, width: W * 0.13, height: unit * 0.34, rx: unit * 0.17, fill: "var(--deep-raised)" }),
+    block(W * 0.04, W * 0.06, unit * 1.1, "var(--paper-dim)"),
+    block(W * 0.1, W * 0.09, unit * 1.9, "var(--paper-side)"),
+    block(W * 0.2, W * 0.06, unit * 0.9, "var(--paper-dim)"),
+    home(W * 0.78, W * 0.07, unit * 0.6),
+    home(W * 0.88, W * 0.08, unit * 0.75),
+    s("rect", { x: 0, y: horizon, width: W, height: H - horizon, fill: "var(--deep-raised)" }));
+  // On the side of your road the ghost's does not take
+  for (const f of [0.08, 0.24, 0.47, 0.72]) svg.append(tree(W * f, up ? H - unit * 0.9 : mid - unit * 0.95, unit * 0.46));
+
+  const line = (rows) => rows.map(([px, py], i) => `${i ? "L" : "M"}${px.toFixed(1)} ${py.toFixed(1)}`).join(" ");
+  const pts = points.map((p) => [x(p.month), y(p.offset)]);
+
+  // Yours: the road, then a month lit on it for every month
+  svg.append(s("path", { d: `M0 ${mid} H${W}`, stroke: "var(--paper-side)", "stroke-width": roadWidth, fill: "none" }));
+  for (const m of months) svg.append(s("rect", { x: x(m) - 3, y: mid - 1.5, width: 6, height: 3, rx: 1.5, fill: "var(--marigold)" }));
+
+  // The ghost's, under a mask whose one stroke is drawn in, as the chart's ghost line was
+  const lengths = [0];
+  for (let i = 1; i < pts.length; i++) lengths.push(lengths[i - 1] + Math.hypot(pts[i][0] - pts[i - 1][0], pts[i][1] - pts[i - 1][1]));
+  const total = lengths.at(-1) || 1;
+  const id = `ghost-reveal-${++chartCount}`;
+  const reveal = s("path", { d: line(pts), class: "chart-reveal", style: `stroke-width: ${roadWidth + 8}px`, "stroke-dasharray": `${total} ${total}`, "stroke-dashoffset": 0 });
+  const mask = s("mask", { id, maskUnits: "userSpaceOnUse", x: 0, y: 0, width: W, height: H });
+  mask.append(reveal);
+  svg.append(s("defs", {}, mask));
+  svg.append(s("g", { mask: `url(#${id})` },
+    s("path", { d: line(pts), stroke: "var(--ghost-fill)", "stroke-width": roadWidth, "stroke-linejoin": "round", "stroke-linecap": "round", fill: "none" }),
+    s("path", { d: line(pts), class: "chart-ghost" })));
+
+  // The layoff, a barrier across both roads, with the sheet's words for the month
+  if (layoff) {
+    const lx = x(layoff.month);
+    const off = points.find((p) => p.month === layoff.month)?.offset ?? 0;
+    const [top, bottom] = [Math.min(mid, y(off)) - roadWidth * 0.75, Math.max(mid, y(off)) + roadWidth * 0.75];
+    svg.append(s("rect", { x: lx - 2.5, y: top, width: 5, height: bottom - top, rx: 2, fill: "var(--vermilion)" }));
+    // Under the road when the ghost's went up, over yours when it went down: where there is room
+    const t = s("text", { x: Math.min(lx + 8, W - 2), y: up ? H - 8 : mid - roadWidth * 0.75, class: "road-art-label", "text-anchor": "end" });
+    t.textContent = layoff.label;
+    svg.append(t);
+  }
+
+  const first = s("text", { x: L - 8, y: H - 8, class: "road-art-label" });
+  first.textContent = `Month ${months[0]}`;
+  svg.append(first);
+
+  // The fork
+  const sx = x(split);
+  const pill = s("g", { class: "chart-split-g" });
+  pill.append(s("line", { x1: sx, x2: sx, y1: 22, y2: mid, class: "chart-split", style: "stroke: var(--paper-dim)" }));
+  const label = `Split · month ${split}`;
+  const w = label.length * 6.2 + 16;
+  const lx = Math.min(Math.max(sx - w / 2, 2), W - w - 2);
+  pill.append(s("rect", { x: lx, y: 3, width: w, height: 20, rx: 10, class: "chart-split-pill" }));
+  const t = s("text", { x: lx + w / 2, y: 17, class: "chart-split-text", "text-anchor": "middle" });
+  t.textContent = label;
+  pill.append(t);
+  svg.append(pill);
+
+  const rings = marks.map((m) => {
+    const i = points.findIndex((p) => p.month === m);
+    if (i < 0) return null;
+    const ring = s("circle", { cx: pts[i][0], cy: pts[i][1], r: 7, class: "chart-mark" });
+    svg.append(ring);
+    return { month: m, at: lengths[i] / total, el: ring };
+  }).filter(Boolean);
+
+  // You, and the ghost, each where their road ended: the hero's figure, scaled to stand on the road
+  const person = (px, py, fill) => s("g", { transform: `translate(${px} ${py}) scale(${(H * 0.18) / 76}) translate(-548 -300)` },
+    s("circle", { cx: 548, cy: 238, r: 12, fill }),
+    s("path", { d: "M531 300v-30a17 17 0 0 1 34 0v30Z", fill }));
+  svg.append(person(x(months.at(-1)) + 12, mid + roadWidth * 0.2, "var(--ink)"));
+  const [ex, ey] = pts.at(-1);
+  // A step further on than you, so that two lives ending close together do not stand in each other
+  const endDot = s("g", { class: "chart-ghost-end-g" }, person(ex + 34, ey + roadWidth * 0.2, "var(--ghost-fill)"));
+  const head = s("circle", { cx: pts[0][0], cy: pts[0][1], r: 4, class: "chart-ghost-head" });
+  svg.append(endDot, head);
+  svg.ghost = { reveal, total, points: pts, lengths, rings, endDot, head, pill };
+  return svg;
+}
+
 // Before the draw: the ghost undrawn, nothing of it showing, so the screen opens on your run
 // alone. Not under reduced motion, where the line is simply there
 export function hideGhost(svg) {
