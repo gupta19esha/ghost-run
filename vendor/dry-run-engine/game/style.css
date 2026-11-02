@@ -479,9 +479,10 @@ html, body {
 
 .home-net-worth {
   margin-top: 4px;
-  font-size: 58px;
+  font-size: min(58px, 12vw);
   font-weight: 800;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .home-chip { margin-top: 10px; padding: 4px 9px; }
@@ -963,7 +964,9 @@ html, body {
   font-size: 66px;
   font-weight: 800;
   line-height: 1;
+  white-space: nowrap;
 }
+.month-close .net-worth.is-long, .month-close.explaining .net-worth.is-long { font-size: min(12vw, 48px); }
 
 .move-up { --move: var(--teal); --move-faint: var(--teal-faint); }
 .move-down { --move: var(--vermilion); --move-faint: var(--vermilion-faint); }

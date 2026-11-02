@@ -172,6 +172,8 @@
   }
   .month-close .net-worth,
   .month-close.explaining .net-worth { margin-top: 18px; font-size: clamp(64px, 7vw, 112px); }
+  .month-close .net-worth.is-long,
+  .month-close.explaining .net-worth.is-long { font-size: clamp(44px, 4.4vw, 72px); }
   .month-close .chip-large { margin-top: 18px; font-size: 16px; padding: 6px 13px; }
   .month-close .close-head .close-explained { max-width: 34ch; font-size: 15px; }
   .month-close > .close-bars { display: none; }

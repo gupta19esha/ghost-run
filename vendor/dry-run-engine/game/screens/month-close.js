@@ -27,6 +27,7 @@ const CLOSED = "closed";
 const LEARNED = "You learned something";
 const CLOSE = "Close";
 const COUNT_MS = 1200;
+const LONG_MONEY = 10;
 
 const BARS = [
   ["safety", "Safety"],
@@ -92,6 +93,8 @@ export function monthCloseScreen({ month, compared, safetyDanger, hook, concept,
   const worth = document.createElement("div");
   worth.className = "net-worth money";
   worth.textContent = money(compared.netWorth.before);
+  // A negative in lakhs is too wide for the big size: it takes a size that fits on one line
+  if (Math.max(money(compared.netWorth.before).length, money(compared.netWorth.after).length) >= LONG_MONEY) worth.classList.add("is-long");
   head.append(label, worth);
 
   const dir = direction(compared.netWorth.change);
