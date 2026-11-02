@@ -240,10 +240,15 @@
   .start-foot .action { display: block; width: min(100%, 420px); margin: 0 auto; }
 
   /* The road opening a chapter has no pictures yet, so no row kept for them: the month, the road,
-     then what lies beside it, with the card standing below the road's end */
+     then what lies beside it. The card stands at the road's end, the height of the road's band, so
+     it sets no height of its own and leaves nothing empty under the stops */
+  .opening .road { min-height: 236px; }
   .opening .road-ahead-month { height: 44px; }
-  .opening .road-end .road-body { order: 3; height: auto; padding-top: 10px; }
-  .opening .road-end .certificate-card { max-height: none; width: 100%; }
+  .opening .road-end { position: relative; flex-basis: 300px; }
+  .opening .road-end .road-track { position: absolute; top: 44px; left: 0; width: 28px; }
+  .opening .road-end .road-way { right: 0; }
+  .opening .road-end .road-body { position: absolute; inset: 0 0 0 28px; display: flex; flex-direction: column; height: auto; padding: 8px 12px 12px; }
+  .opening .road-end .certificate-card { flex: 1 1 0; width: 100%; min-height: 0; max-height: none; max-width: none; margin-top: 6px; object-fit: contain; object-position: left top; }
 
   /* The chapter's progress is the rail's here (game/rail.js), so the phone's strip goes */
   .chapter-progress-strip { display: none; }

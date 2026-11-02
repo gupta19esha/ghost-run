@@ -158,6 +158,19 @@ try {
 
     // ---------- The landing's two ways in ----------
     await go(`${ORIGIN}/`, 1200);
+    // A label that has left its button: the text's own box against the button's, on everything
+    // that carries one. Overflow off the page would not show this
+    const spilt = await js(`return [...document.querySelectorAll("a.action, a.close-button, .lp-chapter-state")].filter((a) => a.offsetParent !== null).map((a) => {
+        const range = document.createRange();
+        range.selectNodeContents(a);
+        const t = range.getBoundingClientRect(), b = a.getBoundingClientRect();
+        const lines = new Set([...range.getClientRects()].map((r) => Math.round(r.top))).size;
+        return { text: a.textContent.trim(), out: t.left < b.left - 0.5 || t.right > b.right + 0.5 || t.top < b.top - 0.5 || t.bottom > b.bottom + 0.5, lines, colour: getComputedStyle(a).color };
+      }).filter((l) => l.out || l.lines > 1);`);
+    for (const l of spilt) say(size, "landing", `"${l.text}" ${l.out ? "leaves its button" : `wraps to ${l.lines} lines`}`);
+    // A chapter's status stays inside its card, and clear of the card's other words
+    const pills = await js(`return [...document.querySelectorAll(".lp-chapter-state")].filter((p) => { const b = p.getBoundingClientRect(), c = p.closest(".lp-chapter").getBoundingClientRect(); return b.left < c.left || b.right > c.right - 8 || b.bottom > c.bottom; }).map((p) => p.textContent);`);
+    if (pills.length) say(size, "landing", `status pills leave their cards: ${pills.join(", ")}`);
     const landing = await js(`${reachableBox}
       const texts = [...document.querySelectorAll("a.action, a.close-button")].map((a) => [a.textContent.trim(), a.getAttribute("href")]);
       const hero = [...document.querySelectorAll(".lp-hero-play a")];

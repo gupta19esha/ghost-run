@@ -55,6 +55,8 @@ body { background: var(--ink); }
 .lp-lede { margin: 10px 0 0; font-size: 17px; line-height: 1.45; color: color-mix(in srgb, var(--ink) 84%, var(--deep)); }
 .lp-hero-play { margin-top: 20px; }
 .lp-hero-button { text-decoration: none; }
+/* A button is as wide as its label needs, or wider: its label never wraps and it never shrinks */
+.lp-header .action, .lp-hero .action, .lp-hero-ghost, .lp-see, .lp-play-section .action, .lp-dock .action { flex-shrink: 0; white-space: nowrap; }
 .lp-hero-note { margin: 10px 0 0; font-size: 14px; font-weight: 600; text-align: center; color: color-mix(in srgb, var(--ink) 75%, var(--deep)); }
 /* The hero's drawing: composed wider than any phone and anchored at its foot and middle, so a
    phone sees the coin, the road and you */
@@ -381,9 +383,11 @@ body { background: var(--ink); }
   .lp-title { margin: 0; font-size: min(66px, calc((var(--field) - var(--pad)) / 2 * 0.084)); line-height: 1.04; letter-spacing: -0.02em; }
   .lp-title-line { display: block; white-space: nowrap; }
   .lp-lede { margin-top: 22px; max-width: 30ch; font-size: 23px; line-height: 1.45; }
-  .lp-hero-play { display: flex; align-items: center; gap: 22px; margin-top: 36px; }
-  .lp-hero .action.lp-hero-button { width: auto; height: 66px; padding: 0 56px; font-size: 24px; }
-  .lp-hero .lp-hero-note { margin: 0; text-align: left; font-size: 16px; }
+  /* The two ways in side by side, sharing a line where the column has room, and the note under them */
+  .lp-hero-play { display: flex; flex-wrap: wrap; align-items: stretch; gap: 14px; margin-top: 36px; }
+  .lp-hero .action.lp-hero-button { width: auto; height: 66px; padding: 0 36px; font-size: 24px; }
+  .lp-hero-ghost { width: auto; min-height: 66px; margin: 0; padding: 0 28px; }
+  .lp-hero .lp-hero-note { flex-basis: 100%; margin: 0; text-align: left; font-size: 16px; }
   .lp-art-holder { grid-column: 3; margin: 0; position: relative; }
   .lp-art { display: none; }
   /* At one and a half times its own scale, 820 by 400 drawn 1230 by 600, from the column's left
