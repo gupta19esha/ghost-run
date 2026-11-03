@@ -62,7 +62,7 @@ A rejected attempt's reasons go back to the model, and it tries again, up to fou
 
 The model has less freedom than that may suggest. Left to itself, Spark got month numbers, grammar and whose score moved wrong. So its brief (`metaBrief` in `agent/prompt.js`) gives it the shape of each narration, sentence by sentence: a split sentence chosen to be true of that fork, which event to mention from a short list, and a fixed sentence for what each score's move means. The model chooses among those, and fits them together. The result is accurate and plain, and it repeats itself across forks.
 
-An earlier set by Claude Opus 5.5 stays in the repo as a fallback (`cache/narrations/claude/`). It reads better and was not the set we chose to ship.
+An earlier set by Claude Opus 5.5 stays in the repo as a fallback (`cache/narrations/claude/`).
 
 **Where no model is involved:** the charts, figures and ranking everywhere, the twenty long explanations of the ideas, and the ghost run on a player's own finished chapter (the report's "Meet your ghost"). The narrator only takes the demo life, because its forks are finite and can be cached. A player's own fork gets a fixed template filled with its figures, and the page says no model wrote it.
 
