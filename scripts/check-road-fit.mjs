@@ -17,6 +17,7 @@ import { existsSync, mkdtempSync, mkdirSync, readFileSync, writeFileSync } from 
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { getDecision } from "../vendor/dry-run-engine/engine/index.js";
+import { play } from "../runner/replay.js";
 import { SAVE_KEY } from "../vendor/dry-run-engine/game/config.js";
 
 const ALL = [[320, 568], [360, 640], [390, 664], [390, 745], [390, 844], [900, 600], [1024, 768], [1280, 720], [1366, 768], [1440, 900], [1920, 1080]];
@@ -215,6 +216,18 @@ try {
     if (!/stand-in/.test(own.text)) say(size, "own run", "its narration does not say it was written without a model");
     if (!/No model wrote this/.test(own.text)) say(size, "own run", "its panel does not say no model wrote it");
     if (/narrator|attempt/i.test(own.text)) say(size, "own run", "its panel credits a narrator or its attempts");
+    // Where it ended, on a run that takes every decision's first option and ends negative in lakhs:
+    // its two figures are the widest the screen draws, and each must stay on one line
+    const broke = play(1, (decision) => Object.keys(decision.options)[0]);
+    await go(`${ORIGIN}/web/index.html`, 200);
+    await js(`localStorage.setItem(${JSON.stringify(SAVE_KEY)}, ${JSON.stringify(JSON.stringify({ ...demo, seed: 1, choices: broke.choices, closed: 24 }))}); return 1`);
+    await go(`${ORIGIN}/ghost/?run=mine#fork/${broke.choices.length - 1}/D30-C/end`, 800);
+    await until(`document.querySelector(".compare-figure")`, "Where it ended");
+    await wait(1600);
+    const figures = await js(`return [...document.querySelectorAll(".compare-figure")].map((el) => { const r = document.createRange(); r.selectNodeContents(el); return [el.textContent, new Set([...r.getClientRects()].map((x) => Math.round(x.top))).size, el.scrollWidth <= el.clientWidth + 1]; });`);
+    for (const [text, lines, fits] of figures) if (lines > 1 || !fits) say(size, "own run", `"${text}" does not fit on one line`);
+    if (!figures.every(([text]) => text.startsWith("−"))) say(size, "own run", `the check did not see negative figures: ${figures.map((f) => f[0])}`);
+    await shot(`own-end-${size}`);
     await go(`${ORIGIN}/ghost/?run=mine`, 800);
     await until(`document.querySelector(".step .dock")`, "The own run's first step");
     await wait(500);

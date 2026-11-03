@@ -424,7 +424,8 @@ input, select, textarea { font-size: max(16px, 1em); }
 .key-real { background: var(--bone); }
 .key-ghost { background: repeating-linear-gradient(135deg, var(--ghost), var(--ghost) 3px, var(--ghost-fill) 3px, var(--ghost-fill) 6px); box-shadow: inset 0 0 0 1.5px var(--ghost); }
 .step .compare-worth { margin-top: 18px; }
-.step .compare-figure { font-size: 30px; }
+/* Two figures side by side: a negative in lakhs takes a size that keeps each on one line */
+.step .compare-figure { font-size: min(30px, 7vw); white-space: nowrap; }
 
 /* What happened */
 .step .narration { margin-top: 16px; }
