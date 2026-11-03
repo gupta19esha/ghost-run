@@ -57,6 +57,24 @@ had to choose.
 
 ---
 
+## Collected by a tick, and the long versions
+
+Ruled 3 November 2026. A card is collected when the player ticks it at month close, not when
+its month closes: the tick is what records it (`ticked` in the save, `game/save.js`). A month
+with more than one card shows them one at a time, each ticked before the next comes in. Close
+does not wait for the tick; a card left unticked waits in the collection with its tick there.
+A save from before this keeps every card its closed months gave it.
+
+Each collected card opens a long version, three or four short paragraphs, in
+`game/concepts-long.js`. They are written by hand, not by a model: the concepts are fixed and
+the same for every player. They follow the rules below except the length, explain the board and
+never the moves, and read the same whatever was chosen. Every figure in them is held to the
+engine or to the sheet copy it restates by `scripts/check_stated_terms.py` (rule 16), which also
+fails on any figure in them it does not check. The one figure of the player's own is Runway's
+`{runway}`, their runway on the morning of month 22.
+
+---
+
 ## The rules I wrote them to
 
 1. **Name it, then say what it means.** The title is the thing the player can now say out

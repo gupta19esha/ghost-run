@@ -30,9 +30,9 @@ import { howItWorksScreen } from "./screens/how-it-works.js";
 import { reportScreen } from "./screens/report.js";
 import { chapterTurnScreen } from "./screens/chapter-turn.js";
 import { certificateScreen } from "./screens/certificate.js";
-import { ideasScreen } from "./screens/ideas.js";
+import { ideasScreen, ideaScreen } from "./screens/ideas.js";
 import { chapterInfo } from "./chapters.js";
-import { ideasSoFar } from "./ideas.js";
+import { ideasSoFar, longIdea } from "./ideas.js";
 import { chapterProgress, createStrip } from "./progress.js";
 import { chapterCard, lockedChapterCard } from "./certificate.js";
 import { barLabels } from "./labels.js";
@@ -41,7 +41,7 @@ import { lifeSoFar, roadStops } from "./timeline.js";
 import { DEFAULT_CHARACTER } from "./character.js";
 import {
   newSave, readSave, writeSave, dropSave, setAsideSave, replay, waitsForTomorrow, recordClose, currentStreak, chapterDays,
-  explainedAlready, recordExplained, jumpSave, introSeen, recordIntroSeen, chapterOpened, recordChapterOpened,
+  explainedAlready, recordExplained, jumpSave, introSeen, recordIntroSeen, chapterOpened, recordChapterOpened, recordTicked,
 } from "./save.js";
 import { installTestingTools } from "./testing.js";
 import { BALANCED_CHOICES } from "./balanced-path.js";
@@ -156,11 +156,15 @@ function startMonth() {
   showMonthCard();
 }
 
+// The chapter's ideas as the player has them: collected once ticked (game/ideas.js). closed: the
+// months to count as closed, by default the save's
+const ideasOf = (chapter = 1, closed = save.closed) => ideasSoFar(closed, chapter, save.ticked ?? null);
+
 // The road for a chapter, from the save. Once the chapter is finished its card is the player's
 // own; before, it is locked
 function roadOf(chapter, months) {
   const info = chapterInfo(chapter);
-  const ideas = ideasSoFar(save.closed, chapter);
+  const ideas = ideasOf(chapter);
   return {
     stops: roadStops(months.filter((m) => m.chapter === chapter), { chapter, cards: ideas.cards, reached: state.month }),
     chapter: { number: formatCount(chapter), title: info.name, span: `${info.ages.from} to ${info.ages.to} · ${info.months} months`, count: ideas.count },
@@ -301,9 +305,14 @@ function closeMonth(closed, monthEnd) {
     compared: compareBars(monthStart, monthEnd),
     safetyDanger: safetyInDanger(state),
     hook: nextHook(),
-    concept: conceptForMonth(closed),
-    // The count with this month's card in it, which is collected as it shows (UI.md rule 10)
-    ideas: ideasSoFar(closed).count,
+    concepts: conceptForMonth(closed) ? [{ month: closed, ...conceptForMonth(closed) }] : [],
+    // The count so far: this month's card is collected once it is ticked (ruled 3 November 2026)
+    ideas: ideasOf(chapterPlace(closed)?.chapter ?? 1, closed).count,
+    onTick: (month) => {
+      recordTicked(save, month);
+      writeSave(save);
+      return ideasOf(chapterPlace(month)?.chapter ?? 1, closed).count;
+    },
     // The month 1 close says what all four measure (ruled 30 September 2026)
     explanations: closed === 1 ? BAR_LINES : null,
     money: formatMoney,
@@ -323,7 +332,11 @@ function closeMonth(closed, monthEnd) {
     month: closed,
     explanations: closed === 1 ? BAR_LINES : null,
   }));
-  if (script.active && !holding("close")) screen.querySelector(".close-button").click();
+  // A screenshot script ticks the month's card on its way through, as a player collecting it would
+  if (script.active && !holding("close")) {
+    screen.querySelector(".concept-tick")?.click();
+    screen.querySelector(".close-button").click();
+  }
 }
 
 // The words after the change beside net worth in the rail on Home, as Home has them
@@ -389,7 +402,7 @@ function showReport() {
     safetyDanger: safetyInDanger(state),
     best,
     worst,
-    ideas: ideasSoFar(save.closed).count,
+    ideas: ideasOf().count,
     onIdeas: () => openIdeas(showReport, null),
     concepts: {
       total: titles.length,
@@ -450,7 +463,7 @@ function goHome(lastMonth, continuing = false, { walkFrom = null, open = null } 
     money: formatMoney,
     streak: currentStreak(save),
     hook: nextHook(),
-    ideas: ideasSoFar(save.closed).count,
+    ideas: ideasOf().count,
     onIdeas: () => openIdeas(),
     continuing,
     onPlay: continuing ? continueMonth : startMonth,
@@ -504,10 +517,22 @@ function openIdeas(back = () => goHome(homeLastMonth, homeContinuing), view = ho
   const chapter = chapterPlace(state.month)?.chapter ?? 1;
   show(ideasScreen({
     chapter: { number: formatCount(chapter), name: chapterInfo(chapter).name },
-    ideas: ideasSoFar(save.closed, chapter),
+    ideas: ideasOf(chapter),
     at,
     onChapter: () => openTimeline(() => openIdeas(back, view, at), view),
     onClose: back,
+    // A collected idea opens its long version, whose Close comes back here at that card
+    onOpen: (month) => show(ideaScreen({
+      month,
+      idea: longIdea(month, save),
+      onClose: () => openIdeas(back, view, month),
+    }), view, null),
+    // A card never ticked at its month's close is collected here, and the count follows
+    onTick: (month) => {
+      recordTicked(save, month);
+      writeSave(save);
+      openIdeas(back, view, month);
+    },
   }), view, null);
 }
 

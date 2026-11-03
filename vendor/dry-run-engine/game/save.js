@@ -3,7 +3,8 @@
 // The save is not the engine's state. It is what the player did: the seed, every choice in
 // the order it was made, how many months they have closed, the day they last closed one, the
 // streak of days in a row that ended on, which bars have had their line shown, the day the
-// run began, the day each chapter closed, and which chapters' start screens have been seen. Resuming replays those choices through the
+// run began, the day each chapter closed, which chapters' start screens have been seen, and
+// which months' ideas the player has ticked at month close (ticked). Resuming replays those choices through the
 // engine, so the run is the same run (UI.md build rule 4) and the save stays small.
 //
 // The daily gate (UI.md, ruled 31 October 2026): the first FIRST_SITTING_MONTHS months play in
@@ -22,7 +23,7 @@
 // starts again from the landing screen.
 
 import {
-  createState, applyDecision, advanceMonth, decisionsForMonth, getBars, compareBars, chapterComplete,
+  createState, applyDecision, advanceMonth, decisionsForMonth, getBars, compareBars, chapterComplete, chapterConcepts,
 } from "../engine/index.js";
 import { SAVE_KEY, FIRST_SITTING_MONTHS } from "./config.js";
 import { DEFAULT_CHARACTER } from "./character.js";
@@ -45,17 +46,31 @@ function yesterday() {
 export function newSave({ seed }) {
   return {
     version: VERSION, seed, choices: [], closed: 0, closedOn: null, streak: 0, explained: [],
-    startedOn: today(), chapterClosedOn: {}, chaptersOpened: [], character: DEFAULT_CHARACTER,
+    startedOn: today(), chapterClosedOn: {}, chaptersOpened: [], character: DEFAULT_CHARACTER, ticked: [],
   };
 }
 
+// The months whose idea a run that closed this many months has, every chapter's: what a save from
+// before ideas were ticked is given, so its collection is what it was, and what a tester's jump has
+const conceptMonthsTo = (closed) => [1, 2, 3, 4, 5, 6]
+  .flatMap((chapter) => chapterConcepts(chapter))
+  .map((card) => card.month)
+  .filter((month) => month <= closed);
+
 // An older save, brought up to the fields this one writes, without changing any it has.
-// startedOn is unknown for a run begun before it was recorded, so null.
+// startedOn is unknown for a run begun before it was recorded, so null. A save from before ideas
+// were ticked has every idea its closed months showed, as it did then.
 export function upgrade(save) {
   return {
     closed: 0, closedOn: null, streak: 0, explained: [], startedOn: null, chapterClosedOn: {}, chaptersOpened: [], character: DEFAULT_CHARACTER,
+    ticked: conceptMonthsTo(save.closed ?? 0),
     ...save,
   };
+}
+
+// A month's idea, ticked: that is what collects it (ruled 3 November 2026)
+export function recordTicked(save, month) {
+  save.ticked = [...new Set([...(save.ticked ?? []), month])].sort((a, b) => a - b);
 }
 
 // Each bar's line shows once per player (ruled 30 September 2026, ONBOARDING.md section 5):
@@ -100,7 +115,7 @@ export function jumpSave(seed, month, path = {}) {
     }
     state = advanceMonth(state).state;
   }
-  return { ...newSave({ seed }), choices, closed: state.month - 1 };
+  return { ...newSave({ seed }), choices, closed: state.month - 1, ticked: conceptMonthsTo(state.month - 1) };
 }
 
 // The landing's opening plays in full once (ruled 30 September 2026). Whether it has is kept
@@ -223,13 +238,15 @@ export function setAsideSave() {
 // monthStart is the bars as the current month found them. lastMonth is compareBars over the
 // last closed month, for Home, or null before the first.
 // hooks, optional, for the timeline: onChoice(state, decision, optionId) after each choice is
-// applied, and onClose(month, compared) as each closed month runs.
+// applied, onClose(month, compared) as each closed month runs, and onMonthStart(state) as each
+// month begins, before any choice in it.
 // Returns null when the save does not replay.
 export function replay(save, hooks = {}) {
   try {
     let state = createState(save.seed);
     let monthStart = getBars(state);
     let lastMonth = null;
+    hooks.onMonthStart?.(state);
     const queue = [...save.choices];
     for (;;) {
       for (const decision of decisionsForMonth(state)) {
@@ -256,6 +273,7 @@ export function replay(save, hooks = {}) {
       hooks.onClose?.(state.month, lastMonth);
       state = next;
       monthStart = getBars(state);
+      hooks.onMonthStart?.(state);
     }
   } catch (whatever) {
     return null;

@@ -23,6 +23,11 @@
 // progress is not a button. The report's one primary action is the ghost run, on screen without
 // scrolling.
 //
+// Ideas are collected by a tick at month close: the check ticks every month's card but month
+// 2's, and the count beside it must go up by one as it does. Month 2's is then ticked from the
+// collection, which must count it. A collected idea opens its long version, which comes back to
+// the collection.
+//
 // node --experimental-websocket scripts/check-game-fit.mjs [--phone] [--sizes=1440x900,900x600]
 // (Node 22 and later need no flag.) Chrome: CHROME, or the usual install path.
 
@@ -183,6 +188,14 @@ try {
         else if (m.name === "callback") await advance(3600);
         else if (m.name === "close") {
           month += 1;
+          // The month's card, ticked: the count beside it goes up by one, and the button says so
+          if (month !== 2) {
+            const tick = await act(`const t = document.querySelector(".concept-tick"); if (!t) return null; const before = document.querySelector(".concept-count")?.textContent; t.click(); return { before, after: document.querySelector(".concept-count")?.textContent, pressed: t.getAttribute("aria-pressed"), inView: t.getBoundingClientRect().bottom <= innerHeight }`);
+            if (tick) {
+              const n = (s) => Number(s?.split(" ")[0]);
+              if (tick.pressed !== "true" || n(tick.after) !== n(tick.before) + 1) problems.push(`close month ${month}: the tick did not collect its card (${tick.before} to ${tick.after})`);
+            }
+          }
           await act(`document.querySelector(".close-button").click(); return 1`);
           walkDue = true;
           await advance(300);
@@ -230,6 +243,26 @@ try {
             if (ideas.sideways > 0) problems.push(`ideas: scrolls sideways by ${ideas.sideways}px`);
             if (w < 900 && ideas.progress) problems.push("ideas: shows the chapter's progress strip");
             seen.set("ideas", ideas);
+            // Month 2's card, left unticked at its close, waits here with its tick
+            const waiting = await act(`const t = document.querySelector('.ideas [data-month="2"] .concept-tick'); if (!t) return null; const before = document.querySelector(".ideas-title").textContent; t.click(); return before`);
+            if (waiting === null) problems.push("ideas: the card left unticked has no tick in the collection");
+            else {
+              await advance(300);
+              const after = await act(`return [document.querySelector(".ideas-title").textContent, !!document.querySelector('.ideas [data-month="2"] .idea-open')]`);
+              if (Number(after[0].split(" ")[0]) !== Number(waiting.split(" ")[0]) + 1 || !after[1]) problems.push(`ideas: ticking the waiting card did not collect it (${waiting} to ${after[0]})`);
+            }
+            // A collected idea opens its long version, and Close comes back to the collection
+            await act(`document.querySelector(".ideas .idea-open").click(); return 1`);
+            await advance(400);
+            const long = await measure();
+            if (long.name !== "idea") problems.push(`ideas: a collected idea opened ${long.name}`);
+            if (long.sideways > 0) problems.push(`idea: scrolls sideways by ${long.sideways}px`);
+            const paragraphs = await act(`return document.querySelectorAll(".idea-long-body p").length`);
+            if (paragraphs < 3) problems.push(`idea: ${paragraphs} paragraphs`);
+            seen.set("idea", long);
+            await act(`document.querySelector(".idea-long .icon-button").click(); return 1`);
+            await advance(300);
+            if ((await measure()).name !== "ideas") problems.push("idea: Close does not go back to the ideas");
             await act(`document.querySelector(".ideas-chapter").click(); return 1`);
             await advance(300);
             const again = await measure();

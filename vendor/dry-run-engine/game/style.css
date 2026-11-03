@@ -1063,6 +1063,51 @@ html, body {
   .concept-head { gap: 6px; letter-spacing: 0.03em; }
 }
 
+/* The tick that collects a card (ruled 3 November 2026): a ring with its check, and the word.
+   Ticked, it fills in the card's deep, the check draws itself, the card gives a small lift and
+   the count beside the label takes the new figure. A second card, where a month has one,
+   comes in from the side once the first is ticked */
+.concept-title-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-top: 10px; }
+.concept-title-row .concept-title { margin-top: 4px; }
+.concept-tick {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 6px 14px 6px 9px;
+  background: var(--ink);
+  border: 2px solid var(--deep-raised);
+  border-radius: 999px;
+  color: var(--deep-raised);
+  font-family: var(--body);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.concept-tick:focus-visible { outline: 2px solid var(--bone); outline-offset: 2px; }
+.concept-tick-mark { flex: 0 0 22px; width: 22px; height: 22px; }
+.concept-tick-mark path { stroke-dasharray: 15; stroke-dashoffset: 0; opacity: 0.35; }
+.concept-tick[aria-pressed="true"] { background: var(--deep-raised); color: var(--ink); cursor: default; }
+.concept-tick[aria-pressed="true"] .concept-tick-mark path { opacity: 1; animation: tick-draw 320ms cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+@keyframes tick-draw { from { stroke-dashoffset: 15; } }
+.concept.is-collected { animation: concept-collect 420ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes concept-collect { 40% { transform: translateY(-4px) scale(1.015); } }
+.concept.is-collected .concept-count { color: var(--deep-raised); font-weight: 800; animation: count-take 520ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes count-take { 30% { transform: scale(1.25); } }
+.concept.is-leaving { animation: concept-leave 260ms ease-in forwards; }
+@keyframes concept-leave { to { opacity: 0; transform: translateX(-28px); } }
+.concept.is-arriving { animation: concept-arrive 360ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards; }
+@keyframes concept-arrive { from { opacity: 0; transform: translateX(28px); } }
+@media (prefers-reduced-motion: reduce) {
+  .concept.is-collected, .concept.is-collected .concept-count, .concept.is-arriving,
+  .concept-tick[aria-pressed="true"] .concept-tick-mark path { animation: none; }
+}
+@media (max-width: 380px) {
+  .concept-tick { gap: 5px; padding: 4px 11px 4px 7px; font-size: 14px; }
+  .concept-tick-mark { flex-basis: 20px; width: 20px; height: 20px; }
+}
+
 /* ---------- The ideas ---------- */
 
 /* Every concept card of the chapter, in order (UI.md rule 10). A collected one is month close's
@@ -1098,6 +1143,55 @@ html, body {
   padding: 16px 20px;
   border: 1px dashed var(--rule);
   border-radius: 12px;
+}
+/* A collected card is one button onto its long version, with a chevron at the head's right */
+.idea-open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.idea-open:focus-visible { outline: 2px solid var(--bone); outline-offset: 6px; border-radius: 8px; }
+.idea-more { flex: 0 0 10px; width: 10px; height: 16px; margin-left: auto; color: var(--deep-raised); }
+.ideas-list .concept.idea:has(.idea-open:hover) { border-color: var(--deep); }
+/* One whose month closed but which was never ticked: its tick is here instead */
+.idea.waiting { border-style: dashed; }
+
+/* A collected idea's long version: its month, its title, then its paragraphs on the card's
+   ground, the first a little larger, as a lede */
+.idea-long { padding: 0 var(--gutter) 48px; }
+.idea-long-title {
+  margin: 6px 0 0;
+  font-family: var(--display);
+  font-size: 30px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--bone);
+}
+.idea-long-body {
+  margin-top: 22px;
+  padding: 24px 22px;
+  background: var(--concept-ground);
+  border: 2px solid var(--deep-raised);
+  border-radius: 18px;
+  animation: concept-arrive 360ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+.idea-long-body p { margin: 0; font-size: 17px; line-height: 1.55; color: var(--bone); }
+.idea-long-body p + p { margin-top: 14px; }
+.idea-long-body p:first-child { font-family: var(--display); font-size: 20px; font-weight: 600; line-height: 1.35; }
+@media (max-width: 380px) {
+  .idea-long-title { font-size: 26px; }
+  .idea-long-body { padding: 20px 18px; }
+  .idea-long-body p { font-size: 16px; }
+  .idea-long-body p:first-child { font-size: 18px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .idea-long-body { animation: none; }
 }
 
 /* ---------- Chapter report ---------- */

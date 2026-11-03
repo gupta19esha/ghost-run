@@ -39,7 +39,7 @@ export function chapterCard(state, save, chapter = 1) {
   const best = months.reduce((a, b) => (b.change > a.change ? b : a));
   const worst = months.reduce((a, b) => (b.change < a.change ? b : a));
   const choices = save.choices.filter((id) => getDecision(id.split("-")[0]).chapter === chapter).length;
-  const ideas = ideasSoFar(months[months.length - 1].month, chapter);
+  const ideas = ideasSoFar(months[months.length - 1].month, chapter, save.ticked ?? null);
   return {
     chapter: { number: formatCount(chapter), title: first.chapter_title },
     ages: { from: start.age, to: state.age },

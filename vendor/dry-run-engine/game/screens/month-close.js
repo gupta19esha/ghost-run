@@ -6,11 +6,16 @@
 // goes there.
 //
 // Under the bars, the concept card, when the month carries one (sheet v24): "You learned
-// something", the concept's title and its body, the product owner's copy. It unlocks because
+// something", the concept's title and its body, the product owner's copy. It comes because
 // the month happened, whatever was chosen. Four months carry none, deliberately. The
 // artboard draws its lock and label in marigold; they are slate here, because marigold is
-// money only. At the head's right, the ideas collected with this one, "3 of 20 ideas" (UI.md
+// money only. At the head's right, the ideas collected so far, "3 of 20 ideas" (UI.md
 // rule 10): a count, not a link, because the close is on its way to Home, which opens them.
+//
+// The card is collected by ticking it (ruled 3 November 2026): its tick is the one thing that
+// records it, and the count goes up as it is ticked. A month with more than one card shows them
+// one at a time, the next arriving once the one before is ticked. Close does not wait for a
+// tick; a card left unticked waits in the collection, where it can be ticked later.
 //
 // At the month 1 close only, the one screen that shows all four together says what each one
 // measures, a line under each (ruled 30 September 2026, UI.md rule 8). The bars then stack,
@@ -25,6 +30,11 @@ import { hookBlock } from "./hook.js";
 
 const CLOSED = "closed";
 const LEARNED = "You learned something";
+// The card's tick, before and after
+const COLLECT = "Collect";
+const COLLECTED = "Collected";
+// How long a ticked card holds before the next one comes in
+const NEXT_CARD_MS = 650;
 const CLOSE = "Close";
 const COUNT_MS = 1200;
 const LONG_MONEY = 10;
@@ -35,8 +45,39 @@ const BARS = [
   ["life", "Life"],
 ];
 
-// design/MonthClose.html's card: the lock, the label, the title, the body
-function conceptCard({ title, body }, ideas) {
+// The tick that collects a card: a check in a ring, and its word. Shared with the collection
+export function tickButton(onTick) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "concept-tick";
+  button.setAttribute("aria-pressed", "false");
+  const ring = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  ring.setAttribute("class", "concept-tick-mark");
+  ring.setAttribute("viewBox", "0 0 24 24");
+  ring.setAttribute("aria-hidden", "true");
+  ring.innerHTML = `<circle cx="12" cy="12" r="10.5" fill="none" stroke="currentColor" stroke-width="2"/><path d="M7 12.5l3.2 3.2L17 9" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`;
+  const word = document.createElement("span");
+  word.textContent = COLLECT;
+  button.append(ring, word);
+  button.addEventListener("click", () => {
+    if (button.getAttribute("aria-pressed") === "true") return;
+    button.setAttribute("aria-pressed", "true");
+    word.textContent = COLLECTED;
+    onTick();
+  });
+  return button;
+}
+
+// The title with the tick beside it, so the tick costs the card no height
+export function titleRow(name, tick) {
+  const row = document.createElement("div");
+  row.className = "concept-title-row";
+  row.append(name, tick);
+  return row;
+}
+
+// design/MonthClose.html's card: the lock, the label, the title with its tick, the body
+function conceptCard({ title, body }, ideas, onTick) {
   const card = document.createElement("div");
   card.className = "concept";
   const head = document.createElement("div");
@@ -62,8 +103,35 @@ function conceptCard({ title, body }, ideas) {
   const text = document.createElement("p");
   text.className = "concept-body";
   text.textContent = body;
-  card.append(head, name, text);
+  card.append(head, onTick ? titleRow(name, tickButton(() => onTick(card))) : name, text);
   return card;
+}
+
+// The month's cards, one at a time. concepts: [{ month, title, body }]. ideas: the count before
+// any is ticked. onTick(month): records it, and returns the count with it
+function conceptQueue(concepts, ideas, onTick) {
+  const slot = document.createElement("div");
+  slot.className = "concept-slot";
+  const show = (index) => {
+    const concept = concepts[index];
+    const card = conceptCard(concept, ideas, (shown) => {
+      ideas = onTick(concept.month);
+      const count = shown.querySelector(".concept-count");
+      if (count) count.textContent = ideas;
+      shown.classList.add("is-collected");
+      if (index + 1 >= concepts.length) return;
+      const next = () => show(index + 1);
+      if (reducedMotion()) next();
+      else setTimeout(() => {
+        shown.classList.add("is-leaving");
+        shown.addEventListener("animationend", next, { once: true });
+      }, NEXT_CARD_MS);
+    });
+    if (index > 0) card.classList.add("is-arriving");
+    slot.replaceChildren(card);
+  };
+  show(0);
+  return slot;
 }
 
 function explained(text) {
@@ -76,11 +144,12 @@ function explained(text) {
 const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // month: the month just closed. compared: compareBars from the engine. safetyDanger: the
-// engine's safetyInDanger at the month's end. hook: next month's line, or null. concept:
-// { title, body } from the engine's conceptForMonth, or null. ideas: the count collected with
-// it, in words, or null. money: text/'s formatter.
+// engine's safetyInDanger at the month's end. hook: next month's line, or null. concepts: the
+// month's cards, [{ month, title, body }] from the engine's conceptForMonth, none for most of
+// the four months without. ideas: the count collected so far, in words, or null. onTick(month):
+// collects that card, and returns the count with it. money: text/'s formatter.
 // explanations: each one's line, keyed as compared is, at the month 1 close; otherwise null.
-export function monthCloseScreen({ month, compared, safetyDanger, hook, concept, ideas = null, explanations = null, money, onClose }) {
+export function monthCloseScreen({ month, compared, safetyDanger, hook, concepts = [], ideas = null, onTick, explanations = null, money, onClose }) {
   const screen = document.createElement("section");
   screen.className = explanations ? "screen month-close explaining" : "screen month-close";
   screen.dataset.screen = "close";
@@ -151,7 +220,7 @@ export function monthCloseScreen({ month, compared, safetyDanger, hook, concept,
   foot.append(action);
 
   screen.append(head, bars);
-  if (concept) screen.append(conceptCard(concept, ideas));
+  if (concepts.length > 0) screen.append(conceptQueue(concepts, ideas, onTick));
   screen.append(grow, foot);
 
   // Net worth counts from where the month started to where it ended, and the bars move

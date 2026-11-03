@@ -177,7 +177,8 @@
   .month-close .chip-large { margin-top: 18px; font-size: 16px; padding: 6px 13px; }
   .month-close .close-head .close-explained { max-width: 34ch; font-size: 15px; }
   .month-close > .close-bars { display: none; }
-  .month-close > .concept { grid-row: 2; margin-top: 0; }
+  .month-close > .concept-slot { grid-row: 2; }
+  .month-close .concept { margin-top: 0; }
   .month-close > .close-foot { grid-row: 3; padding: 28px 0 0; }
   .month-close .hook-line { font-size: 22px; }
   .month-close .close-button { height: 56px; }
@@ -215,6 +216,7 @@
     .home-foot { padding-top: 16px; padding-bottom: 16px; }
   }
 
+  .idea-long { width: min(100%, 680px); margin: 0 auto; padding-top: 24px; }
   .how,
   .ideas,
 
