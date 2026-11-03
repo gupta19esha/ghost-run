@@ -178,7 +178,11 @@ export function roadView({ stops, money, open = null, card, onCard = null, onIde
       const opening = detail.hidden;
       for (const other of toggles) other(false);
       toggle(opening);
-      if (opening) item.scrollIntoView({ block: "nearest", inline: "nearest" });
+      if (!opening) return;
+      // In Home's frame on a phone, the month opens from its top, so it never shows as a slice
+      const frame = item.closest(".home-road");
+      if (frame && frame.scrollHeight > frame.clientHeight) frame.scrollTop += item.getBoundingClientRect().top - frame.getBoundingClientRect().top;
+      else item.scrollIntoView({ block: "nearest", inline: "nearest" });
     });
     toggles.push(toggle);
 

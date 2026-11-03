@@ -183,6 +183,9 @@ export function homeScreen({ onHowItWorks, ideas, onIdeas, chapter, bars, labels
   const way = document.createElement("div");
   way.className = "home-road";
   way.append(road.road);
+  // Locked, on a phone, the reason to come back stands on the road at the month that is waiting,
+  // beside the character, so the foot under the road is short (style.css hides one of the two)
+  if (locked && hook) road.at(null)?.querySelector(".road-body").append(hookBlock(hook, "road-hook"));
 
   const foot = document.createElement("div");
   foot.className = "home-foot";
@@ -218,7 +221,7 @@ export function homeScreen({ onHowItWorks, ideas, onIdeas, chapter, bars, labels
   screen.start = () => {
     road.start();
     const stop = road.at(open);
-    if (stop) way.scrollTop += stop.getBoundingClientRect().top - way.getBoundingClientRect().top - (way.clientHeight - stop.offsetHeight) / 2;
+    if (stop) way.scrollTop += stop.getBoundingClientRect().top - way.getBoundingClientRect().top - Math.max(0, (way.clientHeight - stop.offsetHeight) / 2);
     if (stop) road.road.scrollLeft += stop.getBoundingClientRect().left - road.road.getBoundingClientRect().left - (road.road.clientWidth - stop.offsetWidth) / 2;
     if (walkFrom !== null) road.walk(walkFrom, screen, () => {});
   };

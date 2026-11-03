@@ -262,7 +262,7 @@ try {
           ideas: document.querySelectorAll("button.road-idea").length,
           sideways,
           closeInView: inView(document.querySelector(".timeline .icon-button, .home-foot .action")),
-          across: getComputedStyle(road).display === "flex",
+          across: ["flex", "grid"].includes(getComputedStyle(road).display),
           oneRowBand: new Set(stops.map((s) => Math.round(s.querySelector(".road-track").getBoundingClientRect().top))).size,
           rail: !!document.querySelector(".rail") && getComputedStyle(document.querySelector(".rail")).display !== "none",
           tooSmallRows: [...document.querySelectorAll(".road-row, button.road-idea")].filter((b) => b.getBoundingClientRect().height < 44).length,
