@@ -3,7 +3,12 @@
 // shapes, from the game's own stylesheets. Everything shown is computed here, in the browser,
 // by the engine in vendor/ through runner/, agent/ and verify/. No model is called.
 //
+// Before them, once per visitor, an opening that says what this is (#about). It shows on the demo
+// life only, the first time its first step would, and the first step links back to it. Whether it
+// has shown is kept in localStorage; with no storage it shows on every first visit, nothing worse.
+//
 // Five steps, one screen each, as the game is one screen at a time. By the address:
+//   #about                         The opening: what this is, and one button to begin
 //   #run                           1. Your run: the finished life, the chart, the bars
 //   #choose                        2. Choose a moment: the two ranked lists, or every month
 //   #fork/<index>/<option>         3. The split: the ghost line drawing itself from the split
@@ -121,6 +126,48 @@ function muteButton() {
 // Steps already seen play no motion on a return: the ghost line is simply there
 const seen = new Set();
 
+// ---------- The opening ----------
+
+const INTRO_KEY = "ghost-run:intro-seen";
+function introSeen() {
+  try {
+    return localStorage.getItem(INTRO_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+function recordIntroSeen() {
+  try {
+    localStorage.setItem(INTRO_KEY, "1");
+  } catch {
+    // No storage: the opening shows again next time, which costs a tap
+  }
+}
+
+// What this is, in four lines, and one button. The cards arrive one after another, as the game's do
+function introStep() {
+  recordIntroSeen();
+  const lede = h("p", { class: "intro-lede" }, "A demo player's two years, already played, so you can try the ghost run without playing twenty-four months first.");
+  const lines = [
+    "Pick any decision they made.",
+    "The game replays those two years with the other choice, on the same seed: the same market, the same crash, the same layoff. Only that one choice is different, and if it takes a later choice off the table, the page tells you.",
+    "So whatever changes is the choice, not luck.",
+  ].map((text) => h("li", { class: "intro-line" }, text));
+  const card = h("ol", { class: "card intro-card" }, lines);
+  const screen = h("section", { class: "screen ghost-screen step intro", "data-screen": "intro" },
+    h("header", { class: "step-top" }, h("a", { class: "brand", href: "/" }, ghostMark(20), "Ghost Run")),
+    h("h1", { class: "ghost-title intro-title" }, "This is a finished life."),
+    lede,
+    card,
+    h("nav", { class: "dock", "aria-label": "Begin" }, h("div", { class: "dock-inner" },
+      h("button", { type: "button", class: "action dock-next intro-begin", onclick: () => go("#run") }, "Begin ›"))));
+  const play = () => {
+    arrive(lede, { delay: 80 });
+    lines.forEach((line, i) => arrive(line, { delay: 220 + i * 140 }));
+  };
+  return { screen, play };
+}
+
 // ---------- 1. Your run ----------
 
 function runStep() {
@@ -136,6 +183,8 @@ function runStep() {
     mine
       ? h("h1", { class: "ghost-title" }, "Two years. You are 24.")
       : h("h1", { class: "ghost-first" }, "A demo player's two years, finished and loaded, so you can fork a life without playing twenty-four months first."),
+    // The way back to the opening
+    mine ? null : h("button", { type: "button", class: "intro-again", onclick: () => go("#about") }, "What is this?"),
     ticks,
     h("div", { class: "ghost-worth" },
       h("p", { class: "month-label" }, "Net worth"),
@@ -479,9 +528,11 @@ function tallyLine() {
 let current = null;
 let chooseScroll = 0;
 function route() {
-  const hash = location.hash || "#run";
+  // The first arrival at the demo life opens on what this is, once per visitor
+  const first = !location.hash || location.hash === "#run";
+  const hash = location.hash === "#about" || (first && !mine && !introSeen()) ? "#about" : location.hash || "#run";
   const fork = hash.match(/^#fork\/(\d+)\/([A-Z0-9]+-[A-Z])(?:\/(end|story))?$/);
-  const key = fork ? fork[0] : hash === "#choose" ? "#choose" : "#run";
+  const key = fork ? fork[0] : hash === "#choose" ? "#choose" : hash === "#about" && !mine ? "#about" : "#run";
   if (current?.key === "#choose") chooseScroll = window.scrollY;
   current?.cleanup?.();
   stopAll();
@@ -491,7 +542,7 @@ function route() {
       const [index, option] = [Number(fork[1]), fork[2]];
       next = fork[3] === "end" ? endStep(index, option) : fork[3] === "story" ? storyStep(index, option) : splitStep(index, option);
     } else {
-      next = key === "#choose" ? chooseStep() : runStep();
+      next = key === "#choose" ? chooseStep() : key === "#about" ? introStep() : runStep();
     }
   } catch (error) {
     next = { screen: step(2, { back: { label: "Choose", to: "#choose" }, hint: "" },

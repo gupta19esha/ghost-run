@@ -471,3 +471,51 @@ input, select, textarea { font-size: max(16px, 1em); }
 @media (prefers-reduced-motion: reduce) {
   .list-wait .ghost-mark, .narration-wait .ghost-mark { animation: none; }
 }
+
+/* ---------- The opening (#about) ---------- */
+
+/* What this is: the title, a line under it, and the three lines that follow in one card, ruled
+   between, the way the game's cards are. One button in the dock */
+.intro-title { margin-top: 28px; }
+.intro-lede { margin: 12px 0 0; font-family: var(--display); font-size: 20px; font-weight: 600; line-height: 1.35; color: var(--bone); }
+.intro-card { margin: 22px 0 0; padding: 4px 20px; list-style: none; }
+.intro-line { padding: 16px 0; font-size: 17px; line-height: 1.5; color: var(--bone-dim); }
+.intro-line + .intro-line { border-top: 1px solid var(--rule); }
+.intro-line:last-child { font-family: var(--display); font-size: 19px; font-weight: 700; color: var(--bone); }
+.dock .action.intro-begin { flex: 1; }
+/* The way back to it, under the first step's line: a link in the deep */
+.intro-again {
+  display: inline-block;
+  align-self: flex-start;
+  margin: 2px 0 0;
+  padding: 8px 0;
+  background: none;
+  border: 0;
+  color: var(--deep-raised);
+  font-family: var(--body);
+  font-size: 15px;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.intro-again:focus-visible { outline: 3px solid var(--deep-raised); outline-offset: 2px; border-radius: 6px; }
+@media (max-width: 340px) {
+  .intro-title { margin-top: 18px; }
+  .intro-lede { font-size: 18px; }
+  .intro-card { padding: 2px 16px; }
+  .intro-line { padding: 12px 0; font-size: 16px; }
+  .intro-line:last-child { font-size: 18px; }
+}
+@media (max-height: 700px) {
+  .intro-title { margin-top: 14px; }
+  .intro-card { margin-top: 16px; }
+  .intro-line { padding: 12px 0; }
+}
+@media (max-height: 600px) {
+  .intro-title { margin-top: 10px; font-size: 26px; }
+  .intro-lede { margin-top: 8px; font-size: 16px; line-height: 1.3; }
+  .intro-card { margin-top: 12px; padding: 0 14px; }
+  .intro-line { padding: 9px 0; font-size: 14px; line-height: 1.4; }
+  .intro-line:last-child { font-size: 16px; }
+}

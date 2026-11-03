@@ -191,9 +191,26 @@ try {
     if (landing.sideways > 0) say(size, "landing", `scrolls sideways by ${landing.sideways}px`);
     await shot(`landing-${size}`);
 
-    // ---------- The ghost's first line, on the demo life, then a player's own run ----------
+    // ---------- The ghost's opening, once per visitor, then its first line, then a player's own run ----------
     await go(`${ORIGIN}/ghost/`, 800);
-    await until(`document.querySelector(".step .dock")`, "The ghost's first step");
+    await until(`document.querySelector(".step .dock")`, "The ghost's opening");
+    await wait(1200);
+    const intro = await js(`${reachableBox}
+      const s = document.querySelector("#app > section");
+      const lines = [...document.querySelectorAll(".intro-line")];
+      const last = lines.at(-1)?.getBoundingClientRect();
+      return { screen: s.dataset.screen, title: document.querySelector("h1")?.textContent, lines: lines.length, buttons: document.querySelectorAll(".intro .dock button").length, begin: inView(document.querySelector(".intro-begin")), over: last ? last.bottom - document.querySelector(".dock").getBoundingClientRect().top : null, sideways, stored: localStorage.getItem("ghost-run:intro-seen") };`);
+    if (intro.screen !== "intro") say(size, "ghost", `a first visit opened "${intro.screen}", not the opening`);
+    else {
+      if (intro.title !== "This is a finished life." || intro.lines !== 3) say(size, "ghost opening", `says "${intro.title}" with ${intro.lines} lines`);
+      if (intro.buttons !== 1 || !intro.begin) say(size, "ghost opening", `${intro.buttons} buttons, Begin ${intro.begin ? "" : "not "}on screen`);
+      if (intro.over > 0.5) say(size, "ghost opening", `its last line ends ${intro.over}px under the dock`);
+      if (intro.sideways > 0) say(size, "ghost opening", `scrolls sideways by ${intro.sideways}px`);
+      if (intro.stored !== "1") say(size, "ghost opening", "is not remembered as seen");
+      await shot(`ghost-intro-${size}`);
+      await js(`document.querySelector(".intro-begin").click(); return 1`);
+    }
+    await until(`document.querySelector('[data-screen="step-1"]')`, "The ghost's first step");
     await wait(1400);
     const first = await js(`${reachableBox}
       const h1 = document.querySelector("h1");
@@ -206,6 +223,13 @@ try {
     if (first.lineTop < 0) say(size, "ghost", "its first line starts above the screen");
     if (first.sideways > 0) say(size, "ghost", `scrolls sideways by ${first.sideways}px`);
     await shot(`ghost-first-${size}`);
+    // The first step leads back to the opening, and a second visit goes straight to the first step
+    await js(`document.querySelector(".intro-again").click(); return 1`);
+    await wait(500);
+    if ((await js(`return document.querySelector("#app > section").dataset.screen`)) !== "intro") say(size, "ghost", "What is this? does not lead back to the opening");
+    await go(`${ORIGIN}/ghost/`, 800);
+    await until(`document.querySelector(".step .dock")`, "The ghost on a second visit");
+    if ((await js(`return document.querySelector("#app > section").dataset.screen`)) !== "step-1") say(size, "ghost", "a second visit shows the opening again");
 
     // A life that is not the demo's: another seed, so the narrator could not take it
     await go(`${ORIGIN}/web/index.html`, 200);
