@@ -126,7 +126,7 @@ field, the button, the month card, then D01.
 | Bullet 2: money is not the only score | **Rewrite or replace** | It names three bars without saying what they are, and promises a score the game never shows. It is where option 1A or 2 could live |
 | Bullet 3: no real money, nothing to buy | Keep, or move | It reassures and it is a legal point (Online Gaming Act, SEBI). It could sit with the disclaimer at the foot |
 | Name field | **Cut** | Nothing in the game reads it (`game/screens/landing.js`). It adds a decision before the first real one, and it is personal data the DPDP notice would have to cover, for nothing |
-| "Begin at 22" button | Keep | Clear, one tap |
+| "Begin at 22" button | Keep | Clear, one tap. Changed on 3 November 2026 to "Start at month 1", the words the site's landing page uses for the same button |
 | Disclaimer line | Keep | Required: educational, not investment advice (HANDOFF section 3) |
 | Month card | Keep, and consider adding one line | Two seconds of orientation: month, age, salary. It is also the natural place for the shape of the session, the part the player now learns only at "Come back tomorrow" |
 | D01 as the first decision | **Consider swapping** | It opens on a tax declaration and the EPF, the most jargon-heavy decision of the month, explained only at the month's close. D02, choosing a flat, is concrete and immediate. Their order is content, the product owner's to rule on |

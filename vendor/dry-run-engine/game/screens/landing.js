@@ -30,7 +30,7 @@ export const POINTS = [
   "No real money. Nothing to buy. It is a simulation",
 ];
 
-const BUTTON = "Begin at 22";
+const BUTTON = "Start at month 1";
 const DISCLAIMER = "Educational simulation. Not investment advice.";
 
 // The mark: 24 ticks round a circle, one for each month of Chapter 1, the first 9 in
