@@ -24,9 +24,9 @@
 // Top right, the streak: days in a row with a month closed. Hidden while it is 0, so a new
 // or broken streak shows nothing rather than a zero.
 //
-// Under them, the ideas collected so far, "12 of 20 ideas", the product owner's words (UI.md
-// rule 10, ruled 31 October 2026). It opens the collection, so it is marigold, like the other
-// links. It sits beside the chapter's two lines, so it costs Home no height.
+// The ideas collected so far, "12 of 20 ideas", the product owner's words (UI.md rule 10, ruled
+// 31 October 2026), are a button beside the main one at the foot, where a thumb reaches
+// (screens/ideas-pill.js, ruled 3 November 2026). It opens the collection.
 //
 // Reopened partway through a month, Home comes first (ruled 28 September 2026,
 // FIRST-SESSION.md): the month's stop on the road stands open on the choices already made, each
@@ -35,6 +35,7 @@
 
 import { direction, arrow } from "./moves.js";
 import { hookBlock } from "./hook.js";
+import { ideasPill } from "./ideas-pill.js";
 
 const CHAPTER = "Chapter";
 const NET_WORTH = "Net worth";
@@ -113,12 +114,7 @@ export function homeScreen({ onHowItWorks, ideas, onIdeas, chapter, bars, labels
   row.className = "home-corner-row";
   row.append(how);
   if (streak > 0) row.append(streakChip(streak));
-  const collected = document.createElement("button");
-  collected.type = "button";
-  collected.className = "home-how home-ideas";
-  collected.textContent = ideas;
-  collected.addEventListener("click", onIdeas);
-  corner.append(row, collected);
+  corner.append(row);
   top.append(corner);
 
   const worth = document.createElement("div");
@@ -199,7 +195,11 @@ export function homeScreen({ onHowItWorks, ideas, onIdeas, chapter, bars, labels
   // the month that is waiting (design/HomeLocked.html)
   play.disabled = locked;
   play.textContent = locked ? LOCKED : continuing ? CONTINUE : PLAY;
-  foot.append(play);
+  // The ideas beside the main button, both in a thumb's reach
+  const actions = document.createElement("div");
+  actions.className = "foot-actions";
+  actions.append(ideasPill(ideas, onIdeas, "home-ideas"), play);
+  foot.append(actions);
   if (locked) {
     const note = document.createElement("p");
     note.className = "home-waiting";

@@ -440,7 +440,6 @@ html, body {
    chapter's two lines, so Home is no taller */
 .home-corner { display: flex; flex-direction: column; align-items: flex-end; flex-shrink: 0; }
 .home-corner-row { display: flex; align-items: center; gap: 12px; }
-.home-corner .home-ideas { padding: 0; line-height: 18px; font-variant-numeric: tabular-nums; }
 .home-corner .streak { padding-top: 5px; padding-bottom: 5px; }
 .home-how {
   padding: 8px 0;
@@ -1244,7 +1243,6 @@ html, body {
 }
 .report-concepts { margin-top: 32px; padding: 20px; border-color: var(--deep); }
 .report-concepts .concept-body { margin-top: 10px; }
-.report-concepts .report-ideas { display: block; margin-top: 14px; font-variant-numeric: tabular-nums; }
 .report-next { margin-top: 36px; }
 .report-next-line {
   margin: 8px 0 0;
@@ -1726,4 +1724,157 @@ body.progressed { --strip: 26px; }
 @media (max-width: 899px) {
   .is-played + .is-ahead .road-track { background: linear-gradient(180deg, var(--deep-raised), var(--deep) 70%); }
   .is-played + .is-ahead .road-way { background: linear-gradient(180deg, var(--paper-side), var(--deep-raised) 70%); }
+}
+
+/* ---------- The ideas as a button (screens/ideas-pill.js, ruled 3 November 2026) ---------- */
+
+/* A pill with a button's edge: the card's ground, the deep's border, thicker underneath so it
+   reads as something to press, and two stacked cards beside the count. On Home and the report
+   it sits beside the main button; ticked into, it takes the new count with a pulse */
+.ideas-pill {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  min-height: 44px;
+  padding: 6px 12px 6px 9px;
+  background: var(--concept-ground);
+  border: 2px solid var(--deep-raised);
+  border-bottom-width: 4px;
+  border-radius: 14px;
+  color: var(--deep-raised);
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.15;
+  font-variant-numeric: tabular-nums;
+  text-align: left;
+  cursor: pointer;
+}
+.ideas-pill:hover { border-color: var(--deep); color: var(--deep); }
+.ideas-pill:active { transform: translateY(2px); border-bottom-width: 2px; }
+.ideas-pill:focus-visible { outline: 2px solid var(--bone); outline-offset: 2px; }
+.ideas-pill-mark { flex: 0 0 22px; width: 22px; height: 22px; }
+.ideas-pill.is-taking { animation: pill-take 560ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+@keyframes pill-take {
+  30% { transform: scale(1.14); box-shadow: 0 0 0 7px color-mix(in srgb, var(--deep-raised) 22%, transparent); }
+}
+.ideas-pill.is-hinting { animation: pill-ring 1300ms ease-out 3; }
+@keyframes pill-ring {
+  0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--deep-raised) 45%, transparent); }
+  70%, 100% { box-shadow: 0 0 0 12px color-mix(in srgb, var(--deep-raised) 0%, transparent); }
+}
+
+/* Beside the main button: the button takes the rest of the row. The count wraps to two lines,
+   "12 of 20" over "ideas", so the button keeps its words on one */
+.foot-actions { display: flex; align-items: stretch; gap: 10px; }
+.foot-actions > .action { flex: 1 1 auto; min-width: 0; margin: 0; }
+.foot-actions .ideas-pill-count { max-width: 4.3em; }
+
+/* At month close, beside the month's name, smaller: the count a card flies into */
+.close-label-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.close-ideas-place { position: relative; }
+.close-ideas { min-height: 34px; padding: 3px 10px 3px 7px; border-bottom-width: 3px; font-size: 13px; }
+.close-ideas .ideas-pill-mark { flex-basis: 18px; width: 18px; height: 18px; }
+/* Its tap reaches a thumb's size beyond its edge */
+.close-ideas { position: relative; }
+.close-ideas::after { content: ""; position: absolute; inset: -6px -4px; }
+
+/* The line under the count, the first three times: the deep's ground, an arrow up at the count */
+.ideas-hint {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 5;
+  width: max-content;
+  max-width: min(240px, calc(100vw - 2 * var(--gutter)));
+  padding: 10px 14px;
+  background: var(--deep-raised);
+  border-radius: 12px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.35;
+  letter-spacing: normal;
+  text-align: left;
+  text-transform: none;
+  box-shadow: 0 6px 18px color-mix(in srgb, var(--deep) 25%, transparent);
+  animation: hint-in 340ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+.ideas-hint::before {
+  content: "";
+  position: absolute;
+  top: -6px;
+  right: calc(var(--to-pill, 40px) - 7px);
+  width: 14px;
+  height: 14px;
+  background: inherit;
+  border-radius: 2px;
+  transform: rotate(45deg);
+}
+@keyframes hint-in { from { opacity: 0; transform: translateY(-6px); } }
+
+/* Read more, at the card's head's right: plain words in the deep, and a chevron */
+.concept-more {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: -10px 0 -10px auto;
+  padding: 10px 0 10px 10px;
+  background: none;
+  border: 0;
+  color: var(--deep-raised);
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: normal;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+.concept-more svg { flex: 0 0 8px; width: 8px; height: 13px; }
+.concept-more:hover { color: var(--deep); }
+.concept-more:focus-visible { outline: 2px solid var(--bone); outline-offset: 2px; border-radius: 4px; }
+
+/* The copy of a ticked card on its way into the count */
+.concept-flying {
+  position: fixed;
+  z-index: 40;
+  box-sizing: border-box;
+  margin: 0;
+  pointer-events: none;
+  transform-origin: center;
+}
+
+/* Over month close, in place: a long version or the collection, risen from below. Close puts the
+   close back where it was */
+.close-sheet {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  background: var(--ink);
+  animation: sheet-up 320ms cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+}
+.close-sheet > .screen { min-height: 100%; }
+@keyframes sheet-up { from { opacity: 0; transform: translateY(28px); } }
+body.sheet-open { overflow: hidden; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ideas-pill.is-taking, .ideas-pill.is-hinting, .ideas-hint, .close-sheet { animation: none; }
+}
+/* On the narrowest phones the count beside the main button gives up its mark, so the button's
+   words stay on one line */
+@media (max-width: 380px) {
+  .foot-actions { gap: 8px; }
+  .foot-actions .ideas-pill { gap: 0; padding: 6px 10px; }
+  .foot-actions .ideas-pill-mark { display: none; }
+  .foot-actions > .action { padding-left: 10px; padding-right: 10px; font-size: 19px; }
+}
+@media (max-width: 380px) {
+  /* A longer label, such as the locked day's "Come back tomorrow", takes two lines inside its
+     button rather than running out of it */
+  .foot-actions > .action { height: auto; min-height: 46px; padding-top: 6px; padding-bottom: 6px; line-height: 1.15; }
+  .home.locked .foot-actions > .action { font-size: 17px; }
 }

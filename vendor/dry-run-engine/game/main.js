@@ -42,9 +42,12 @@ import { DEFAULT_CHARACTER } from "./character.js";
 import {
   newSave, readSave, writeSave, dropSave, setAsideSave, replay, waitsForTomorrow, recordClose, currentStreak, chapterDays,
   explainedAlready, recordExplained, jumpSave, introSeen, recordIntroSeen, chapterOpened, recordChapterOpened, recordTicked,
+  ideaHintsLeft, recordIdeaHint,
 } from "./save.js";
 import { installTestingTools } from "./testing.js";
 import { BALANCED_CHOICES } from "./balanced-path.js";
+// The site's sounds, the ghost run's, shared: synthesized, soft, and off when the player muted them
+import { sound } from "/web/sound.js";
 
 const app = document.getElementById("app");
 document.title = PRODUCT_NAME;
@@ -313,6 +316,16 @@ function closeMonth(closed, monthEnd) {
       writeSave(save);
       return ideasOf(chapterPlace(month)?.chapter ?? 1, closed).count;
     },
+    // Read more: the card's long version, over the close
+    longIdea: (month, close) => ideaScreen({ month, idea: longIdea(month, save), onClose: close }),
+    // The count: the collection, over the close, as it stands with this month closed
+    collection: (close, swap) => collectionOver(closed, close, swap, () => screen),
+    sounds: { collect: sound.confirm, count: sound.rise },
+    hintsLeft: () => ideaHintsLeft(save),
+    onHint: () => {
+      recordIdeaHint(save);
+      writeSave(save);
+    },
     // The month 1 close says what all four measure (ruled 30 September 2026)
     explanations: closed === 1 ? BAR_LINES : null,
     money: formatMoney,
@@ -337,6 +350,30 @@ function closeMonth(closed, monthEnd) {
     screen.querySelector(".concept-tick")?.click();
     screen.querySelector(".close-button").click();
   }
+}
+
+// The collection over month close (its count's button), counting the month being closed. A card
+// opens its long version in its place, whose Close comes back to the collection; a card ticked
+// here is ticked on the close too
+function collectionOver(closed, close, swap, closeScreen) {
+  const chapter = chapterPlace(closed)?.chapter ?? 1;
+  const again = (at = null) => {
+    const section = ideasScreen({
+      chapter: { number: formatCount(chapter), name: null },
+      ideas: ideasOf(chapter, closed),
+      at,
+      onClose: close,
+      onOpen: (month) => swap(ideaScreen({ month, idea: longIdea(month, save), onClose: () => swap(again(month)) })),
+      onTick: (month) => {
+        recordTicked(save, month);
+        writeSave(save);
+        closeScreen().collected?.(month, ideasOf(chapter, closed).count);
+        swap(again(month));
+      },
+    });
+    return section;
+  };
+  return again();
 }
 
 // The words after the change beside net worth in the rail on Home, as Home has them

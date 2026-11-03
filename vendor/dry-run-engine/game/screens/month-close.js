@@ -9,13 +9,18 @@
 // something", the concept's title and its body, the product owner's copy. It comes because
 // the month happened, whatever was chosen. Four months carry none, deliberately. The
 // artboard draws its lock and label in marigold; they are slate here, because marigold is
-// money only. At the head's right, the ideas collected so far, "3 of 20 ideas" (UI.md
-// rule 10): a count, not a link, because the close is on its way to Home, which opens them.
+// money only. At the head's right, "Read more": the card's long version (game/concepts-long.js),
+// which opens over the close, in place; its Close comes back to the close where it was. The card
+// itself keeps its short text, so it stays a card.
 //
 // The card is collected by ticking it (ruled 3 November 2026): its tick is the one thing that
-// records it, and the count goes up as it is ticked. A month with more than one card shows them
-// one at a time, the next arriving once the one before is ticked. Close does not wait for a
-// tick; a card left unticked waits in the collection, where it can be ticked later.
+// records it. The ideas collected so far, "3 of 20 ideas", are a button beside the month's name
+// (screens/ideas-pill.js) that opens the collection over the close, in place too. Ticked, the
+// card flies up into it, and the count ticks over with a pulse, to the game's two sounds for
+// a choice and a figure rising. The first three times, a line under the count says the full idea
+// is in there. Under reduced motion nothing flies and no line shows. A month with more than one
+// card shows them one at a time, the next arriving once the one before is ticked. Close does not
+// wait for a tick; a card left unticked waits in the collection, where it can be ticked later.
 //
 // At the month 1 close only, the one screen that shows all four together says what each one
 // measures, a line under each (ruled 30 September 2026, UI.md rule 8). The bars then stack,
@@ -27,6 +32,7 @@
 
 import { direction, arrow } from "./moves.js";
 import { hookBlock } from "./hook.js";
+import { ideasPill } from "./ideas-pill.js";
 
 const CLOSED = "closed";
 const LEARNED = "You learned something";
@@ -35,6 +41,13 @@ const COLLECT = "Collect";
 const COLLECTED = "Collected";
 // How long a ticked card holds before the next one comes in
 const NEXT_CARD_MS = 650;
+// The card's way into its long version
+const READ_MORE = "Read more";
+// The line under the count, the first three times a card is collected
+const HINT = "Each idea is in here, in full.";
+// The card's flight into the count, and how long the line under it stays
+const FLY_MS = 520;
+const HINT_MS = 4200;
 const CLOSE = "Close";
 const COUNT_MS = 1200;
 const LONG_MONEY = 10;
@@ -76,8 +89,23 @@ export function titleRow(name, tick) {
   return row;
 }
 
-// design/MonthClose.html's card: the lock, the label, the title with its tick, the body
-function conceptCard({ title, body }, ideas, onTick) {
+function readMoreButton(onRead) {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "concept-more";
+  const word = document.createElement("span");
+  word.textContent = READ_MORE;
+  const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+  svg.setAttribute("viewBox", "0 0 10 16");
+  svg.setAttribute("aria-hidden", "true");
+  svg.innerHTML = `<path d="M2 2l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>`;
+  button.append(word, svg);
+  button.addEventListener("click", onRead);
+  return button;
+}
+
+// design/MonthClose.html's card: the lock, the label, Read more, the title with its tick, the body
+function conceptCard({ title, body }, onRead, onTick) {
   const card = document.createElement("div");
   card.className = "concept";
   const head = document.createElement("div");
@@ -91,12 +119,7 @@ function conceptCard({ title, body }, ideas, onTick) {
   const label = document.createElement("span");
   label.textContent = LEARNED;
   head.append(lock, label);
-  if (ideas) {
-    const count = document.createElement("span");
-    count.className = "concept-count";
-    count.textContent = ideas;
-    head.append(count);
-  }
+  if (onRead) head.append(readMoreButton(onRead));
   const name = document.createElement("div");
   name.className = "concept-title";
   name.textContent = title;
@@ -107,17 +130,48 @@ function conceptCard({ title, body }, ideas, onTick) {
   return card;
 }
 
-// The month's cards, one at a time. concepts: [{ month, title, body }]. ideas: the count before
-// any is ticked. onTick(month): records it, and returns the count with it
-function conceptQueue(concepts, ideas, onTick) {
+// A copy of the card flies up into the count, shrinking as it goes, then done() runs
+function fly(card, target, done) {
+  if (reducedMotion() || !target) {
+    done();
+    return;
+  }
+  const from = card.getBoundingClientRect();
+  const to = target.getBoundingClientRect();
+  const copy = card.cloneNode(true);
+  copy.classList.add("concept-flying");
+  copy.setAttribute("aria-hidden", "true");
+  Object.assign(copy.style, { left: `${from.left}px`, top: `${from.top}px`, width: `${from.width}px`, height: `${from.height}px` });
+  document.body.append(copy);
+  const dx = to.left + to.width / 2 - (from.left + from.width / 2);
+  const dy = to.top + to.height / 2 - (from.top + from.height / 2);
+  const scale = Math.max(0.08, to.height / from.height);
+  // It lands on time whatever the frames do: a hidden tab or a headless browser can hold them back
+  let landed = false;
+  const land = () => {
+    if (landed) return;
+    landed = true;
+    copy.remove();
+    done();
+  };
+  setTimeout(land, FLY_MS + 40);
+  copy.animate([
+    { transform: "translate(0, 0) scale(1)", opacity: 1 },
+    { transform: `translate(${dx}px, ${dy}px) scale(${scale})`, opacity: 0.7 },
+  ], { duration: FLY_MS, easing: "cubic-bezier(0.55, 0, 0.25, 1)" }).finished.then(land, land);
+}
+
+// The month's cards, one at a time. concepts: [{ month, title, body }]. onRead(month): opens that
+// card's long version. onTick(month): records it, and returns the count with it. flyTo(): the
+// count it flies into. collected(count): the card has reached the count, which takes it
+function conceptQueue(concepts, { onRead, onTick, flyTo, collected }) {
   const slot = document.createElement("div");
   slot.className = "concept-slot";
   const show = (index) => {
     const concept = concepts[index];
-    const card = conceptCard(concept, ideas, (shown) => {
-      ideas = onTick(concept.month);
-      const count = shown.querySelector(".concept-count");
-      if (count) count.textContent = ideas;
+    const card = conceptCard(concept, onRead ? () => onRead(concept.month) : null, (shown) => {
+      const count = onTick(concept.month);
+      fly(shown, flyTo(), () => collected(count));
       shown.classList.add("is-collected");
       if (index + 1 >= concepts.length) return;
       const next = () => show(index + 1);
@@ -149,7 +203,14 @@ const reducedMotion = () => matchMedia("(prefers-reduced-motion: reduce)").match
 // the four months without. ideas: the count collected so far, in words, or null. onTick(month):
 // collects that card, and returns the count with it. money: text/'s formatter.
 // explanations: each one's line, keyed as compared is, at the month 1 close; otherwise null.
-export function monthCloseScreen({ month, compared, safetyDanger, hook, concepts = [], ideas = null, onTick, explanations = null, money, onClose }) {
+// longIdea(month, close): the section to show for a card's long version, its Close calling
+// close. collection(close, swap): the collection's section, which can swap(section) itself for
+// another, such as a long version. sounds: { collect, count }, the game's sounds, or none.
+// hintsLeft(): whether the line under the count still shows; onHint(): it has shown once more
+export function monthCloseScreen({
+  month, compared, safetyDanger, hook, concepts = [], ideas = null, onTick, explanations = null, money, onClose,
+  longIdea = null, collection = null, sounds = {}, hintsLeft = () => false, onHint = () => {},
+}) {
   const screen = document.createElement("section");
   screen.className = explanations ? "screen month-close explaining" : "screen month-close";
   screen.dataset.screen = "close";
@@ -159,12 +220,24 @@ export function monthCloseScreen({ month, compared, safetyDanger, hook, concepts
   const label = document.createElement("div");
   label.className = "month-label";
   label.textContent = `Month ${month} ${CLOSED}`;
+  // The month's name, and beside it the ideas collected, which opens them over the close
+  const pill = ideas === null ? null : ideasPill(ideas, () => openSheet(collection), "close-ideas");
+  const labelRow = document.createElement("div");
+  labelRow.className = "close-label-row";
+  labelRow.append(label);
+  // The count, and room under it for the line that points at it
+  const pillPlace = document.createElement("div");
+  pillPlace.className = "close-ideas-place";
+  if (pill) {
+    pillPlace.append(pill);
+    labelRow.append(pillPlace);
+  }
   const worth = document.createElement("div");
   worth.className = "net-worth money";
   worth.textContent = money(compared.netWorth.before);
   // A negative in lakhs is too wide for the big size: it takes a size that fits on one line
   if (Math.max(money(compared.netWorth.before).length, money(compared.netWorth.after).length) >= LONG_MONEY) worth.classList.add("is-long");
-  head.append(label, worth);
+  head.append(labelRow, worth);
 
   const dir = direction(compared.netWorth.change);
   if (dir !== "flat") {
@@ -220,7 +293,84 @@ export function monthCloseScreen({ month, compared, safetyDanger, hook, concepts
   foot.append(action);
 
   screen.append(head, bars);
-  if (concepts.length > 0) screen.append(conceptQueue(concepts, ideas, onTick));
+  if (concepts.length > 0) {
+    screen.append(conceptQueue(concepts, {
+      onRead: longIdea ? (cardMonth) => openSheet((close) => longIdea(cardMonth, close)) : null,
+      onTick: (cardMonth) => {
+        sounds.collect?.();
+        return onTick(cardMonth);
+      },
+      flyTo: () => pill,
+      collected: (count) => {
+        if (!pill) return;
+        pill.setCount(count);
+        sounds.count?.();
+        if (!reducedMotion() && hintsLeft()) {
+          onHint();
+          showHint();
+        }
+      },
+    }));
+  }
+
+  // The line under the count, pointing up at it, with the count ringed; gone after a while or at
+  // the next tap anywhere
+  function showHint() {
+    const hint = document.createElement("div");
+    hint.className = "ideas-hint";
+    hint.setAttribute("role", "status");
+    hint.textContent = HINT;
+    hint.style.setProperty("--to-pill", `${pill.offsetWidth / 2}px`);
+    pillPlace.append(hint);
+    pill.classList.add("is-hinting");
+    let timer = null;
+    const gone = () => {
+      clearTimeout(timer);
+      hint.remove();
+      pill.classList.remove("is-hinting");
+      document.removeEventListener("pointerdown", gone, true);
+    };
+    timer = setTimeout(gone, HINT_MS);
+    document.addEventListener("pointerdown", gone, true);
+  }
+
+  // Over the close, in place: a long version or the collection. Its Close comes back to the close
+  // where it was, with focus where it had been
+  function openSheet(build) {
+    if (!build) return;
+    const opener = document.activeElement;
+    const sheet = document.createElement("div");
+    sheet.className = "close-sheet";
+    sheet.setAttribute("role", "dialog");
+    sheet.setAttribute("aria-modal", "true");
+    const escape = (event) => {
+      if (event.key === "Escape") close();
+    };
+    const close = () => {
+      document.removeEventListener("keydown", escape);
+      document.body.classList.remove("sheet-open");
+      sheet.remove();
+      opener?.focus?.();
+    };
+    const swap = (section) => {
+      sheet.replaceChildren(section);
+      sheet.scrollTop = 0;
+      section.querySelector(".icon-button")?.focus();
+    };
+    document.addEventListener("keydown", escape);
+    document.body.classList.add("sheet-open");
+    screen.append(sheet);
+    swap(build(close, swap));
+  }
+  // The collection ticked a card this close is showing: the close takes the tick and the count
+  screen.collected = (cardMonth, count) => {
+    if (!concepts.some((c) => c.month === cardMonth)) {
+      pill?.setCount(count);
+      return;
+    }
+    const tick = screen.querySelector(".concept-slot .concept-tick");
+    if (tick && tick.getAttribute("aria-pressed") !== "true") tick.click();
+  };
   screen.append(grow, foot);
 
   // Net worth counts from where the month started to where it ended, and the bars move

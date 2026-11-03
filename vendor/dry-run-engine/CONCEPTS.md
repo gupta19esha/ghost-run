@@ -65,6 +65,13 @@ with more than one card shows them one at a time, each ticked before the next co
 does not wait for the tick; a card left unticked waits in the collection with its tick there.
 A save from before this keeps every card its closed months gave it.
 
+At month close the card keeps its short text and its tick, with Read more at its head, which
+opens the long version over the close; its Close comes back to the close where it was. Ticked,
+the card flies up into the ideas count beside the month's name, which takes the new figure with
+a pulse and the site's sounds. On the first three collections only, a line under the count says
+each idea is in there, in full (`ideaHints` in the save); never under reduced motion. The count is
+a button on month close, Home and the chapter report, beside the main button on the last two.
+
 Each collected card opens a long version, three or four short paragraphs, in
 `game/concepts-long.js`. They are written by hand, not by a model: the concepts are fixed and
 the same for every player. They follow the rules below except the length, explain the board and

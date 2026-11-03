@@ -4,7 +4,8 @@
 // the order it was made, how many months they have closed, the day they last closed one, the
 // streak of days in a row that ended on, which bars have had their line shown, the day the
 // run began, the day each chapter closed, which chapters' start screens have been seen, and
-// which months' ideas the player has ticked at month close (ticked). Resuming replays those choices through the
+// which months' ideas the player has ticked at month close (ticked), and how many times the line
+// pointing at the ideas has shown after a tick (ideaHints, three at most). Resuming replays those choices through the
 // engine, so the run is the same run (UI.md build rule 4) and the save stays small.
 //
 // The daily gate (UI.md, ruled 31 October 2026): the first FIRST_SITTING_MONTHS months play in
@@ -46,7 +47,7 @@ function yesterday() {
 export function newSave({ seed }) {
   return {
     version: VERSION, seed, choices: [], closed: 0, closedOn: null, streak: 0, explained: [],
-    startedOn: today(), chapterClosedOn: {}, chaptersOpened: [], character: DEFAULT_CHARACTER, ticked: [],
+    startedOn: today(), chapterClosedOn: {}, chaptersOpened: [], character: DEFAULT_CHARACTER, ticked: [], ideaHints: 0,
   };
 }
 
@@ -64,8 +65,16 @@ export function upgrade(save) {
   return {
     closed: 0, closedOn: null, streak: 0, explained: [], startedOn: null, chapterClosedOn: {}, chaptersOpened: [], character: DEFAULT_CHARACTER,
     ticked: conceptMonthsTo(save.closed ?? 0),
+    ideaHints: 0,
     ...save,
   };
+}
+
+// The line under the ideas after a tick shows on the first three collections, then never again
+export const IDEA_HINTS = 3;
+export const ideaHintsLeft = (save) => (save.ideaHints ?? 0) < IDEA_HINTS;
+export function recordIdeaHint(save) {
+  save.ideaHints = (save.ideaHints ?? 0) + 1;
 }
 
 // A month's idea, ticked: that is what collects it (ruled 3 November 2026)

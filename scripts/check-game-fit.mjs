@@ -24,9 +24,12 @@
 // scrolling.
 //
 // Ideas are collected by a tick at month close: the check ticks every month's card but month
-// 2's, and the count beside it must go up by one as it does. Month 2's is then ticked from the
-// collection, which must count it. A collected idea opens its long version, which comes back to
-// the collection.
+// 2's, and the count beside the month's name must go up by one once the card has flown into it.
+// The line pointing at the count shows on the first three collections and never after, and the
+// save keeps that count. Month 2's card is then ticked from the collection, which must count it.
+// A collected idea opens its long version, which comes back to the collection. At the first close,
+// Read more opens the card's long version over the close and its Close comes back to the close
+// untouched, and the count opens the collection over the close.
 //
 // node --experimental-websocket scripts/check-game-fit.mjs [--phone] [--sizes=1440x900,900x600]
 // (Node 22 and later need no flag.) Chrome: CHROME, or the usual install path.
@@ -154,6 +157,7 @@ try {
       const seen = new Map();
       let sideTrips = false;
       let walkTapped = false;
+      let collections = 0;
       let walkDue = false;
       let starts = 0;
       let month = 0;
@@ -188,12 +192,36 @@ try {
         else if (m.name === "callback") await advance(3600);
         else if (m.name === "close") {
           month += 1;
-          // The month's card, ticked: the count beside it goes up by one, and the button says so
+          // At the first close: Read more over the close and back, then the count's collection
+          if (month === 1) {
+            const opened = await act(`const b = document.querySelector(".concept-more"); if (!b) return null; b.click(); return true`);
+            await advance(400);
+            const sheet = await act(`return { title: document.querySelector(".close-sheet .idea-long-title")?.textContent ?? null, paragraphs: document.querySelectorAll(".close-sheet .idea-long-body p").length, sideways: document.documentElement.scrollWidth - innerWidth }`);
+            if (!opened || !sheet.title || sheet.paragraphs < 3) problems.push(`close month 1: Read more did not open the long version (${JSON.stringify(sheet)})`);
+            if (sheet.sideways > 0) problems.push(`close month 1, read more: scrolls sideways by ${sheet.sideways}px`);
+            await act(`document.querySelector(".close-sheet .icon-button")?.click(); return 1`);
+            await advance(300);
+            const back = await act(`return { sheet: !!document.querySelector(".close-sheet"), screen: document.querySelector("#app > section").dataset.screen, tick: document.querySelector(".concept-tick")?.getAttribute("aria-pressed") }`);
+            if (back.sheet || back.screen !== "close" || back.tick !== "false") problems.push(`close month 1: Read more's Close came back to ${JSON.stringify(back)}`);
+            await act(`document.querySelector(".close-ideas").click(); return 1`);
+            await advance(400);
+            const list = await act(`return document.querySelector(".close-sheet .ideas-title")?.textContent ?? null`);
+            if (!list) problems.push("close month 1: the count does not open the collection");
+            await act(`document.querySelector(".close-sheet .icon-button")?.click(); return 1`);
+            await advance(300);
+          }
+          // The month's card, ticked: it flies into the count, which goes up by one, and the first
+          // three times a line points at the count
           if (month !== 2) {
-            const tick = await act(`const t = document.querySelector(".concept-tick"); if (!t) return null; const before = document.querySelector(".concept-count")?.textContent; t.click(); return { before, after: document.querySelector(".concept-count")?.textContent, pressed: t.getAttribute("aria-pressed"), inView: t.getBoundingClientRect().bottom <= innerHeight }`);
+            const tick = await act(`const t = document.querySelector(".concept-tick"); if (!t) return null; const before = document.querySelector(".close-ideas")?.textContent; t.click(); return { before, pressed: t.getAttribute("aria-pressed") }`);
             if (tick) {
+              collections += 1;
+              await advance(900);
+              const after = await act(`return { count: document.querySelector(".close-ideas")?.textContent, hint: !!document.querySelector(".ideas-hint"), hints: JSON.parse(Object.values(localStorage).find((v) => v.includes('"ideaHints"')) ?? "{}").ideaHints }`);
               const n = (s) => Number(s?.split(" ")[0]);
-              if (tick.pressed !== "true" || n(tick.after) !== n(tick.before) + 1) problems.push(`close month ${month}: the tick did not collect its card (${tick.before} to ${tick.after})`);
+              if (tick.pressed !== "true" || n(after.count) !== n(tick.before) + 1) problems.push(`close month ${month}: the tick did not collect its card (${tick.before} to ${after.count})`);
+              if (after.hint !== collections <= 3) problems.push(`close month ${month}: collection ${collections} ${after.hint ? "shows" : "does not show"} the line at the count`);
+              if (after.hints !== Math.min(collections, 3)) problems.push(`close month ${month}: the save counts ${after.hints} lines shown after ${collections} collections`);
             }
           }
           await act(`document.querySelector(".close-button").click(); return 1`);
