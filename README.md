@@ -13,7 +13,7 @@ Ghost Run is a money game set in India: you play the first two years of a workin
 | Ranking | Forks a save at every choice and orders the forks by how surprising they are | `agent/rank.js` |
 | Ghost flow | The five steps at `/ghost/`: the run, choose a moment, the split, where it ended, what happened | `web/ghost.js` |
 | Daylight theme | The game's visual direction, laid over its original look | `web/daylight.css` |
-| The road | The timeline as a road with a stop for each month, walked by a character the player picks. It opens each chapter, and the ghost's road branches off it at the split | `vendor/dry-run-engine/game/screens/timeline.js`, `web/ui.js` |
+| The road | The timeline as a road with a stop for each month, walked by a character the player picks. It opens each chapter, it is Home between months, and the ghost's road branches off it at the split | `vendor/dry-run-engine/game/screens/timeline.js`, `web/ui.js` |
 | Landing page | What this is, a month to try, the chapters, a ghost run | `web/index.html` |
 | Certificate | The chapter card, drawn in the browser from the save | `vendor/dry-run-engine/game/certificate.js` |
 | Ideas collection | The chapter's twenty concept cards, collected as they are earned | `vendor/dry-run-engine/game/ideas.js` |
@@ -28,7 +28,7 @@ Only chapter one is playable. Chapters two to six are named on the landing page 
 The repository's first commit, on October 29, is that code as it stood, so `git diff b6e2e30 HEAD -- vendor/` shows every change since:
 
 - **The simulation:** no change to how it calculates. `engine/` gained 38 lines, mostly read-only helpers that report a chapter's months and concept cards, and a test. `text/` is unchanged. The sheet of decisions is unchanged.
-- **The game UI:** changed a lot. `game/` has 28 files changed and about 3,100 lines added. Those are the road, the certificate, the ideas, the desktop layout and the rest of the table above that lives in `vendor/`.
+- **The game UI:** changed a lot. `game/` has 29 files changed and about 3,200 lines added. Those are the road, the certificate, the ideas, the desktop layout and the rest of the table above that lives in `vendor/`.
 
 ## How the AI works
 
