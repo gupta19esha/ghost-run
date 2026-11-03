@@ -1,0 +1,19 @@
+{
+  "provider": "meta",
+  "model": "muse-spark-1.3",
+  "attempt": 1,
+  "request": "2630b1e76c4d4dde510d72f1113da66813ff86dcc64d68768c6bbb7fb4938f3c",
+  "narration": "In month {fork_month} you chose {real_choice} and the ghost took {ghost_choice}, but the two lives stayed the same until month {first_divergent_month}.\nThe ghost's Life ended {life_gap}, and it was a little further from only getting by.\nBy month {end_month}, the ghost had {net_worth_gap}.",
+  "usage": {
+    "completion_tokens": 321,
+    "prompt_tokens": 3637,
+    "total_tokens": 3958,
+    "completion_tokens_details": {
+      "reasoning_tokens": 242
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 2417
+    }
+  },
+  "at": "2026-11-02T20:25:13.335Z"
+}

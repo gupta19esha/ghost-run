@@ -1,0 +1,19 @@
+{
+  "provider": "meta",
+  "model": "muse-spark-1.3",
+  "attempt": 1,
+  "request": "415b3a85c57cf80eb7d9048207db3e65294e7d824fb3a3e9ae6cd7062a51658d",
+  "narration": "For {identical_months} months you and the ghost were the same life, and in month {fork_month} you chose {real_choice} while the ghost took {ghost_choice}. The money was furthest apart in month {widest_gap_month}, when the ghost had {widest_gap}. The ghost's Safety ended {safety_gap}, and it could last longer with no pay. By month {end_month}, the ghost had {net_worth_gap}.",
+  "usage": {
+    "completion_tokens": 687,
+    "prompt_tokens": 3729,
+    "total_tokens": 4416,
+    "completion_tokens_details": {
+      "reasoning_tokens": 585
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 2417
+    }
+  },
+  "at": "2026-11-02T20:25:47.330Z"
+}

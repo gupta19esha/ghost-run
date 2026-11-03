@@ -1,0 +1,19 @@
+{
+  "provider": "meta",
+  "model": "muse-spark-1.3",
+  "attempt": 1,
+  "request": "78809b449e7b315604b253c8baa40611eb39a6b55a33f2d0e524fc2603ae76a2",
+  "narration": "In month {fork_month}, after {identical_months} months that matched, you chose {real_choice} and the ghost took {ghost_choice}. In month {crossover_month}, the lead between the two lives changed hands. The ghost's Safety ended {safety_gap}, and it could last less long with no pay. The ghost's Freedom ended {freedom_gap}, and more of its pay was committed before each month began. By month {end_month}, the ghost had {net_worth_gap}.",
+  "usage": {
+    "completion_tokens": 1056,
+    "prompt_tokens": 3811,
+    "total_tokens": 4867,
+    "completion_tokens_details": {
+      "reasoning_tokens": 944
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "at": "2026-11-02T20:25:18.851Z"
+}

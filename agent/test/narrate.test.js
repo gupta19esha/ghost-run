@@ -114,9 +114,8 @@ test("Meta's instructions are its own: the shared prompt and Claude's cached req
   assert.equal(conversation(substituted)[0].content, brief(substituted));
   assert.match(conversation(substituted, [], "meta")[0].content, /Whose score moved/);
   // D16-B: the ghost's Freedom is the lower, in the engine's own figures
-  assert.match(metaBrief(substituted), /Freedom: the ghost's ended at 10 and yours at 25.
-  assert.match(metaBrief(substituted), /The ghost's Freedom ended {freedom_gap}, and more of its pay was committed/);
-/);
+  assert.ok(metaBrief(substituted).includes("Freedom: the ghost's ended at 10 and yours at 25."));
+  assert.ok(metaBrief(substituted).includes("The ghost's Freedom ended {freedom_gap}, and more of its pay was committed"));
 });
 
 // A Meta response, shaped as Meta's chat completions return one

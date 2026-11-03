@@ -1,0 +1,19 @@
+{
+  "provider": "meta",
+  "model": "muse-spark-1.3",
+  "attempt": 1,
+  "request": "174a12dea53e2bb1d027cf666a3678fda1b9e70c389624ce5fcec3d8a2eccced",
+  "narration": "The same money, a different life. After {identical_months} months as one life, you chose {real_choice} in month {fork_month}, and the ghost took {ghost_choice}. In month {layoff_month}, at the layoff, the ghost had {layoff_net_worth_gap}. The ghost's Freedom ended {freedom_gap}, and less of its pay was committed before each month began. The ghost's Safety ended {safety_gap}, and it could last longer with no pay. By month {end_month}, the ghost had {net_worth_gap}.",
+  "usage": {
+    "completion_tokens": 873,
+    "prompt_tokens": 3813,
+    "total_tokens": 4686,
+    "completion_tokens_details": {
+      "reasoning_tokens": 746
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "at": "2026-11-02T20:25:38.935Z"
+}

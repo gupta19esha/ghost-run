@@ -1,0 +1,19 @@
+{
+  "provider": "meta",
+  "model": "muse-spark-1.3",
+  "attempt": 1,
+  "request": "5c41d1746419b4d268ba578da18a8285f47d48e37b13397458a6cf24cb5520b6",
+  "narration": "After {identical_months} months as one life, you chose {real_choice} in month {fork_month}, and the ghost took {ghost_choice}.\nIn month {layoff_month}, at the layoff, the ghost had {layoff_net_worth_gap}.\nThe ghost's Freedom ended {freedom_gap}, and more of its pay was committed before each month began.\nThe ghost's Safety ended {safety_gap}, and it could last less long with no pay.\nBy month {end_month}, the ghost had {net_worth_gap}.",
+  "usage": {
+    "completion_tokens": 720,
+    "prompt_tokens": 3773,
+    "total_tokens": 4493,
+    "completion_tokens_details": {
+      "reasoning_tokens": 600
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "at": "2026-11-02T20:25:32.119Z"
+}

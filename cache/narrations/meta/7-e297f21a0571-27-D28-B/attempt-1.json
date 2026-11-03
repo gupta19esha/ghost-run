@@ -1,0 +1,19 @@
+{
+  "provider": "meta",
+  "model": "muse-spark-1.3",
+  "attempt": 1,
+  "request": "20e7706fb7af797286ba9d2e7eeb5033deff2ef69401a4ad026658e818618e02",
+  "narration": "The two lives ran together for {identical_months} months, until month {fork_month}, when you chose {real_choice} and the ghost took {ghost_choice}.\nThe money was furthest apart in month {widest_gap_month}, when the ghost had {widest_gap}.\nThe ghost's Safety ended {safety_gap}, and it could last less long with no pay.\nThe ghost's Life ended {life_gap}, and it was a little further from only getting by.\nBy month {end_month}, the ghost had {net_worth_gap}.",
+  "usage": {
+    "completion_tokens": 826,
+    "prompt_tokens": 3746,
+    "total_tokens": 4572,
+    "completion_tokens_details": {
+      "reasoning_tokens": 706
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "at": "2026-11-02T20:25:47.022Z"
+}

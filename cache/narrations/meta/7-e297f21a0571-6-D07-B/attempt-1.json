@@ -1,0 +1,19 @@
+{
+  "provider": "meta",
+  "model": "muse-spark-1.3",
+  "attempt": 1,
+  "request": "7d5f65b5d4f1b4e25e67c5b2852f31f6f38ebff4ef25140f7b0a9a71d9d280fa",
+  "narration": "In month {fork_month}, after {identical_months} months that matched, you chose {real_choice} and the ghost took {ghost_choice}.\nIn month {crossover_month}, the lead between the two lives changed hands.\nBy month {end_month}, the ghost had {net_worth_gap}.",
+  "usage": {
+    "completion_tokens": 1355,
+    "prompt_tokens": 3669,
+    "total_tokens": 5024,
+    "completion_tokens_details": {
+      "reasoning_tokens": 1285
+    },
+    "prompt_tokens_details": {
+      "cached_tokens": 0
+    }
+  },
+  "at": "2026-11-02T20:25:11.612Z"
+}

@@ -47,9 +47,13 @@ The model is forbidden from writing a number. It writes tokens such as `{net_wor
 
 A rejected attempt's reasons go back to the model, and it tries again, up to four attempts. The browser checks every attempt again before showing it.
 
-The narrations on the live site were written by Claude Opus 5.5 (`claude-opus-5-5`), for all 64 forks of the demo life, at about $2.70 in API cost. In that final run all 64 passed on the first attempt. The retry has fired on real output in earlier runs, but not in this set. A provider for Meta's model is wired in and has never been run.
+**The shipped narrations were written by Meta's Muse Spark 1.3** (`muse-spark-1.3`, standard mode, so Meta does not train on them), for all 64 forks of the demo life, at about $0.52 in API cost. 63 passed on the first attempt and one on its second.
 
-**Where no model is involved:** the charts, figures and ranking anywhere, and the ghost run on a player's own finished chapter (the report's "Meet your ghost"). The narrator only takes the demo life, because its forks are finite and can be cached. A player's own fork gets a fixed template filled with its figures, and the page says no model wrote it.
+The model has less freedom than that may suggest. Left to itself, Spark got month numbers, grammar and whose score moved wrong. So its brief (`metaBrief` in `agent/prompt.js`) gives it the shape of each narration, sentence by sentence: a split sentence chosen to be true of that fork, which event to mention from a short list, and a fixed sentence for what each score's move means. The model chooses among those, and fits them together. The result is accurate and plain, and it repeats itself across forks.
+
+An earlier set by Claude Opus 5.5 stays in the repo as a fallback (`cache/narrations/claude/`). It reads better and was not the set we chose to ship.
+
+**Where no model is involved:** the charts, figures and ranking everywhere, and the ghost run on a player's own finished chapter (the report's "Meet your ghost"). The narrator only takes the demo life, because its forks are finite and can be cached. A player's own fork gets a fixed template filled with its figures, and the page says no model wrote it.
 
 ## The honest limit
 
@@ -57,9 +61,9 @@ The narrations on the live site were written by Claude Opus 5.5 (`claude-opus-5-
 
 - **The token rule can be got round.** It requires a token somewhere in each sentence and does not check what the rest of the sentence says. "In month {fork_month} your investment held its value" would pass.
 - **The cause rule is a list of phrases:** because, caused, led to, meant that, which is why, as a result, resulted in, due to. A cause claimed in other words passes. The prompt forbids those too, but nothing enforces it.
-- **Four false narrations got past the checker and were caught by reading.** They said things like "every rupee of any next salary claimed". Freedom reaches zero at 70% of income committed, not 100%. The fix was to give the model the score's real scale and regenerate all 64.
-- **At least one wrong sentence is still live.** D09-A says the ghost's days "read as living" at a Life score of about 38, which other narrations rightly call getting by.
-- **Style rules are not enforced.** The limits on length and figures per sentence are prompt instructions only.
+- **False statements got past the checker and were caught by reading.** Four Claude narrations said things like "every rupee of any next salary claimed", though Freedom reaches zero at 70% of income committed, not 100%. A Meta draft said "Your cushion looked thinner" when it was the ghost's Safety that fell. The verifier passed all of them.
+- **The fix for those is in the prompt, not the checker.** Every narration in the shipped set was read by hand against the engine's figures, and none of those errors was found, but that is a person's reading, not a guarantee. Regenerating would need reading again.
+- **Style rules are not enforced.** Sentence shapes and the limits on length are prompt instructions only. Ten shipped narrations are shorter than the four sentences asked for, and one is longer than the six.
 
 ## Run it locally
 
@@ -73,17 +77,17 @@ npm run dev
 Then open http://127.0.0.1:3000. This runs with no key, but narration comes from a stub that says it was written without a model. To see the real narrations, still with no key and no network, create `.env.local` containing one line:
 
 ```
-NARRATE_PROVIDER=claude
+NARRATE_PROVIDER=meta
 ```
 
 `npm test` runs every test. `scripts/check-road-fit.mjs` and `scripts/check-game-fit.mjs` check the screens at phone and desktop sizes in headless Chrome.
 
 ### How the narration cache works
 
-Every model response is committed in `cache/narrations/claude/<fork>/attempt-<n>.json`, with the model, its token usage, and a digest of the exact request it answered. The route answers from there, with no key and no network, as long as the request still matches. The live site runs this way.
+Every model response is committed in `cache/narrations/<provider>/<fork>/attempt-<n>.json`, with the model, its token usage, and a digest of the exact request it answered. The route answers from there, with no key and no network, as long as the request still matches. The live site runs this way.
 
-Paid calls happen only with `NARRATE_LIVE=1` and a key, or when you run `npm run narrate:claude` or `npm run narrate:meta`, which regenerate the cache. Changing the prompt or the model changes the request, so the old answers stop matching and every fork has to be generated again.
+Paid calls happen only with `NARRATE_LIVE=1` and a key, or when you run `npm run narrate:meta` or `npm run narrate:claude`, which regenerate the cache. Changing a provider's prompt or model changes the request, so its old answers stop matching and every fork has to be generated again.
 
-The route always answers. If the chosen provider has nothing cached for a fork, or its call fails, it falls back to Claude's committed cache, then to the template that says no model wrote it.
+The route always answers. If Meta has nothing cached for a fork, or its call fails, it falls back to Claude's committed cache, then to the template that says no model wrote it.
 
 More detail, including why chapters three to six cannot start yet, is in [docs/BUILD-NOTES.md](docs/BUILD-NOTES.md).
