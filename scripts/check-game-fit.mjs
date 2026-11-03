@@ -17,8 +17,11 @@
 // once from Home and once from the report; they scroll by design, so only their width is checked.
 // The road opening the chapter (UI.md rule 11) must come between the landing and month 1, exactly
 // once, with its button in reach while it scrolls. The chapter's name on the ideas opens the road.
-// The chapter's progress opens the road from a decision, and Close comes back to that decision. The
-// report's one primary action is the ghost run, on screen without scrolling.
+// Home is the road: one character on it, at the month that is next, and a stop on it opens. After
+// every month's close the character walks there on Home; the first walk is tapped, which must
+// finish it at once without pressing anything, and the rest must end by themselves. The chapter's
+// progress is not a button. The report's one primary action is the ghost run, on screen without
+// scrolling.
 //
 // node --experimental-websocket scripts/check-game-fit.mjs [--phone] [--sizes=1440x900,900x600]
 // (Node 22 and later need no flag.) Chrome: CHROME, or the usual install path.
@@ -128,6 +131,10 @@ try {
       id: s.querySelector(".option")?.dataset.optionId?.split("-")[0] ?? null,
       compact: s.classList.contains("compact"),
       progress: [...document.querySelectorAll(".chapter-progress")].find((p) => !p.hidden && p.getBoundingClientRect().width > 0)?.textContent ?? null,
+      progressButton: !!document.querySelector(".chapter-progress button"),
+      walking: !!s.querySelector(".road.walking"),
+      figures: s.querySelectorAll(".road-figure").length,
+      figureAt: Number(s.querySelector(".road-stop[aria-current]")?.dataset.month ?? 0),
     };`);
 
   for (const [w, h] of SIZES) {
@@ -141,8 +148,8 @@ try {
       const problems = [];
       const seen = new Map();
       let sideTrips = false;
-      let roadTrip = false;
       let walkTapped = false;
+      let walkDue = false;
       let starts = 0;
       let month = 0;
       for (let step = 0; step < 600; step++) {
@@ -156,7 +163,8 @@ try {
         if (w >= 900 && ["month", "decision", "consequence", "callback", "close", "home", "timeline", "how"].includes(m.name) && !m.rail) problems.push(`${label}: no rail`);
         const inMonth = ["month", "decision", "consequence", "callback", "close", "home"].includes(m.name);
         if (inMonth && !m.progress) problems.push(`${label}: no chapter progress`);
-        if (!inMonth && m.progress && !["timeline", "how", "walk"].includes(m.name)) problems.push(`${label}: shows the chapter progress`);
+        if (!inMonth && m.progress && !["timeline", "how"].includes(m.name)) problems.push(`${label}: shows the chapter progress`);
+        if (m.progressButton) problems.push(`${label}: the chapter's progress is a button`);
         if (m.name === "month" && month === 0 && !seen.has("start")) problems.push("month 1: no chapter start before it");
         if (!seen.has(m.name)) seen.set(m.name, m);
         const act = (expr) => run(expr);
@@ -169,57 +177,45 @@ try {
         }
         else if (m.name === "month") await advance(2100);
         else if (m.name === "decision") {
-          // Once, early: the road from the chapter's progress, and back to this same decision
-          if (!roadTrip && month >= 1) {
-            roadTrip = true;
-            const opened = await act(`const b = [...document.querySelectorAll(".chapter-progress-open")].find((e) => e.offsetParent !== null); if (!b) return false; b.click(); return true`);
-            if (!opened) problems.push("decision: the chapter's progress does not open the road");
-            else {
-              await advance(300);
-              const road = await measure();
-              if (road.name !== "timeline") problems.push(`decision: the chapter's progress opened ${road.name}`);
-              if (road.sideways > 0) problems.push(`road from a decision: scrolls sideways by ${road.sideways}px`);
-              await act(`document.querySelector(".timeline .icon-button").click(); return 1`);
-              await advance(300);
-              const back = await measure();
-              if (back.name !== "decision" || back.id !== m.id) problems.push(`road from a decision: Close came back to ${back.name} ${back.id ?? ""}`);
-            }
-          }
           await act(`const o = [...document.querySelectorAll(".option")]; o[${path === "first" ? 0 : "o.length - 1"}].click(); return 1`);
           await advance(1200);
         } else if (m.name === "consequence" || m.name === "turn") await advance(5200);
         else if (m.name === "callback") await advance(3600);
-        else if (m.name === "walk") {
-          // The character's walk to the next stop. It leaves by itself; the first is tapped, which
-          // must finish it at once
-          if (!walkTapped) {
-            walkTapped = true;
-            await act(`document.querySelector(".walking").click(); return 1`);
-            await advance(50);
-            if ((await measure()).name === "walk") problems.push("walk: a tap does not finish it");
-          } else {
-            const fig = await act(`const f = document.querySelector(".walking .road-figure"); return !!f && document.querySelectorAll(".walking .road-figure").length === 1`);
-            if (!fig) problems.push("walk: no character on the road");
-            await advance(1500);
-            if ((await measure()).name === "walk") problems.push("walk: it does not leave by itself");
-          }
-        }
         else if (m.name === "close") {
           month += 1;
           await act(`document.querySelector(".close-button").click(); return 1`);
+          walkDue = true;
           await advance(300);
         } else if (m.name === "home") {
-          // Once, early: the life so far and How it works, beside Home
+          if (m.figures !== 1) problems.push(`home after month ${month}: ${m.figures} characters on the road`);
+          if (m.figureAt !== month + 1) problems.push(`home after month ${month}: the character stands at month ${m.figureAt}`);
+          // The character's walk from the month just closed: the first is tapped, the rest end alone
+          if (walkDue) {
+            walkDue = false;
+            if (!m.walking) problems.push(`home after month ${month}: no walk`);
+            else if (!walkTapped) {
+              walkTapped = true;
+              await act(`document.querySelector(".home-foot .action").click(); return 1`);
+              await advance(50);
+              const after = await measure();
+              if (after.name !== "home") problems.push(`walk: the tap that finished it also pressed Home's button (${after.name})`);
+              else if (after.walking) problems.push("walk: a tap does not finish it");
+            } else {
+              await advance(1500);
+              if (!(await measure()).walking) problems.push("walk: over in under 1.5 seconds, too quick to see");
+              await advance(1500);
+              if ((await measure()).walking) problems.push("walk: it does not end by itself");
+            }
+            continue;
+          }
+          // Once, early: a month on the road opened, How it works and the ideas, from Home
           if (!sideTrips && month >= 2) {
             sideTrips = true;
-            await act(`document.querySelector(".home-where").click(); return 1`);
-            await advance(300);
-            const t = await measure();
-            if (t.sideways > 0) problems.push(`timeline: scrolls sideways by ${t.sideways}px`);
-            if (w >= 900 && !t.rail) problems.push("timeline: no rail");
-            seen.set("timeline", t);
-            await act(`document.querySelector(".timeline .icon-button, .timeline button").click(); return 1`);
-            await advance(300);
+            const opened = await act(`const row = document.querySelector(".home .road-stop.is-played .road-row"); row.click(); return !row.closest(".road-stop").querySelector(".timeline-detail").hidden`);
+            if (!opened) problems.push("home: a month on the road does not open");
+            const o = await measure();
+            if (o.sideways > 0) problems.push(`home, a month open: scrolls sideways by ${o.sideways}px`);
+            if (o.keyOver > 0) problems.push(`home, a month open: its button ends ${o.keyOver}px below the window`);
             await act(`document.querySelector(".home-how").click(); return 1`);
             await advance(300);
             const how = await measure();

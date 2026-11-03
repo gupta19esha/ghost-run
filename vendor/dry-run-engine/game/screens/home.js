@@ -1,5 +1,8 @@
 // Home, built to design/Home.html: the chapter, net worth and how it moved last month, the
-// three bars, where the player is in their life, and one button.
+// three bars, and one button. Between them, the chapter's road (screens/timeline.js), with the
+// player's character standing at the month that is next: Home is the road (ruled 3 November 2026).
+// Its played stops open as the timeline's do. Once a month has closed, the character walks there
+// from the month just played; a tap finishes the walk, and reduced motion leaves it out.
 //
 // Every figure is the engine's and every piece of money is text/'s. The bars are the engine's
 // values now (getBars); their colours are how they moved over the month just closed (UI.md
@@ -26,10 +29,9 @@
 // links. It sits beside the chapter's two lines, so it costs Home no height.
 //
 // Reopened partway through a month, Home comes first (ruled 28 September 2026,
-// FIRST-SESSION.md): under the bars, the choices already made this month, each with the
-// result line it showed, drawn as the progress timeline draws them. The button then continues
-// the month. The words for a continued month and for the list are the product owner's
-// (28 September 2026): "Carry on with the month" and "This month so far".
+// FIRST-SESSION.md): the month's stop on the road stands open on the choices already made, each
+// with the result line it showed. The button then continues the month, in the product owner's
+// words (28 September 2026): "Carry on with the month".
 
 import { direction, arrow } from "./moves.js";
 import { hookBlock } from "./hook.js";
@@ -39,12 +41,8 @@ const NET_WORTH = "Net worth";
 const THIS_MONTH = "this month";
 const PLAY = "Play the month";
 const HOW_IT_WORKS = "How it works";
-// Continuing a month partway through, and the heading over its choices so far: the product
-// owner's words (FIRST-SESSION.md section 5)
+// Continuing a month partway through: the product owner's words (FIRST-SESSION.md section 5)
 const CONTINUE = "Carry on with the month";
-const SO_FAR = "This month so far";
-// The way into the timeline, in marigold so it reads as the link it is (design/Home.html)
-const LIFE_SO_FAR = "your life so far";
 // The locked Home's two lines are the product owner's copy, not the sheet's
 // (design/HomeLocked.html). The month number is the engine's.
 const LOCKED = "Come back tomorrow";
@@ -79,12 +77,13 @@ function streakChip(days) {
 // chapter: { number in words, title } or null. bars: getBars now. labels: the line beside
 // each bar, or null. compared: compareBars over the month just closed. safetyDanger:
 // safetyInDanger now. money: text/'s formatter. locked: today's month is played, and the
-// button waits for tomorrow. hook: next month's line, shown only while locked. streak: days in a row, from the save. onTimeline: opens the progress timeline, from the line that
-// says where the player is. continuing: the month is partly played, and the button carries
-// it on. thisMonth: the choices made so far this month, { label, line }, oldest first.
+// button waits for tomorrow. hook: next month's line, shown only while locked. streak: days in a
+// row, from the save. month: the month that is next. continuing: the month is partly played, and the button carries it on.
 // marks: where each bar's good mark sits, 0 to 100, from the engine. onHowItWorks: opens
 // How it works. ideas: the count collected, in words (game/ideas.js). onIdeas: opens them.
-export function homeScreen({ onHowItWorks, ideas, onIdeas, chapter, bars, labels, compared, marks, safetyDanger, month, age, money, locked, hook, streak, continuing = false, thisMonth = [], onPlay, onTimeline }) {
+// road: the chapter's roadView. open: the month to show opened on it, or null. walkFrom: the
+// month just closed, for the character to walk from, or null for no walk
+export function homeScreen({ onHowItWorks, ideas, onIdeas, chapter, bars, labels, compared, marks, safetyDanger, month, money, locked, hook, streak, continuing = false, onPlay, road, open = null, walkFrom = null }) {
   const screen = document.createElement("section");
   screen.className = `screen home${continuing ? " continuing" : ""}${locked ? " locked" : ""}`;
   screen.dataset.screen = "home";
@@ -180,48 +179,16 @@ export function homeScreen({ onHowItWorks, ideas, onIdeas, chapter, bars, labels
     list.append(bar);
   }
 
-  // The month so far: the chosen card and its result line, as the timeline shows them
-  let soFar = null;
-  if (thisMonth.length > 0) {
-    soFar = document.createElement("div");
-    soFar.className = "home-this-month";
-    const heading = document.createElement("div");
-    heading.className = "month-label";
-    heading.textContent = SO_FAR;
-    soFar.append(heading);
-    for (const choice of thisMonth) {
-      const card = document.createElement("div");
-      card.className = "chosen";
-      card.textContent = choice.label;
-      soFar.append(card);
-      if (choice.line !== null) {
-        const line = document.createElement("p");
-        line.className = "timeline-line";
-        line.textContent = choice.line;
-        soFar.append(line);
-      }
-    }
-  }
-
-  const grow = document.createElement("div");
-  grow.className = "grow";
+  // The road, in a frame of its own on a phone, so it scrolls to the player while the bars stay
+  const way = document.createElement("div");
+  way.className = "home-road";
+  way.append(road.road);
 
   const foot = document.createElement("div");
   foot.className = "home-foot";
   // Locked, the reason to come back sits above everything else in the foot (UI.md): the
   // screen a returning player sees most
   if (locked && hook) foot.append(hookBlock(hook, "home-hook"));
-  // The line that says where the player is opens the life so far (UI.md step 6)
-  const where = document.createElement("button");
-  where.type = "button";
-  where.className = "home-where";
-  where.addEventListener("click", onTimeline);
-  const line = document.createElement("span");
-  const link = document.createElement("span");
-  link.className = "home-where-link";
-  link.textContent = LIFE_SO_FAR;
-  line.append(`Month ${month} · you are ${age} · `, link);
-  where.append(document.createElement("div"), line, document.createElement("div"));
   const play = document.createElement("button");
   play.type = "button";
   play.className = "action";
@@ -229,7 +196,7 @@ export function homeScreen({ onHowItWorks, ideas, onIdeas, chapter, bars, labels
   // the month that is waiting (design/HomeLocked.html)
   play.disabled = locked;
   play.textContent = locked ? LOCKED : continuing ? CONTINUE : PLAY;
-  foot.append(where, play);
+  foot.append(play);
   if (locked) {
     const note = document.createElement("p");
     note.className = "home-waiting";
@@ -246,8 +213,14 @@ export function homeScreen({ onHowItWorks, ideas, onIdeas, chapter, bars, labels
     play.addEventListener("click", onPlay, { once: true });
   }
 
-  screen.append(top, worth, list);
-  if (soFar) screen.append(soFar);
-  screen.append(grow, foot);
+  screen.append(top, worth, list, way, foot);
+  // The player's stop, or the month opened, in the middle of the road; then the walk, if any
+  screen.start = () => {
+    road.start();
+    const stop = road.at(open);
+    if (stop) way.scrollTop += stop.getBoundingClientRect().top - way.getBoundingClientRect().top - (way.clientHeight - stop.offsetHeight) / 2;
+    if (stop) road.road.scrollLeft += stop.getBoundingClientRect().left - road.road.getBoundingClientRect().left - (road.road.clientWidth - stop.offsetWidth) / 2;
+    if (walkFrom !== null) road.walk(walkFrom, screen, () => {});
+  };
   return screen;
 }

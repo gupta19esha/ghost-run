@@ -191,22 +191,31 @@
   .callback-text { max-width: 30ch; margin: 0 auto; font-size: clamp(28px, 2.4vw, 34px); text-align: center; }
   .timer-foot { width: min(100%, 520px); align-self: center; }
 
-  /* Home: net worth and the bars are the rail's. What is left sits in the middle */
+  /* Home: net worth and the bars are the rail's. The road runs across the stage, as the
+     timeline's does, with the button under it */
   .screen { min-height: calc(100dvh - var(--top)); }
   .home {
-    width: min(100%, 560px);
-    margin: 0 auto;
+    width: 100%;
+    max-width: none;
     justify-content: center;
-    padding: var(--stage-pad) 0;
+    padding: var(--stage-pad) var(--gutter);
   }
   .home > .home-worth,
-  .home > .home-bars,
-  .home > .grow { display: none; }
-  .home-top,
-  .home-foot,
-  .home-this-month { padding-left: 0; padding-right: 0; }
-  .home-foot { padding-top: 40px; }
-  .home.continuing .home-foot { position: static; }
+  .home > .home-bars { display: none; }
+  .home-top { padding: 0; }
+  .home-road { flex: none; min-height: 0; margin: 20px calc(-1 * var(--gutter)) 0; overflow: visible; border: 0; }
+  .home-road .road { margin-bottom: 0; }
+  /* The button stays in reach on a short window: the foot pins to the bottom, across the stage,
+     and the road scrolls under it */
+  .home-foot { margin: 0 calc(-1 * var(--gutter)); padding: 24px max(var(--gutter), calc(50% - 210px)) 0; }
+  /* On a short window the road's pictures and words close up, so the button fits under it */
+  @media (max-height: 800px) {
+    .home .road-row, .home .road-ahead-month { height: 160px; }
+    .home .road-thumb { flex-basis: 64px; height: 64px; }
+    .home .road-end .road-body { height: 160px; }
+    .home .road-end .certificate-card { max-height: 128px; }
+    .home-foot { padding-top: 16px; padding-bottom: 16px; }
+  }
 
   .how,
   .ideas,

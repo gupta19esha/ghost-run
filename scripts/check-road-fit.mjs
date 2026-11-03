@@ -102,8 +102,9 @@ try {
     await js(`localStorage.setItem(${JSON.stringify(SAVE_KEY)}, ${JSON.stringify(JSON.stringify(run))}); return 1`);
     await go(`${ORIGIN}/game/`, 1200);
     // Over a network the page takes its time
-    await until(`document.querySelector(".home-where, .report button")`, "Home or the report");
-    await js(`(document.querySelector(".home-where") ?? [...document.querySelectorAll(".report button")].at(-1)).click(); return 1`);
+    await until(`document.querySelector(".home-road, .report button")`, "Home or the report");
+    // Home is the road; once the chapter is over, the report opens it
+    await js(`if (!document.querySelector(".home-road")) [...document.querySelectorAll(".report button")].at(-1).click(); return 1`);
     await wait(900);
   };
   const reachableBox = `const inView = (el) => { if (!el) return false; const b = el.getBoundingClientRect(); return b.width > 0 && b.top >= 0 && b.bottom <= innerHeight + 0.5 && b.left >= 0 && b.right <= innerWidth + 0.5; };
@@ -236,7 +237,7 @@ try {
     await js(`localStorage.clear(); return 1`);
 
     // ---------- The timeline, part way, then finished ----------
-    for (const [state, through, reached] of [["partway", 10, 11], ["finished", 24, 24]]) {
+    for (const [state, through, reached, screen] of [["partway", 10, 11, "home"], ["finished", 24, 24, "timeline"]]) {
       await openRoad(through);
       const m = await js(`${reachableBox}
         const stops = [...document.querySelectorAll(".road-stop:not(.road-end)")];
@@ -260,7 +261,7 @@ try {
           barriers: document.querySelectorAll(".road-barrier").length,
           ideas: document.querySelectorAll("button.road-idea").length,
           sideways,
-          closeInView: inView(document.querySelector(".timeline .icon-button")),
+          closeInView: inView(document.querySelector(".timeline .icon-button, .home-foot .action")),
           across: getComputedStyle(road).display === "flex",
           oneRowBand: new Set(stops.map((s) => Math.round(s.querySelector(".road-track").getBoundingClientRect().top))).size,
           rail: !!document.querySelector(".rail") && getComputedStyle(document.querySelector(".rail")).display !== "none",
@@ -269,11 +270,11 @@ try {
           figureClipped: (() => { const f = document.querySelector(".road-figure")?.getBoundingClientRect(); const t = here?.querySelector(".road-track").getBoundingClientRect(); return !f || !t || f.top < t.top - 0.5 || f.bottom > t.bottom + 0.5; })(),
         };`);
       const where = `timeline ${state}`;
-      if (m.name !== "timeline") { say(size, where, `opened "${m.name}"`); continue; }
+      if (m.name !== screen) { say(size, where, `opened "${m.name}"`); continue; }
       if (m.stops !== 24) say(size, where, `${m.stops} stops`);
       if (m.figures !== 1) say(size, where, `${m.figures} figures`);
       if (m.sideways > 0) say(size, where, `scrolls sideways by ${m.sideways}px`);
-      if (!m.closeInView) say(size, where, "Close is not on screen");
+      if (!m.closeInView) say(size, where, `${screen === "home" ? "Play the month" : "Close"} is not on screen`);
       if (m.aheadWords.length) say(size, where, `says more than its month ahead: ${m.aheadWords[0]}`);
       if (m.aheadExtra) say(size, where, `${m.aheadExtra} stops ahead carry a picture, an open idea or an event`);
       if (!m.cardAtEnd) say(size, where, "no chapter card at the road's end");
@@ -326,7 +327,7 @@ try {
       await js(`document.querySelector(".ideas .icon-button").click(); return 1`);
       await wait(200);
       const back = await js(`return { name: document.querySelector(".screen")?.dataset.screen, month: document.querySelector(".road-stop.open")?.dataset.month };`);
-      if (back.name !== "timeline" || back.month !== idea.month) say(size, where, `Close from the idea came back to ${back.name}, month ${back.month}`);
+      if (back.name !== screen || back.month !== idea.month) say(size, where, `Close from the idea came back to ${back.name}, month ${back.month}`);
     }
 
     // ---------- The split: a fork early, late, last, and the one with the substitution ----------

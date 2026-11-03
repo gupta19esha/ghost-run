@@ -1,7 +1,7 @@
 // The playable Chapter 1, UI.md version 2. Step 5: save and resume, one month a day after the
 // first sitting. The session loop is the month card, each of the month's decisions with its
 // consequence, the month run by the engine, any callbacks that land, then the month close.
-// Close goes Home, and Home plays the next month: straight on for the first three months, then
+// Close goes Home, which is the chapter's road, and Home plays the next month: straight on for the first three months, then
 // once a day, with the next month offered now as well (ruled 31 October 2026). The first month
 // starts straight from the landing screen. Reopening continues where the player was
 // (game/save.js).
@@ -25,7 +25,7 @@ import { BAR_LINES } from "./screens/bar-lines.js";
 import { callbackScreen } from "./screens/callback.js";
 import { monthCloseScreen } from "./screens/month-close.js";
 import { homeScreen } from "./screens/home.js";
-import { timelineScreen } from "./screens/timeline.js";
+import { timelineScreen, roadView } from "./screens/timeline.js";
 import { howItWorksScreen } from "./screens/how-it-works.js";
 import { reportScreen } from "./screens/report.js";
 import { chapterTurnScreen } from "./screens/chapter-turn.js";
@@ -79,18 +79,10 @@ const holding = (screen) => script.stop === screen && script.play.length === 0;
 export function show(screen, view = null, progress = view?.progress ?? null) {
   rail.show(view);
   strip.set(progress);
-  // The road, from a screen that waits for the player. Close brings this same screen back
-  const toRoad = ROAD_FROM.has(screen.dataset.screen) ? () => openTimeline(() => show(screen, view, progress), view) : null;
-  strip.setOpen(toRoad);
-  rail.setOpen(toRoad);
   app.replaceChildren(screen);
   testing?.shown(screen);
   screen.start?.();
 }
-
-// The screens the chapter's progress opens the road from. The month card, the result and the
-// callback are on timers, and move on by themselves
-const ROAD_FROM = new Set(["home", "decision", "close"]);
 
 // The rail, on a desktop window: net worth and the bars, beside every screen of a month, Home,
 // the timeline and How it works (game/rail.js)
@@ -178,21 +170,9 @@ function roadOf(chapter, months) {
   };
 }
 
-// A month has closed: the character walks to the next stop on the road, then the game goes on.
-// Under reduced motion, or for a screenshot script, it simply goes on
-function walkTo(closed, view, then) {
-  if (script.active || matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    then();
-    return;
-  }
-  const chapter = chapterPlace(closed)?.chapter ?? 1;
-  show(timelineScreen({
-    ...roadOf(chapter, lifeSoFar(save) ?? []),
-    onIdea: () => {},
-    walkFrom: closed,
-    onWalked: then,
-  }), view, null);
-}
+// Whether the character walks on Home once a month has closed: not under reduced motion, nor for
+// a screenshot script
+const walks = () => !script.active && !matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 // The chapter opens on its road (UI.md rule 11), all of it ahead
 function showChapterStart(chapter, onPlay) {
@@ -333,7 +313,7 @@ function closeMonth(closed, monthEnd) {
       writeSave(save);
       // The chapter's last month: the turn of the chapter, then its card, then the report
       if (chapterComplete(state)) closeChapter();
-      else walkTo(closed, board({ compared: compareBars(monthStart, monthEnd), month: closed }), () => goHome(compareBars(monthStart, monthEnd)));
+      else goHome(compareBars(monthStart, monthEnd), false, { walkFrom: walks() ? closed : null });
     },
   });
   show(screen, board({
@@ -439,7 +419,9 @@ const optionalCount = (count) => (count === null ? null : formatCount(count));
 // sitting its button waits for tomorrow once a month has been closed today, and the line under
 // it plays the next month now (UI.md step 5, ruled 31 October 2026). A screenshot script plays
 // past it, unless the screen it is there to capture is Home itself.
-function goHome(lastMonth, continuing = false) {
+// walkFrom: the month just closed, which the character walks on from. open: a month to show
+// opened on the road, as it was when one of its ideas was opened from there
+function goHome(lastMonth, continuing = false, { walkFrom = null, open = null } = {}) {
   // Once the chapter's last month has closed, the chapter report stands where Home would
   if (chapterComplete(state)) {
     showReport();
@@ -448,12 +430,13 @@ function goHome(lastMonth, continuing = false) {
   homeLastMonth = lastMonth;
   homeContinuing = continuing;
   const locked = waitsForTomorrow(save) && !(script.active && script.stop !== "home");
-  // Partway through a month: the choices so far, with the result line each showed
-  const thisMonth = continuing ? (lifeSoFar(save)?.find((m) => m.month === state.month)?.choices ?? []) : [];
   // The chapter and its title are the sheet's, on this month's decisions. Read as if none were
   // taken yet, so a month whose decisions are all made still has its heading
   const [next] = decisionsForMonth({ ...state, decisions_taken: {} });
   const chapter = next?.chapter_title ? { number: formatCount(next.chapter), title: next.chapter_title } : null;
+  const months = lifeSoFar(save) ?? [];
+  const place = chapterPlace(state.month)?.chapter ?? 1;
+  const back = (month) => () => goHome(homeLastMonth, homeContinuing, { open: month });
   const screen = homeScreen({
     chapter,
     bars: getBars(state),
@@ -464,17 +447,22 @@ function goHome(lastMonth, continuing = false) {
     locked,
     safetyDanger: safetyInDanger(state),
     month: state.month,
-    age: state.age,
     money: formatMoney,
     streak: currentStreak(save),
     hook: nextHook(),
     ideas: ideasSoFar(save.closed).count,
     onIdeas: () => openIdeas(),
     continuing,
-    thisMonth,
     onPlay: continuing ? continueMonth : startMonth,
-    onTimeline: () => openTimeline(),
     onHowItWorks: () => openHowItWorks(),
+    // Partway through a month, its stop stands open on the choices so far
+    road: roadView({
+      ...roadOf(place, months),
+      open: open ?? (continuing ? state.month : null),
+      onIdea: (month) => openIdeas(back(month), homeBoard, month),
+    }),
+    open: open ?? (continuing ? state.month : null),
+    walkFrom,
   });
   const moved = lastMonth?.netWorth.change ?? 0;
   homeBoard = board({

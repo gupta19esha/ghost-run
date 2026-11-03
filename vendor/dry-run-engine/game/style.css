@@ -475,7 +475,8 @@ html, body {
   color: var(--bone);
 }
 
-.home-worth { padding: 34px var(--gutter) 0; }
+.home-worth { display: flex; align-items: flex-end; flex-wrap: wrap; gap: 4px 12px; padding: 20px var(--gutter) 0; }
+.home-worth .month-label { flex-basis: 100%; }
 
 .home-net-worth {
   margin-top: 4px;
@@ -485,16 +486,18 @@ html, body {
   white-space: nowrap;
 }
 
-.home-chip { margin-top: 10px; padding: 4px 9px; }
+.home-chip { margin-bottom: 4px; padding: 4px 9px; }
+/* On Home, the figure gives the road some of its height (the ghost page draws it at its own size) */
+.home .home-net-worth { font-size: min(46px, 11vw); }
 
 .home-bars {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding: 32px var(--gutter) 0;
+  gap: 12px;
+  padding: 20px var(--gutter) 0;
 }
 
-.home-bar { display: flex; flex-direction: column; gap: 7px; }
+.home-bar { display: flex; flex-direction: column; gap: 5px; }
 .home-bar-figure {
   font-size: 13px;
   color: var(--slate);
@@ -520,49 +523,31 @@ html, body {
 }
 .home-bar-fill { height: 100%; background: var(--move); }
 
-/* Reopened partway through a month: the choices made so far, as the timeline draws them */
-.home-this-month {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding: 26px var(--gutter) 0;
+/* The road (screens/timeline.js), between the bars and the button. On a phone it has a frame of
+   its own that takes what the window leaves, and scrolls to the player inside it, so the bars and
+   the button stay where they are. It never gets less than about two stops; on a phone too short
+   for that, the page scrolls and the foot stays pinned to the bottom */
+.home-road {
+  flex: 1 1 0;
+  min-height: 150px;
+  margin-top: 22px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
 }
-.home-this-month .timeline-line { margin-bottom: 0; }
-/* With the month's choices listed, Home can be taller than a small phone (by up to 222px at
-   320 by 568 with two). The foot stays pinned to the bottom so the button never leaves the
-   screen, and the choices scroll under it */
-.home.continuing .home-foot {
-  position: sticky;
-  bottom: 0;
-  background: var(--ink);
-}
+.home-road .road { margin: 0; }
 
 .home-foot {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 14px;
-  padding: 24px var(--gutter) 34px;
+  padding: 18px var(--gutter) 30px;
+  background: var(--ink);
 }
-
-.home-where {
-  width: 100%;
-  padding: 6px 0;
-  background: none;
-  border: 0;
-  font-family: var(--body);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 9px;
-  color: var(--slate);
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.06em;
-}
-.home-where div { flex-grow: 1; height: 1px; background: var(--rule); }
-.home-where-link { color: var(--marigold); }
-.home-where:hover .home-where-link { color: var(--marigold-hover); }
-.home-where:focus-visible { outline: 2px solid var(--bone); outline-offset: 2px; border-radius: 4px; }
 
 /* ---------- How it works ---------- */
 
@@ -1383,8 +1368,6 @@ html, body {
   .close-bars { margin-top: 28px; }
   .close-foot { padding-bottom: 24px; }
   .home-top { padding-top: 20px; }
-  .home-worth { padding-top: 22px; }
-  .home-bars { padding-top: 24px; gap: 14px; }
   .home-foot { padding-bottom: 20px; }
   .hook { padding-top: 14px; }
   .hook-line { font-size: 19px; margin-top: 6px; }
@@ -1536,26 +1519,6 @@ html, body {
 .chapter-progress-now { background: var(--progress); }
 .chapter-progress-now[hidden] { display: none; }
 
-/* The way onto the road: all of the progress is the button, and it reaches past the strip's thin
-   height to a thumb's, over what is under it, with the road's mark at its end */
-.chapter-progress { position: relative; }
-.chapter-progress.is-open-able { padding-right: 22px; }
-.chapter-progress-open {
-  position: absolute;
-  inset: -8px 0 -4px;
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  padding: 0;
-  background: none;
-  border: 0;
-  color: var(--bone-dim);
-  cursor: pointer;
-}
-.chapter-progress-open[hidden] { display: none; }
-.chapter-progress-open:focus-visible { outline: 2px solid var(--bone); outline-offset: -2px; border-radius: 6px; }
-.chapter-progress-road { width: 14px; height: 14px; }
-
 /* On a phone, a strip across the top, above every screen of a month and Home. It takes its
    height from the screens under it (--strip), and the top of each closes up by about as much,
    so the screen is barely taller than it was */
@@ -1571,8 +1534,6 @@ body.progressed { --strip: 26px; }
 .progressed .close-head { padding-top: 34px; }
 @media (max-height: 800px) {
   .progressed .home-top { padding-top: 10px; }
-  .progressed .home-worth { padding-top: 24px; }
-  .progressed .home-bars { padding-top: 24px; gap: 14px; }
   .progressed .close-head { padding-top: 12px; }
   .progressed .explaining .close-bars { margin-top: 16px; }
 }
@@ -1580,7 +1541,7 @@ body.progressed { --strip: 26px; }
   body.progressed { --strip: 20px; }
   .chapter-progress-strip { height: 20px; padding-top: 4px; }
   .progressed .home-top { padding-top: 6px; }
-  .progressed .home-worth { padding-top: 18px; }
+  .progressed .home-worth { padding-top: 14px; }
   .progressed .close-head { padding-top: 4px; }
   .progressed .close-bars { margin-top: 16px; }
   .progressed .explaining .close-head { padding-top: 2px; }
