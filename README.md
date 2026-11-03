@@ -6,29 +6,39 @@ Ghost Run is a money game set in India: you play the first two years of a workin
 
 ## What was built during the hackathon (October 26 to November 4)
 
-| Piece | What it does | Where |
-|---|---|---|
-| Fork runner | Replays a save, then replays it again with one choice changed. Both go through the same engine, so a fork that takes your own option is byte-identical to the real run | `runner/` |
-| Verifier and tokens | Checks a narration before anyone reads it. Every figure must be a token resolved from the fork | `verify/` |
-| Ranking | Forks a save at every choice and orders the forks by how surprising they are | `agent/rank.js` |
-| Ghost flow | The five steps at `/ghost/`: the run, choose a moment, the split, where it ended, what happened | `web/ghost.js` |
-| Daylight theme | The game's visual direction, laid over its original look | `web/daylight.css` |
-| The road | The timeline as a road with a stop for each month, walked by a character the player picks. It opens each chapter, it is Home between months, and the ghost's road branches off it at the split | `vendor/dry-run-engine/game/screens/timeline.js`, `web/ui.js` |
-| Landing page | What this is, a month to try, the chapters, a ghost run | `web/index.html` |
-| Certificate | The chapter card, drawn in the browser from the save | `vendor/dry-run-engine/game/certificate.js` |
-| Ideas collection | The chapter's twenty concept cards, collected as they are earned | `vendor/dry-run-engine/game/ideas.js` |
-| Model layer | The prompt, the retry loop, the cache and the API route | `agent/`, `api/narrate.js`, `cache/narrations/` |
+The repository's first commit, on October 29, is the simulation it is built on, as it stood (below). Everything here came after it.
+
+**The ghost run**
+
+- **Fork runner** (`runner/`). Replays a save through the engine, then replays it again with one choice changed. Both sides go through the same engine, and a test proves it: a fork that takes the player's own option is the real run, byte for byte (`runner/test/fork.test.js`). When a later choice the player made is not offered on the ghost's path, a ruled fallback picks the ghost's choice and the fork records it.
+- **Token system** (`verify/tokens.js`). 36 tokens, such as `{net_worth_gap}` and `{fork_month}`, each resolved from a fork's own figures. They are the only way a figure can enter a narration.
+- **Verifier** (`verify/verify.js`, `agent/checks.js`). Seven checks every narration attempt must pass before anyone reads it, listed under "How the AI works". The browser runs them again on every attempt before showing it.
+- **Ranking** (`agent/rank.js`). Forks a save at every choice, to every option offered there, and orders the forks by a "surprise" score built from the numbers alone: a reversal, a gap that opened at the layoff, a bar that moved while money did not, a trade between money and Safety or Freedom. Its units were measured over 2,532 forks of 40 saves (`scripts/measure-rank.mjs`, `reports/RANK-2026-10-29.md`).
+- **Meta narration layer** (`agent/`, `api/narrate.js`, `cache/narrations/`). The prompt, the retry loop and the API route. All 64 forks of the demo life were narrated by Meta's Muse Spark 1.3 and committed as a cache, which the live site serves. The route can also call a model live for the demo life, with `NARRATE_LIVE=1` and a key. The live site has neither, and makes no model calls.
+- **Ghost flow** (`web/ghost.js`). The five steps at `/ghost/`: the run, choose a moment, the split, where it ended, what happened.
+
+**The game around it**
+
+- **Daylight theme** (`web/daylight.css`). The game's visual direction, laid over its original look.
+- **The road** (`vendor/dry-run-engine/game/screens/timeline.js`, `web/ui.js`). The chapter as a road with a stop for each month. It opens the chapter, it is Home between months, and the ghost's road branches off it at the split.
+- **The character** (`vendor/dry-run-engine/game/character.js`). Picked at the chapter's opening, or left as the default. It stands on the road and walks to the next stop after each month closes, unless the player's device asks for reduced motion.
+- **Ideas collection** (`vendor/dry-run-engine/game/ideas.js`, `concepts-long.js`). The chapter's twenty concept cards, each collected by a tick at month close. Each has a long version, three or four short paragraphs written by hand. Every figure in them is held to the engine by the simulation's own stated-terms checker, extended for them (`vendor/dry-run-engine/scripts/check_stated_terms.py`, 84 figures).
+- **Certificate** (`vendor/dry-run-engine/game/certificate.js`). The chapter card, drawn in the browser from the save.
+- **Landing page** (`web/index.html`). What this is, a month to try, the chapters, a ghost run.
+- **Desktop layout** (`vendor/dry-run-engine/game/desktop.css`, `rail.js`). A side rail with net worth and the bars, and the road running across the window.
+- **Tests.** `npm test` runs 125 tests. `scripts/check-game-fit.mjs` plays the chapter in headless Chrome and checks every screen at phone and desktop sizes; `scripts/check-road-fit.mjs` checks the road, the landing and the ghost run.
 
 Only chapter one is playable. Chapters two to six are named on the landing page and locked.
 
 ## What it is built on
 
-`vendor/dry-run-engine/` is Dry Run, a finance simulation written before the hackathon. It holds the engine (the ledger, the market, the scores), 30 authored decisions with their copy, and the original game UI. **The simulator and its content are not hackathon work.**
+`vendor/dry-run-engine/` is Dry Run, a finance simulation written before the hackathon. It holds the engine (the ledger, the market, the three scores and net worth), the 30 authored decisions of chapter one with their copy, the calibration harness and its reports, and the original game UI. **The simulation, its decisions and its calibration are not hackathon work.**
 
-The repository's first commit, on October 29, is that code as it stood, so `git diff b6e2e30 HEAD -- vendor/` shows every change since:
+The first commit is that code as it stood, so `git diff b6e2e30 HEAD -- vendor/` shows every change since:
 
-- **The simulation:** no change to how it calculates. `engine/` gained 38 lines, mostly read-only helpers that report a chapter's months and concept cards, and a test. `text/` is unchanged. The sheet of decisions is unchanged.
-- **The game UI:** changed a lot. `game/` has 29 files changed and about 3,200 lines added. Those are the road, the certificate, the ideas, the desktop layout and the rest of the table above that lives in `vendor/`.
+- **The engine:** no change to how it calculates. `engine/` has 38 lines added in 3 files: read-only helpers that report a chapter's months and concept cards, and their test.
+- **The decisions and the calibration:** unchanged. `text/`, `data/`, `calibration/` and the decision sheet show no diff.
+- **The game UI:** changed a lot. `game/` has 32 files changed, about 4,200 lines added. That is the game half of the list above.
 
 ## How the AI works
 
@@ -39,7 +49,8 @@ The model is forbidden from writing a number. It writes tokens such as `{net_wor
 `verify/verify.js` and `agent/checks.js` reject an attempt that:
 
 - types a digit
-- invents a token, or uses one this fork has no value for
+- invents a token
+- uses a token this fork has no value for
 - leaves out a later choice the ghost could not take, when the fork has one
 - asserts a cause, which the engine never records: a month's change is the sum of every choice, salary, costs, returns and shocks, with no attribution to any one of them
 - has a sentence with no token in it (the one exception is the fixed opening line on a fork that ends with the same money)
@@ -53,7 +64,7 @@ The model has less freedom than that may suggest. Left to itself, Spark got mont
 
 An earlier set by Claude Opus 5.5 stays in the repo as a fallback (`cache/narrations/claude/`). It reads better and was not the set we chose to ship.
 
-**Where no model is involved:** the charts, figures and ranking everywhere, and the ghost run on a player's own finished chapter (the report's "Meet your ghost"). The narrator only takes the demo life, because its forks are finite and can be cached. A player's own fork gets a fixed template filled with its figures, and the page says no model wrote it.
+**Where no model is involved:** the charts, figures and ranking everywhere, the twenty long explanations of the ideas, and the ghost run on a player's own finished chapter (the report's "Meet your ghost"). The narrator only takes the demo life, because its forks are finite and can be cached. A player's own fork gets a fixed template filled with its figures, and the page says no model wrote it.
 
 ## The honest limit
 
