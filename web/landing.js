@@ -7,7 +7,7 @@
 //   game's ticks, chapter one's lighting in turn
 // - a ghost, drawing itself from the split month when it comes on screen
 // - the four-part progress rule at the top
-// - the chapter two sign-up, which is connected to nothing (see signup below)
+// - the chapter two sign-up, sent to Formspree (see signup below)
 //
 // Motion is web/motion.js's: a tap finishes it, and with reduced motion on everything is simply
 // there. The page makes no sound. Nothing here moves the page under the player's thumb.
@@ -209,20 +209,53 @@ function progress() {
 
 // ---------- Chapter two ----------
 
-// The chapter two sign-up is connected to nothing. There is no backend: an address typed here is
-// not sent anywhere and not stored, and the page says exactly that rather than showing a success
-// that did not happen. Connecting it needs somewhere to send the address and, before that, a line
-// on this page saying what the address is used for.
+// The chapter two sign-up: the address is posted to Formspree as JSON, and the line under the
+// field says what it is used for, to say when chapter two is ready and nothing else. The page
+// says it worked only when Formspree says so; otherwise it shows the error, Formspree's own words
+// where it gives any, and the address stays in the field to try again.
+const SIGNUP_URL = "https://formspree.io/f/xrpprpza";
+const SENDING = "Sending…";
+const SENT = "Done. We'll email you when chapter two is ready.";
+const NOT_AN_ADDRESS = "That doesn't look like an email address.";
+const NOT_SENT = "That didn't go through, so your address wasn't saved. Try again in a moment.";
+
 function signup(form) {
   const input = form.querySelector("input");
+  const button = form.querySelector("button");
   const status = form.querySelector(".lp-form-status");
-  form.addEventListener("submit", (event) => {
+  const say = (text, state = null) => {
+    status.textContent = text;
+    status.classList.toggle("is-sent", state === "sent");
+    status.classList.toggle("is-error", state === "error");
+  };
+  form.addEventListener("submit", async (event) => {
     event.preventDefault();
-    if (!input.value.trim() || !input.checkValidity()) {
-      status.textContent = "That doesn't look like an email address.";
+    const email = input.value.trim();
+    if (!email || !input.checkValidity()) {
+      say(NOT_AN_ADDRESS, "error");
       return;
     }
-    status.textContent = "Sign-up isn't connected yet, so your email wasn't sent or saved. Chapter one is ready to play now.";
+    button.disabled = true;
+    say(SENDING);
+    try {
+      const response = await fetch(SIGNUP_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Accept: "application/json" },
+        body: JSON.stringify({ email }),
+      });
+      const body = await response.json().catch(() => ({}));
+      if (response.ok && body.ok !== false) {
+        input.value = "";
+        say(SENT, "sent");
+      } else {
+        const why = Array.isArray(body.errors) ? body.errors.map((e) => e.message).filter(Boolean).join(" ") : "";
+        say(why ? `That didn't go through: ${why}` : NOT_SENT, "error");
+      }
+    } catch {
+      say(NOT_SENT, "error");
+    } finally {
+      button.disabled = false;
+    }
   });
 }
 

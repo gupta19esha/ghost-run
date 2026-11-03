@@ -37,7 +37,7 @@ any choice to see the ghost, the life you would have had with the other option.
   two-column hero, the month inside a phone frame and the chapters across the width. Its figures
   come from `web/landing-model.js`, and its written words are checked against the engine and the
   chapter plan by `web/test/landing-model.test.js`. Chapter one is open; chapters two to six say
-  Locked. The chapter two sign-up is connected to nothing yet, and says so.
+  Locked. The chapter two sign-up posts the address to Formspree, and the line under it says the address is used only to tell you when chapter two is ready.
 - `web/ghost.html` is the ghost flow, served at `/ghost/`: the finished demo life, and any choice
   in it forked in the browser and drawn against the real run, with its narration and every attempt
   at it checked by `verify()`. Five steps, one screen each (`web/ghost.js`): your run, choose a

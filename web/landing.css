@@ -232,7 +232,12 @@ body { background: var(--ink); }
 }
 .lp-submit:active { transform: translateY(2px); border-bottom-width: 2px; }
 .lp-submit:focus-visible { outline: 3px solid var(--deep-raised); outline-offset: 2px; }
+/* What the address is for, under the field: the page's one privacy line */
+.lp-form-note { margin: 8px 0 0; font-size: 13px; line-height: 1.45; color: var(--slate); }
 .lp-form-status { margin: 10px 0 0; min-height: 1.4em; font-size: 14px; line-height: 1.45; color: var(--bone-dim); }
+.lp-form-status.is-sent { color: var(--teal-hatch); font-weight: 700; }
+.lp-form-status.is-error { color: var(--vermilion-hatch); font-weight: 700; }
+.lp-submit:disabled { opacity: 0.6; cursor: progress; }
 
 /* ---------- d. The ghost run ---------- */
 
