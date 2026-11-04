@@ -86,8 +86,8 @@ try {
     writeFileSync(join(SHOTS, `${name}.png`), Buffer.from(data, "base64"));
   };
 
-  const until = async (condition, what) => {
-    for (let i = 0; i < 100; i++) {
+  const until = async (condition, what, ms = 20000) => {
+    for (let i = 0; i < ms / 200; i++) {
       if (await js(`return !!(${condition})`)) return;
       await wait(200);
     }
@@ -231,17 +231,25 @@ try {
     await until(`document.querySelector(".step .dock")`, "The ghost on a second visit");
     if ((await js(`return document.querySelector("#app > section").dataset.screen`)) !== "step-1") say(size, "ghost", "a second visit shows the opening again");
 
-    // A life that is not the demo's: another seed. With no store to count live narrations in, as
-    // wherever this check runs, the route serves it the template, which must say so
+    // A life that is not the demo's: another seed. Either outcome is right, and each must say which
+    // it is. With no store to count live narrations in, as locally, or past a limit, the route serves
+    // the template, which says no model wrote it and credits no narrator. Where live narration is
+    // on, as on the deployed site, a model narrates it, and the panel says so and counts the attempts
     await go(`${ORIGIN}/web/index.html`, 200);
     await js(`localStorage.setItem(${JSON.stringify(SAVE_KEY)}, ${JSON.stringify(JSON.stringify({ ...demo, seed: demo.seed + 1, closed: 24 }))}); return 1`);
     await go(`${ORIGIN}/ghost/?run=mine#fork/15/D16-B/story`, 800);
-    await until(`document.querySelector(".narration-text:not(.is-missing), .narration .is-missing, .ghost-error")`, "A narration of the player's own run");
+    // A live narration can take up to the function's 60 seconds
+    await until(`document.querySelector(".narration .verdict, .narration .is-missing, .ghost-error")`, "A narration of the player's own run", 65000);
     const own = await js(`return { missing: !!document.querySelector(".is-missing, .ghost-error"), text: document.querySelector(".narration")?.textContent ?? "", label: document.querySelector(".step-label")?.textContent };`);
     if (own.missing) say(size, "own run", `no narration: ${own.text.slice(0, 120)}`);
-    if (!/stand-in/.test(own.text)) say(size, "own run", "its narration does not say it was written without a model");
-    if (!/No model wrote this/.test(own.text)) say(size, "own run", "its panel does not say no model wrote it");
-    if (/narrator|attempt/i.test(own.text)) say(size, "own run", "its panel credits a narrator or its attempts");
+    else if (/No model wrote this/.test(own.text)) {
+      if (!/stand-in/.test(own.text)) say(size, "own run", "its template narration does not say it was written without a model");
+      if (/narrator|attempt/i.test(own.text)) say(size, "own run", "its template's panel credits a narrator or its attempts");
+    } else {
+      if (!/A model wrote this narration/.test(own.text)) say(size, "own run", "its panel says neither that a model wrote it nor that no model did");
+      if (!/Accepted on attempt \d+ of \d+/.test(own.text)) say(size, "own run", "its live narration's panel does not count the attempts");
+      if (/stand-in/.test(own.text)) say(size, "own run", "a live narration says it is a stand-in");
+    }
     // Where it ended, on a run that takes every decision's first option and ends negative in lakhs:
     // its two figures are the widest the screen draws, and each must stay on one line
     const broke = play(1, (decision) => Object.keys(decision.options)[0]);
