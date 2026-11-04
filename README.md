@@ -4,6 +4,40 @@ Ghost Run is a money game set in India: you play the first two years of a workin
 
 **Live:** https://ghost-run.vercel.app. The game is at `/game/`. The ghost run on a finished demo life, with nothing to play first, is at `/ghost/`.
 
+## How the game works
+
+You play four minutes a day, one month at a time, from age 22. The first three months play in one sitting, and after that you can always play on. A chapter is 24 months, two years of a life. Six chapters are planned, from 22 to 42. Chapter one is playable.
+
+- **A month** puts a situation in front of you, such as a sister asking you for 8,000 for a coaching class, with three or four options and no right answer. A few early months bring two. You choose, the month plays out, and you see the result. Most months then give you one idea to collect, 20 in the chapter.
+- **What is tracked:** net worth, everything you own minus everything you owe, and three bars:
+  - **Safety:** money to fall back on, and cover if you fall ill.
+  - **Freedom:** how much of your pay is already spoken for before the month begins.
+  - **Life:** whether you are living, or only getting by.
+- **The ghost run.** After month 24, pick any decision you made. The engine replays those 24 months with that one choice changed, on the same seed, and you see both lives.
+- **Two ways in** from the landing page. **Start at month 1** plays the game from the beginning. **Try it on a finished life** opens the ghost run on a demo player's finished two years, with nothing to play first.
+
+```mermaid
+flowchart TD
+    landing["Landing page"]
+    report["Chapter report"]
+    narration["Meta narration, checked by the verifier"]
+
+    subgraph month["A month, 24 times"]
+        situation["Situation"] --> pick["Choose"] --> result["Result"] --> idea["Idea to collect"]
+        idea -- "next month" --> situation
+    end
+
+    subgraph ghost["The ghost run"]
+        choose["Choose a moment"] --> split["The split"] --> ended["Where it ended"] --> happened["What happened"]
+    end
+
+    landing -- "Start at month 1" --> situation
+    landing -- "Try it on a finished life" --> ghost
+    idea -- "after month 24" --> report
+    report -- "Meet your ghost" --> ghost
+    happened --- narration
+```
+
 ## What was built during the hackathon (October 26 to November 4)
 
 The repository's first commit, on October 29, is the simulation it is built on, as it stood (below). Everything here came after it.
@@ -32,7 +66,7 @@ Only chapter one is playable. Chapters two to six are named on the landing page 
 
 ## What it is built on
 
-`vendor/dry-run-engine/` is Dry Run, a finance simulation written before the hackathon. It holds the engine (the ledger, the market, the three scores and net worth), the 30 authored decisions of chapter one with their copy, the calibration harness and its reports, and the original game UI. **The simulation, its decisions and its calibration are not hackathon work.**
+`vendor/dry-run-engine/` is Dry Run, a finance simulation I built earlier this year. It holds the engine (the ledger, the market, the three scores and net worth), the 30 authored decisions of chapter one with their copy, the calibration harness and its reports, and the original game UI. **The simulation, its decisions and its calibration are not hackathon work.**
 
 The first commit is that code as it stood, so `git diff b6e2e30 HEAD -- vendor/` shows every change since:
 
