@@ -232,6 +232,6 @@ Standard mode is deliberate: `muse-spark-1.3-contributor` is far cheaper, but le
 4. Read all 64 against the engine. The verifier guarantees figures, not sentences.
 5. `npm test`, then commit `cache/narrations/meta` and push.
 
-**To serve it:** in Vercel, under the project's Settings, Environment Variables, set `NARRATE_PROVIDER` to `meta` for Production. Leave `NARRATE_LIVE`, `NARRATE_META_MODEL` and any key unset. Redeploy from Deployments, because a variable only applies to a new deployment. Then run `node scripts/check-live-narrations.mjs --provider=meta`, which must end "Every fork matches the meta cache."
+**To serve it:** in Vercel, under the project's Settings, Environment Variables, set `NARRATE_PROVIDER` to `meta` for Production. Keep `NARRATE_LIVE` set to `1` and `MODEL_API_KEY` set on Production, with the Upstash store connected: a player's own run is narrated live with them, and the demo never uses them. Leave `NARRATE_META_MODEL` unset. Redeploy from Deployments, because a variable only applies to a new deployment. Then run `node scripts/check-live-narrations.mjs --provider=meta`, which must end "Every fork matches the meta cache."
 
 **To go back:** set `NARRATE_PROVIDER` to `claude`, redeploy, and run `node scripts/check-live-narrations.mjs`.
