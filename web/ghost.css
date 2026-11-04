@@ -384,7 +384,10 @@ input, select, textarea { font-size: max(16px, 1em); }
 .step-label { margin: 18px 0 0; }
 .step .section-lede { margin-top: 8px; }
 
-/* Choose a moment: three ways in, one row of tabs */
+/* Choose a moment: three ways in, one row of tabs. The line above says why there are three;
+   each tab's caption says how it orders */
+.seg-lede { margin: 8px 0 0; font-size: 16px; line-height: 1.4; color: var(--bone-dim); }
+.seg-lede + .seg { margin-top: 10px; }
 .seg { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; margin-top: 16px; padding: 4px; background: #EDE3CF; border-radius: 14px; }
 .seg-tab {
   min-height: 44px;

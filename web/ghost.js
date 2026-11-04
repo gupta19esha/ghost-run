@@ -150,7 +150,7 @@ function introStep() {
   recordIntroSeen();
   const lede = h("p", { class: "intro-lede" }, "A demo player's two years, already played, so you can try the ghost run without playing twenty-four months first.");
   const lines = [
-    "Pick any decision they made.",
+    "Pick a moment, from a ranked list or by scrolling the months, and see the life they didn't live.",
     "The game replays those two years with the other choice, on the same seed: the same market, the same crash, the same layoff. Only that one choice is different, and if it takes a later choice off the table, the page tells you.",
     "So whatever changes is the choice, not luck.",
   ].map((text) => h("li", { class: "intro-line" }, text));
@@ -219,7 +219,7 @@ function lightTick(tick) {
 const WAYS = [
   ["cost", "Cost you most", "The choices whose other road ends richest."],
   ["surprise", "Surprises", "Where something moved that money doesn't show."],
-  ["months", "Every month", "Every choice you made, month by month. Tap a month to fork it."],
+  ["months", "Every month", "All 24 months, in order. Find a decision you remember and fork it."],
 ];
 let way = "cost";
 
@@ -258,7 +258,8 @@ function chooseStep() {
 
   const screen = step(1, { back: { label: "Your run", to: "#run" }, hint: "Tap a choice to fork it" },
     h("h1", { class: "ghost-title" }, "Pick a choice to change"),
-    h("div", { class: "seg", role: "tablist" }, tabs),
+    h("p", { class: "seg-lede" }, "Three ways to find a moment worth changing."),
+    h("div", { class: "seg", role: "tablist", "aria-label": "Three ways to find a moment" }, tabs),
     caption,
     body);
   return { screen, cleanup: () => listeners.delete(redraw) };
