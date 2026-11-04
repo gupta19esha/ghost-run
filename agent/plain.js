@@ -1,6 +1,6 @@
 // A narration built from a fork's tokens, with no model and no network: what the stub provider
-// answers, and what a player's own run gets in the browser, since the narrator takes only the demo
-// life. It says that it is a stand-in, in its own last sentence.
+// answers, and what api/narrate.js serves when no model can, such as a player's own run past its
+// limits. It says that it is a stand-in, in its own last sentence.
 
 import { sameMoney, SAME_MONEY_LEAD } from "./prompt.js";
 import { resolveTokens } from "../verify/tokens.js";

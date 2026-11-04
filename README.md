@@ -14,7 +14,7 @@ The repository's first commit, on October 29, is the simulation it is built on, 
 - **Token system** (`verify/tokens.js`). 36 tokens, such as `{net_worth_gap}` and `{fork_month}`, each resolved from a fork's own figures. They are the only way a figure can enter a narration.
 - **Verifier** (`verify/verify.js`, `agent/checks.js`). Seven checks every narration attempt must pass before anyone reads it, listed under "How the AI works". The browser runs them again on every attempt before showing it.
 - **Ranking** (`agent/rank.js`). Forks a save at every choice, to every option offered there, and orders the forks by a "surprise" score built from the numbers alone: a reversal, a gap that opened at the layoff, a bar that moved while money did not, a trade between money and Safety or Freedom. Its units were measured over 2,532 forks of 40 saves (`scripts/measure-rank.mjs`, `reports/RANK-2026-10-29.md`).
-- **Meta narration layer** (`agent/`, `api/narrate.js`, `cache/narrations/`). The prompt, the retry loop and the API route. All 64 forks of the demo life were narrated by Meta's Muse Spark 1.3 and committed as a cache, which the live site serves. The route can also call a model live for the demo life, with `NARRATE_LIVE=1` and a key. The live site has neither, and makes no model calls.
+- **Meta narration layer** (`agent/`, `api/narrate.js`, `agent/limits.js`, `cache/narrations/`). The prompt, the retry loop and the API route. All 64 forks of the demo life were narrated by Meta's Muse Spark 1.3 and committed as a cache. The demo is served from that cache and makes no model calls. A player's own finished run is narrated live, within a limit per run and a ceiling across everyone.
 - **Ghost flow** (`web/ghost.js`). The five steps at `/ghost/`: the run, choose a moment, the split, where it ended, what happened.
 
 **The game around it**
@@ -26,7 +26,7 @@ The repository's first commit, on October 29, is the simulation it is built on, 
 - **Certificate** (`vendor/dry-run-engine/game/certificate.js`). The chapter card, drawn in the browser from the save.
 - **Landing page** (`web/index.html`). What this is, a month to try, the chapters, a ghost run.
 - **Desktop layout** (`vendor/dry-run-engine/game/desktop.css`, `rail.js`). A side rail with net worth and the bars, and the road running across the window.
-- **Tests.** `npm test` runs 125 tests. `scripts/check-game-fit.mjs` plays the chapter in headless Chrome and checks every screen at phone and desktop sizes; `scripts/check-road-fit.mjs` checks the road, the landing and the ghost run.
+- **Tests.** `npm test` runs 131 tests. `scripts/check-game-fit.mjs` plays the chapter in headless Chrome and checks every screen at phone and desktop sizes; `scripts/check-road-fit.mjs` checks the road, the landing and the ghost run.
 
 Only chapter one is playable. Chapters two to six are named on the landing page and locked.
 
@@ -64,7 +64,23 @@ The model has less freedom than that may suggest. Left to itself, Spark got mont
 
 An earlier set by Claude Opus 5.5 stays in the repo as a fallback (`cache/narrations/claude/`).
 
-**Where no model is involved:** the charts, figures and ranking everywhere, the twenty long explanations of the ideas, and the ghost run on a player's own finished chapter (the report's "Meet your ghost"). The narrator only takes the demo life, because its forks are finite and can be cached. A player's own fork gets a fixed template filled with its figures, and the page says no model wrote it.
+**The demo and a player's own run are narrated differently.**
+
+- **The demo life** at `/ghost/` is served from the committed cache and never calls a model, whatever the environment says.
+- **A player's own finished chapter** (the report's "Meet your ghost") is narrated live by Spark, with the same prompt, verifier and retry loop, when the player reaches a fork's last step. Two limits, both kept server-side (`agent/limits.js`):
+  - **5 live narrations per run.** A run is its seed and its choices. A fork already narrated is served again from the store, and does not count twice.
+  - **A ceiling of 500 model calls**, across every player, ever. Each attempt is one call, so a narration takes one to four. The count is taken before each call, so it never goes past 500. After that, no more live calls are made, and every own run gets the template. At the demo set's measured cost (64 forks, 65 calls, $0.52), 500 calls is about $4.
+- **The template** is what an own run gets past either limit, or if the call fails or no attempt passes. It is a fixed text filled with the fork's figures, and the page says no model wrote it.
+
+The counts are kept in Redis (Upstash, through Vercel's storage integration). With no store configured, nothing is narrated live.
+
+**Known gaps in the limits:**
+
+- **A failed narration still uses one of the run's five.** The run's count goes up before the first call, so a fork whose call fails, or where no attempt passes, counts the same as one that worked.
+- **Two requests at once count twice.** Two requests for the same fork that arrive together both find nothing stored, and both count against the run.
+- **The per-run limit is easy to get around.** A run is only a seed and a list of choices, so anyone can post another seed and get five more. The real cap is the 500-call ceiling across everyone.
+
+**Where no model is involved:** the charts, figures and ranking everywhere, and the twenty long explanations of the ideas.
 
 ## The honest limit
 
@@ -95,10 +111,10 @@ NARRATE_PROVIDER=meta
 
 ### How the narration cache works
 
-Every model response is committed in `cache/narrations/<provider>/<fork>/attempt-<n>.json`, with the model, its token usage, and a digest of the exact request it answered. The route answers from there, with no key and no network, as long as the request still matches. The live site runs this way.
+Every model response for the demo life is committed in `cache/narrations/<provider>/<fork>/attempt-<n>.json`, with the model, its token usage, and a digest of the exact request it answered. The route answers the demo from there only, with no key and no network. If Meta has nothing cached for a fork, it falls back to Claude's committed cache, then to the template.
 
-Paid calls happen only with `NARRATE_LIVE=1` and a key, or when you run `npm run narrate:meta` or `npm run narrate:claude`, which regenerate the cache. Changing a provider's prompt or model changes the request, so its old answers stop matching and every fork has to be generated again.
+Paid calls happen for a player's own run only, and only with `NARRATE_LIVE=1`, a key and a Redis store, within the limits above. They also happen when you run `npm run narrate:meta` or `npm run narrate:claude`, which regenerate the demo cache. Changing a provider's prompt or model changes the request, so its old answers stop matching and every fork has to be generated again.
 
-The route always answers. If Meta has nothing cached for a fork, or its call fails, it falls back to Claude's committed cache, then to the template that says no model wrote it.
+The route always answers. When a live narration is not possible, an own run gets the template that says no model wrote it, with a line saying why when a limit was the reason.
 
 More detail, including why chapters three to six cannot start yet, is in [docs/BUILD-NOTES.md](docs/BUILD-NOTES.md).

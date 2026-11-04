@@ -11,6 +11,8 @@
 //             the second time. A cached response is used only while the request it answered is
 //             unchanged: a new prompt, or new feedback, asks again
 //   live      false serves from the cache only, with no network; a miss throws NarrationUnavailable
+//   beforeCall  awaited just before each model call, and only then: a limit throws from here to stop
+//             the call from being made
 //
 // Keys come from the environment, read when a call is made, never stored: MODEL_API_KEY for
 // Meta (the name Meta's docs use), ANTHROPIC_API_KEY for Claude.
@@ -62,6 +64,7 @@ export async function narrate(forkResult, {
   env = process.env,
   fetch: fetchFn = globalThis.fetch,
   anthropic = null,
+  beforeCall = null,
 } = {}) {
   if (!PROVIDERS.includes(provider)) throw new Error(`Unknown narration provider ${JSON.stringify(provider)}`);
   if (provider === "stub") return stub(forkResult, attempt, previous, env);
@@ -77,6 +80,7 @@ export async function narrate(forkResult, {
     if (cached && cached.request === request) return cached.narration;
   }
   if (!live) throw new NarrationUnavailable(`No cached narration for attempt ${attempt} of this fork, and live calls are off`);
+  await beforeCall?.();
 
   const { narration, usage } = provider === "meta"
     ? await callMeta({ model, messages, env, fetchFn })

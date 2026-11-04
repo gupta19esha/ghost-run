@@ -1,7 +1,8 @@
 // The ghost screen: a finished life (web/demo/save.json), and the life it would have been with
 // one choice changed. Another screen of the same game: Daylight tokens, Baloo 2, the game's card
 // shapes, from the game's own stylesheets. Everything shown is computed here, in the browser,
-// by the engine in vendor/ through runner/, agent/ and verify/. No model is called.
+// by the engine in vendor/ through runner/, agent/ and verify/, except the narration: that comes
+// from api/narrate.js, and every attempt it returns is checked again here before it is shown.
 //
 // Before them, once per visitor, an opening that says what this is (#about). It shows on the demo
 // life only, the first time its first step would, and the first step links back to it. Whether it
@@ -24,7 +25,6 @@ import { FORMATS, exactMoneyGap, shownMoneyGap } from "../verify/render.js";
 import { animate, count, later, tween, reduced, stopAll } from "./motion.js";
 import { h, ghostMark, chart, road, hideGhost, drawGhost, legend, track, moveBar, arrive } from "./ui.js";
 import { sound, buzz, isMuted, setMuted } from "./sound.js";
-import { plainNarration } from "../agent/plain.js";
 import { readSave } from "../vendor/dry-run-engine/game/save.js";
 
 const app = document.getElementById("app");
@@ -51,7 +51,8 @@ function startRanking() {
 }
 
 // A fork is run once, and its narration asked for once, however often its steps are visited.
-// The narration is asked for at the split, so it is usually in by the time the player reaches it
+// The demo life's is asked for at the split, so it is usually in by the time the player reaches it.
+// A player's own run asks only on reaching the story, as each fork narrated counts against its five
 const views = new Map();
 const narrations = new Map();
 function viewOf(index, option) {
@@ -292,7 +293,7 @@ function monthsList(choose) {
 function splitStep(index, option) {
   const view = viewOf(index, option);
   const { result } = view;
-  narrationOf(index, option);
+  if (!mine) narrationOf(index, option);
   const nw = view.compare[0];
   // Drawn at the card's own width, so its labels stay the size they are written at
   const forkRoad = road({ ...view.road, character: save.character, height: chartHeight(), width: Math.min(innerWidth - 48, ROAD_MAX_WIDTH) });
@@ -399,7 +400,7 @@ function storyStep(index, option) {
   // The narration: asked of api/narrate.js, then every attempt it made checked here by verify()
   const card = h("div", { class: "card narration" },
     h("p", { class: "month-label" }, "Narration"),
-    h("p", { class: "narration-wait" }, ghostMark(18), mine ? "Building this account from the figures…" : "Fetching the narration, and checking every attempt…"));
+    h("p", { class: "narration-wait" }, ghostMark(18), mine ? "Narrating your fork, and checking every attempt. This can take a while…" : "Fetching the narration, and checking every attempt…"));
   const screen = step(4, { back: { label: "Month 24", to: forkHash(index, option, "end") }, next: { label: "Fork another", to: "#choose" } },
     h("h1", { class: "ghost-title" }, "What happened"),
     h("p", { class: "section-lede" }, `You chose “${view.real.label}”. The ghost chose “${view.ghost.label}”.`),
@@ -409,7 +410,7 @@ function storyStep(index, option) {
   narrationOf(index, option)
     .then((served) => {
       if (gone) return;
-      card.replaceChildren(...narrationCard(view, checkAttempts(view.result, served)));
+      card.replaceChildren(...narrationCard(view, checkAttempts(view.result, served.attempts), served.note));
     })
     .catch((error) => {
       if (gone) return;
@@ -420,11 +421,9 @@ function storyStep(index, option) {
   return { screen, cleanup: () => { gone = true; } };
 }
 
-// Asks the server to narrate a fork of the demo life: every attempt it made, in order. The narrator
-// takes only the demo life, so a player's own run has its narration built here from the fork's
-// tokens, and checked here like any other
+// Asks the server to narrate a fork: { attempts, note }, every attempt it made, in order, and on a
+// player's own run, why it is the plain narration when a limit was the reason
 async function requestNarration(index, option) {
-  if (mine) return [{ number: 1, narration: plainNarration(viewOf(index, option).result), ok: true }];
   let response;
   try {
     response = await fetch("/api/narrate", {
@@ -437,7 +436,7 @@ async function requestNarration(index, option) {
   }
   const data = await response.json().catch(() => ({}));
   if (!response.ok) throw new Error(data.error ? `${data.error}.` : `The narrator answered ${response.status}.`);
-  return data.attempts;
+  return { attempts: data.attempts, note: data.note ?? null };
 }
 
 const plural = (n, one, many) => `${n} ${n === 1 ? one : many}`;
@@ -452,7 +451,7 @@ function toggleFor(target, show, hide) {
 }
 
 // The card's contents once the attempts are in and checked
-function narrationCard(view, checked) {
+function narrationCard(view, checked, note = null) {
   const { accepted, rejected, attempts, plain } = checked;
   // Not counted among what the narrator did, because no narrator did it
   if (!plain) record(view, checked);
@@ -488,6 +487,7 @@ function narrationCard(view, checked) {
       : h("p", { class: "narration-text is-missing" }, `No attempt passed in ${plural(attempts.length, "try", "tries")}, so there is nothing to show.`),
     plain && accepted && h("div", { class: "verdict is-ok" },
       h("p", { class: "verdict-line" }, h("b", {}, "✓"), ` ${plural(accepted.figures.length, "figure", "figures")} checked against the simulation.`),
+      note && h("p", { class: "verdict-note" }, note),
       h("p", { class: "verdict-note" }, "No model wrote this. It is a fixed template filled with this fork's figures, and verify() checked each of them in this browser."),
       figures && toggleFor(figures, "Show the figures", "Hide the figures"),
       figures),

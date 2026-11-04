@@ -231,7 +231,8 @@ try {
     await until(`document.querySelector(".step .dock")`, "The ghost on a second visit");
     if ((await js(`return document.querySelector("#app > section").dataset.screen`)) !== "step-1") say(size, "ghost", "a second visit shows the opening again");
 
-    // A life that is not the demo's: another seed, so the narrator could not take it
+    // A life that is not the demo's: another seed. With no store to count live narrations in, as
+    // wherever this check runs, the route serves it the template, which must say so
     await go(`${ORIGIN}/web/index.html`, 200);
     await js(`localStorage.setItem(${JSON.stringify(SAVE_KEY)}, ${JSON.stringify(JSON.stringify({ ...demo, seed: demo.seed + 1, closed: 24 }))}); return 1`);
     await go(`${ORIGIN}/ghost/?run=mine#fork/15/D16-B/story`, 800);

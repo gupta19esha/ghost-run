@@ -53,7 +53,7 @@ Vercel does. The one dependency, the Anthropic SDK, is used only by the narratio
 
 ## Narration
 
-The browser posts a fork of the demo life to `/api/narrate`. The function forks the save itself,
+The browser posts a fork of the demo life, or of the player's own finished run, to `/api/narrate`. The function forks the save itself,
 asks the narrator, checks each answer with `verify()` and the same-money lead, and on a rejection
 sends the reasons back and asks again, up to four attempts. It returns every attempt; the browser
 checks each one again before the panel shows it.
@@ -64,15 +64,19 @@ git ignores. Keys never go in the repo, the browser or a commit.
 | Variable | What it does |
 |---|---|
 | `NARRATE_PROVIDER` | `meta`, `claude` or `stub` (default). Only the server chooses |
-| `NARRATE_LIVE` | `1` lets a paid provider make calls. Otherwise it answers only from `cache/narrations/`, with no network |
+| `NARRATE_LIVE` | `1` lets a paid provider make calls, for a player's own run only. The demo life is always answered from `cache/narrations/`, with no network |
 | `MODEL_API_KEY` | Meta's Model API key (Meta's own name for it) |
 | `ANTHROPIC_API_KEY` | Claude's key |
 | `NARRATE_META_MODEL`, `NARRATE_CLAUDE_MODEL` | Override the model: `muse-spark-1.3` and `claude-opus-5-5` by default |
+| `KV_REST_API_URL`, `KV_REST_API_TOKEN` | The Redis that keeps the live-narration counts, set by Vercel's Upstash integration (`UPSTASH_REDIS_REST_*` also work). Without them nothing is narrated live |
 | `NARRATE_STUB_MISTAKES` | `1` makes the stub type a figure on its first attempt, to see a rejection and a retry |
 
-Every paid response is cached on disk by fork and attempt, so running a fork again costs nothing,
-and the committed cache lets the demo narrate with no network. Only the demo save is accepted, so
-the forks a paid model can be asked about are finite.
+Every paid response for the demo is cached on disk by fork and attempt, and the committed cache is
+all the demo is ever served from. A player's own run is narrated live within two limits kept in
+Redis (`agent/limits.js`): `LIVE_PER_RUN`, 5 forks a run, and `LIVE_CALL_CEILING`, 500 model
+calls across everyone, counted before each call. A live narration that passed is kept in Redis for
+90 days, so the same fork asked again costs nothing. Past a limit, or with no key or store, an own
+run gets the template, and the page says why when a limit was the reason.
 
 ## Motion and sound
 
@@ -166,9 +170,10 @@ screen (UI.md rule 11), and the chapter's progress opens it from Home, a decisio
 UI.md, "the timeline's own artboard", says what it holds.
 
 After the chapter report, the one primary action is "Meet your ghost": `/ghost/?run=mine` runs the ghost
-flow on the player's own save. The narrator takes only the demo life, so an own run's narration is
-`agent/plain.js`, built from the fork's tokens with no model, checked by `verify()` in the browser and
-saying that it is a stand-in. Bare `/ghost/` is the demo life, and says so in its first line.
+flow on the player's own save. An own run's narration is asked for live when the player reaches a
+fork's last step, not at the split as the demo's is, since each fork counts against the run's five.
+Past the limits it is `agent/plain.js`, built from the fork's tokens with no model, checked by
+`verify()` in the browser and saying that it is a stand-in. Bare `/ghost/` is the demo life, and says so in its first line.
 `scripts/check-road-fit.mjs` checks it and the split step's road at every size.
 
 `scripts/check-game-fit.mjs` is the fit check for every screen at any size: it plays chapter one
