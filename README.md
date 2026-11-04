@@ -69,7 +69,7 @@ An earlier set by Claude Opus 5.5 stays in the repo as a fallback (`cache/narrat
 - **The demo life** at `/ghost/` is served from the committed cache and never calls a model, whatever the environment says.
 - **A player's own finished chapter** (the report's "Meet your ghost") is narrated live by Spark, with the same prompt, verifier and retry loop, when the player reaches a fork's last step. Two limits, both kept server-side (`agent/limits.js`):
   - **5 live narrations per run.** A run is its seed and its choices. A fork already narrated is served again from the store, and does not count twice.
-  - **A ceiling of 500 model calls**, across every player, ever. Each attempt is one call, so a narration takes one to four. The count is taken before each call, so it never goes past 500. After that, no more live calls are made, and every own run gets the template. At the demo set's measured cost (64 forks, 65 calls, $0.52), 500 calls is about $4.
+  - **A ceiling of 3000 model calls**, across every player, ever. Each attempt is one call, so a narration takes one to four. The count is taken before each call, so it never goes past 3000. After that, no more live calls are made, and every own run gets the template. At the demo set's measured cost (64 forks, 65 calls, $0.52), 3000 calls is about $24.
 - **The template** is what an own run gets past either limit, or if the call fails or no attempt passes. It is a fixed text filled with the fork's figures, and the page says no model wrote it.
 
 The counts are kept in Redis (Upstash, through Vercel's storage integration). With no store configured, nothing is narrated live.
@@ -78,7 +78,7 @@ The counts are kept in Redis (Upstash, through Vercel's storage integration). Wi
 
 - **A failed narration still uses one of the run's five.** The run's count goes up before the first call, so a fork whose call fails, or where no attempt passes, counts the same as one that worked.
 - **Two requests at once count twice.** Two requests for the same fork that arrive together both find nothing stored, and both count against the run.
-- **The per-run limit is easy to get around.** A run is only a seed and a list of choices, so anyone can post another seed and get five more. The real cap is the 500-call ceiling across everyone.
+- **The per-run limit is easy to get around.** A run is only a seed and a list of choices, so anyone can post another seed and get five more. The real cap is the 3000-call ceiling across everyone.
 
 **Where no model is involved:** the charts, figures and ranking everywhere, and the twenty long explanations of the ideas.
 

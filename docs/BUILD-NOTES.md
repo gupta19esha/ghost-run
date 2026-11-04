@@ -73,7 +73,7 @@ git ignores. Keys never go in the repo, the browser or a commit.
 
 Every paid response for the demo is cached on disk by fork and attempt, and the committed cache is
 all the demo is ever served from. A player's own run is narrated live within two limits kept in
-Redis (`agent/limits.js`): `LIVE_PER_RUN`, 5 forks a run, and `LIVE_CALL_CEILING`, 500 model
+Redis (`agent/limits.js`): `LIVE_PER_RUN`, 5 forks a run, and `LIVE_CALL_CEILING`, 3000 model
 calls across everyone, counted before each call. A live narration that passed is kept in Redis for
 90 days, so the same fork asked again costs nothing. Past a limit, or with no key or store, an own
 run gets the template, and the page says why when a limit was the reason.

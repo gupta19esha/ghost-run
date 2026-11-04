@@ -10,7 +10,7 @@
 // nothing is narrated live.
 
 export const LIVE_PER_RUN = 5;
-export const LIVE_CALL_CEILING = 500;
+export const LIVE_CALL_CEILING = 3000;
 
 // A narration made live is kept, so asking for the same fork again costs nothing
 export const KEEP_SECONDS = 90 * 24 * 60 * 60;
